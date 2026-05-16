@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-16
 **Authors:** Tyler & Charles
-**Status:** Draft, Codex round 2 incorporated, awaiting final human review
+**Status:** Draft, Codex rounds 2 + 3 incorporated, awaiting final human review
 **Predecessor:** V1 design at `docs/superpowers/specs/2026-05-15-multigolem-design.md` (shipped as v0.1.0+mc26.1.2)
 
 ## 1. Summary
@@ -177,7 +177,7 @@ All five abilities are configurable per-tier in `multigolem.json` (see §6). All
 | **Filter** | `emerald_count_wandering_traders` decides whether wandering traders count (default true, includes both regular villagers and wandering traders). Always excludes zombie villagers and illagers (they don't subclass `AbstractVillager`). |
 | **Effect** | If at least one matching villager found AND golem HP < max HP: heal by `emerald_heal_per_tick` (default 1.0 HP); emit visual |
 | **Visual** | Single `HAPPY_VILLAGER` particle floating up from the golem on each heal tick |
-| **Edge cases** | The scan must filter for **live, non-removed** villagers: `villager.isAlive() && !villager.isRemoved()`. If a villager is mid-conversion (struck by lightning, infected by a zombie) at scan time, the heal is still triggered only if they qualify at scan time — but we re-check `isAlive() && !isRemoved()` immediately before calling `heal()` to avoid healing because of an entity that's already gone. Zombie villagers naturally don't qualify (they're `ZombieVillager`, not `AbstractVillager`). Wandering traders converted to zombies during a raid are similarly excluded as soon as the conversion completes. |
+| **Edge cases** | The scan must filter for **live, non-removed** `AbstractVillager` instances: `villager.isAlive() && !villager.isRemoved()`. The villager qualifying at scan time is necessary but not sufficient — we **re-check `isAlive() && !isRemoved()` immediately before calling `heal()`** to handle the gap where an entity is replaced or removed between scan and heal (entity-replacement events such as conversion to a different entity type, despawn, removal by other game logic, or death from concurrent damage). Once an entity ceases to be an `AbstractVillager` (because the original was removed and replaced by a different entity type), it naturally fails the next scan's filter — zombie villagers, for example, are not `AbstractVillager` and so are never counted. |
 | **Config** | `emerald_aura_range` (int, default 8), `emerald_heal_interval_seconds` (double, default 2.0; clamped ≥ 0.5), `emerald_heal_per_tick` (double, default 1.0; ≥ 0), `emerald_count_wandering_traders` (bool, default true) |
 
 ### 5.4 Diamond — Combined Lightning
@@ -348,39 +348,54 @@ V2 additions:
 
 V1 → V2 config migration is a **raw `JsonObject` merge**, NOT a parse-into-model-then-rewrite. The latter would strip any user-added unknown fields (e.g., a comment-style `"_note": "..."` entry, a field added by a third-party companion mod, a custom tier the user added for forward compat). Codex flagged this risk on round 2; this section locks it down.
 
-**Migration algorithm (in-memory, applied during load before validation):**
+**Migration algorithm (in-memory, applied during load):**
 
-1. Read the on-disk file as a `JsonObject` (Gson `JsonParser`). If parse fails, follow the existing V1 rule: load all defaults, log WARN, **do not overwrite** the user's file. Bail on migration.
-2. Build a `JsonObject` of V2 defaults (the schema from §6).
-3. Recursive merge: for each entry in the defaults object,
-   - If the on-disk object has the key → keep the on-disk value (do not overwrite)
-   - If the on-disk object lacks the key → insert the default value
-   - If the value is itself a `JsonObject` → recurse with the same merge rules (so per-tier merges work)
-   - **If the on-disk object has keys not in the defaults → preserve them as-is** (this is the critical lossless property)
-4. The resulting `JsonObject` is the "upgraded" config in memory. It is what gets passed to validation (§6.1) and to the runtime config holder.
-5. If the merged object is bit-identical to the on-disk file (no fields were added), skip the write-back entirely.
-6. Otherwise, write the merged object back to disk **atomically** (see below).
+The order is critical: **merge → validate/canonicalize → compare → write**. Each step operates on the same `JsonObject` instance, so canonicalization (e.g., uppercase rewriting of `diamond_target_mode`) gets persisted by the same write-back that handles V1→V2 field additions.
 
-**Ordering:** preserve insertion order from the on-disk file where practical (Gson `JsonObject` preserves insertion order natively). New default fields get appended after existing ones in their parent object. Correctness (no field loss, no truncation) takes priority over cosmetic ordering.
+1. **Read.** Read the on-disk file as a `JsonObject` (Gson `JsonParser`). If parse fails, follow the existing V1 rule: load all defaults, log WARN, **do not overwrite** the user's file. Bail on migration.
+2. **Merge defaults.** Build a `JsonObject` of V2 defaults (the schema from §6). Recursive merge into the on-disk object:
+   - On-disk has key → keep on-disk value (no overwrite)
+   - On-disk lacks key → insert the default
+   - Value is itself a `JsonObject` → recurse with same rules
+   - **On-disk has keys NOT in defaults → preserve them as-is** (lossless property)
+3. **Validate and canonicalize known fields, in place.** Walk the merged object and apply every rule from §6.1 to known fields — clamps, non-finite replacements, JsonNull guards, case-insensitive enum parsing rewritten to canonical uppercase, malformed type fallbacks. **Unknown fields are not touched.** This is where `"all_hostile_mobs"` becomes `"ALL_HOSTILE_MOBS"` and a malformed `"copper_lightning_heal_amount": "wat"` becomes `null` (the default).
+4. **Hand merged-and-canonicalized object to runtime.** It becomes the in-memory config (read by `MultiGolem.config()`).
+5. **Compare to on-disk content.** Serialize the merged-and-canonicalized object and compare bytes against the original on-disk content (re-read or buffered from step 1). If identical, skip the write-back entirely — nothing changed.
+6. **Write back to disk** (see "Write-back" below). The byte-level diff in step 5 catches cases where the user's file was already canonical and complete; we don't churn disk for no-op upgrades.
 
-**Comments:** JSON has no comment syntax, but users sometimes prefix fields with underscore (e.g., `"_note": "lowered copper hp for testing"`) as a stand-in. The merge preserves any such field as an unknown top-level or per-tier entry.
+**Why this order matters:** validating *after* merging defaults means defaults aren't double-validated. Canonicalizing *before* comparing means a config with lowercase `"all_hostile_mobs"` and otherwise no missing fields will still get a clean uppercase rewrite — the comparison only sees the post-canonicalization form.
 
-**Atomic write-back to disk:**
+**Ordering of fields in the written file:** Gson `JsonObject` preserves insertion order natively. New default fields appended after existing ones in their parent. Correctness over cosmetics.
+
+**Comments:** JSON has no comments. Users sometimes prefix fields with underscore (e.g., `"_note": "lowered copper hp for testing"`) as a stand-in. The merge preserves these as unknown fields.
+
+**Write-back to disk:**
 
 ```
 1. Resolve target path:   config/multigolem.json
 2. Resolve temp path:     config/multigolem.json.tmp.<random>  (same directory)
-3. Write merged JSON to temp path, fully flushed (Files.writeString with StandardOpenOption.SYNC if available)
+3. Write merged-and-canonicalized JSON to temp path, fully flushed
+   (Files.writeString with StandardOpenOption.SYNC if available)
 4. Try: Files.move(temp, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
-5. If atomic move is unsupported by the filesystem (rare on Windows; some network filesystems):
-     a. Fall back to Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING)  // non-atomic
-     b. Log WARN with the filesystem-supports-atomic-move check result so the user can see why
-6. On any IOException during step 3 or 5:
+   On success: target now contains the new content; the swap was atomic. Done.
+5. If AtomicMoveNotSupportedException (rare; some network filesystems):
      a. Best-effort delete the temp file
-     b. Log WARN with the exception details
-     c. The in-memory config (the merged object) is still used at runtime — only the on-disk upgrade is skipped
-     d. The next server start will re-attempt the upgrade
-7. Never leave a truncated target file: by writing to temp + atomic-move, we guarantee the target either contains the old V1 content or the new V2 content, never a partial mix
+     b. Log WARN: "filesystem does not support atomic move; on-disk
+        config left at V1 schema and will be re-attempted next start.
+        In-memory config is the V2-merged version."
+     c. DO NOT fall back to non-atomic REPLACE_EXISTING — that would
+        risk a torn write if the server crashes mid-copy and we'd lose
+        the user's V1 config. Skipping write-back keeps the on-disk
+        guarantee strict.
+6. On any other IOException during step 3 or 4:
+     a. Best-effort delete the temp file
+     b. Log WARN with exception details
+     c. In-memory config (merged) is still used at runtime
+     d. Next server start re-attempts the upgrade
+7. Guarantee: the on-disk file contains EITHER the original V1 content
+   OR the full V2-merged-canonicalized content — never partial, never
+   truncated. The guarantee holds because we never modify the target
+   file except via ATOMIC_MOVE.
 ```
 
 **What this gives us:**
@@ -399,13 +414,13 @@ Codex's review surfaced areas where the right mixin point or API call isn't know
 | # | Spike | Why it matters |
 |---|---|---|
 | 1 | Renderer pipeline in 26.1.2 — `IronGolemRenderer` + render-state class | Determines the two mixin targets for variant texture selection. The plan assumes a render-state pattern, but the exact class names and method points need confirmation. |
-| 2 | `ServerLivingEntityEvents.ALLOW_DAMAGE` signature in Fabric API 0.148.0+26.1.2 | Determines the listener signature for damage interception. Used by copper cancel-and-heal, netherite-fire-immunity, diamond-self-immunity. |
+| 2 | `ServerLivingEntityEvents.ALLOW_DAMAGE` **semantics** in Fabric API 0.148.0+26.1.2 (not just signature). Confirm: (a) listener invocation order across multiple listeners — does ours run before/after vanilla and other mods', and can ordering be influenced; (b) short-circuit behavior — does the first `false` return short-circuit later listeners, or does every listener still run; (c) when a listener returns `false`, are *all* `hurtServer` side effects prevented (no `lastHurtBy` flag, no aggro, no death-trigger, no advancement); (d) for `DamageTypes.LIGHTNING_BOLT` specifically, does the event fire exactly once per strike (channeling-trident bolts, natural bolts, summoned bolts) or can a single bolt trigger multiple ALLOW_DAMAGE events. | Used by copper cancel-and-heal, netherite-fire-immunity, diamond-self-immunity. The atomic single-listener cancel+heal in §5.1 relies on (c) and (d) holding — if they don't, copper's design needs adjustment. |
 | 3 | Fire-ticks API method name in 26.1.2 — `Entity#igniteForSeconds(int)` vs `setRemainingFireTicks(int)` | Used by netherite ignite-on-hit. Verify against decompiled source. |
 | 4 | Mixin `compatibilityLevel` for Java 25 source | Verify `JAVA_25` exists in `CompatibilityLevel` enum of the Mixin library bundled with Fabric Loader 0.19.2. If not present, use the highest available and note why. |
 | 5 | Damage tag for fire — `DamageTypeTags.IS_FIRE` (or equivalent) | Determines the predicate for netherite fire-immunity. |
-| 6 | Mob targeting hook for `ignored_target_types` enforcement. **Candidate hooks to inspect, in preferred order:** (a) `Mob#setTarget(LivingEntity)` — broad veto point, filter immediately to `IronGolem`; we already mixin into the inherited `setLastHurtByMob` from V1 so the pattern is familiar. (b) `TargetGoal#canAttack` / `TargetingConditions#test` if they exist and are narrow enough. (c) Wrap or replace `NearestAttackableTargetGoal` for iron golems if accessible — most precise, also most invasive. (d) Per-tick `setTarget(null)` if the entity's current target is excluded — **fallback only**, allows one-tick target flicker and may fight other mods' targeting code. The spike picks (a)–(c) preferentially; (d) is a last resort. | Picking the right hook here determines mod compatibility and how cleanly `ignored_target_types` enforces. |
+| 6 | Mob targeting hook for `ignored_target_types` enforcement. **Candidate hooks to inspect, in PREFERRED ORDER (best to worst):** (a) **Earlier acquisition/continuation hooks** — `TargetGoal#canAttack`, `NearestAttackableTargetGoal#canUse` / `#canContinueToUse`, or `TargetingConditions#test` if present in 26.1.2 and narrow enough. These reject candidates *before* the goal commits to them — cleanest behavior, no target flicker, fewest side effects on other mods. (b) **`Mob#setTarget(LivingEntity)` as a final veto/safety net** — injected into the declaring `Mob` class (so we catch every setTarget call site) and filtered immediately to `IronGolem` instances; an excluded target is rewritten to `null`. Use only if (a) hooks aren't accessible or are too narrow to cover every targeting path. (c) **Per-tick `setTarget(null)` if `golem.getTarget()` is excluded** — last resort only. Allows one-tick target flicker (the goal sets the target, our tick clears it next frame) which can spawn brief animation artifacts and may fight other mods that read the target between frames. The spike picks (a) if available; falls back to (b); only uses (c) if both (a) and (b) are blocked. | Picking the right hook here determines mod compatibility and how cleanly `ignored_target_types` enforces. The earlier in the targeting pipeline we reject, the fewer side effects ripple through vanilla AI. |
 | 7 | Custom particle scattering for `ELECTRIC_SPARK` cluster | Confirm the right server-side particle emission method on `ServerLevel` (likely `sendParticles(...)` with a count and spread). |
-| 8 | Attachment client sync. **Expected API:** Fabric data attachments support sync via something like `AttachmentRegistry.<T>builder().persistent(codec).syncWith(packetCodec, AttachmentSyncPredicate).buildAndRegister(id)`. The spike confirms the **exact** 0.148.0+26.1.2 method names, the packet codec type for `GolemVariant` (likely a derivation of `Identifier.STREAM_CODEC` since we serialize as string), and the sync predicate values (probably `AttachmentSyncPredicate.all()` since every nearby client needs to know). | Required so the client renderer reads `GolemVariant` per entity. **Must complete before renderer mixin work.** Fallback only if the exact API differs or can't sync entity attachments as needed: custom S2C packet announcing variant on entity tracking-start. |
+| 8 | Attachment client sync. **Preferred API:** Fabric data attachments support sync via something like `AttachmentRegistry.<T>builder().persistent(codec).syncWith(packetCodec, AttachmentSyncPredicate).buildAndRegister(id)`. The spike confirms the **exact** 0.148.0+26.1.2 method names, the packet codec type for `GolemVariant` (likely a derivation of `Identifier.STREAM_CODEC` since we serialize as string), and the sync predicate values (probably `AttachmentSyncPredicate.all()` since every nearby client needs to know). **Custom S2C packet fallback** (only if the Fabric API can't sync entity attachments as needed): define a `MultigolemSyncVariantS2CPacket(int entityId, String variantId)`. Send it on (i) **entity tracking start** — when a client begins tracking an iron golem (use `EntityTrackingEvents.START_TRACKING` from Fabric API), send the current variant to that client; (ii) **variant attachment set/change** — whenever `GolemVariantAttachment.set(...)` runs server-side, broadcast to all tracking clients; (iii) **cleanup** — no explicit cleanup needed for client disconnect (Fabric handles tracker teardown), but on world unload server-side, ensure no listener leaks (use server-lifecycle event); on client disconnect, the client's local cache of variant data is cleared with its world. The fallback needs a small per-client cache (entityId → variant) so the renderer can read variant data when the entity ticks before the next sync. | Required so the client renderer reads `GolemVariant` per entity. **Must complete before renderer mixin work.** |
 
 Each spike updates the targets doc with **exact class/method names, signatures, and a one-line rationale**. No mixin code is written until the relevant spike completes.
 
@@ -612,8 +627,9 @@ New V2 rows to add:
 - [ ] Hit something with diamond golem when cooldown ready → swing summons lightning
 - [ ] Block line-of-sight with a wall — passive zap doesn't fire through wall
 - [ ] Lightning bolt hits diamond golem — no damage (self-immunity)
-- [ ] **Diamond-on-diamond chain:** spawn two diamond golems within passive aura range; trigger a thunderstorm or wait for one to zap the other. Verify (a) the struck golem takes no damage (self-immunity cancels it), (b) the struck golem's `nextDiamondAbilityGameTime` cooldown is **not** consumed or reset just because it was struck (the cooldown only ticks when *this* golem zaps something, not when *something* zaps it), (c) no infinite chain reaction starts
-- [ ] **Diamond on-attack with dying target:** hit a mob whose HP < diamond golem's per-swing damage; vanilla swing kills it; verify the on-attack lightning either doesn't fire (preferred: target alive precondition fails) or fires once and the cooldown is consumed for that swing only — NOT consumed on a missed/whiffed swing
+- [ ] **Diamond bystander immunity (default targeting):** spawn two diamond golems with a hostile mob (e.g., skeleton) near both, within passive aura range. Diamond A zaps the hostile. Verify (a) the lightning bolt hits the hostile, not the bystander diamond B (default `diamond_target_mode: ALL_HOSTILE_MOBS` won't pick another diamond golem since `IronGolem` doesn't implement `Enemy`); (b) collateral lightning AoE damage from the bolt does not damage diamond B (self-immunity cancels any incidental lightning damage); (c) diamond B's `nextDiamondAbilityGameTime` cooldown is **not** consumed or reset just because it was near a lightning event; (d) no chain reaction.
+- [ ] **Diamond direct-hit immunity (forced):** use a debug harness or `/summon lightning_bolt ~ ~ ~` directly on a diamond golem. Verify (a) the struck golem takes no damage (self-immunity cancels via §5.4 listener); (b) its cooldown is unchanged (only zapping consumes cooldown, not being zapped).
+- [ ] **Diamond on-attack with dying target (strict):** hit a mob whose HP < diamond golem's per-swing damage; vanilla swing kills it; verify the on-attack lightning **does not fire** (the `target.isAlive()` precondition in §4.5 fails after the kill) AND the cooldown is **not consumed**. This is the only correct behavior — the spec in §4.5/§5.4 mandates the alive check after vanilla resolves.
 - [ ] **Diamond on-attack with filtered target:** put a creeper directly in front of the diamond golem; have the golem swing (creeper is in `ignored_target_types`); verify cooldown is NOT consumed since the on-attack branch's filter check should block lightning before cooldown spends
 - [ ] Set `diamond_target_mode: BOSSES_ONLY`; restart; verify normal hostiles aren't zapped
 
@@ -683,6 +699,17 @@ New V2 rows to add:
 12. **Emerald conversion/removal edge case** — §5.3 edge-cases row added: live/non-removed filter at scan time AND re-check immediately before heal call. ✅
 13. **Diamond lightning chain edge case** — §11.2 playtest checklist gains the diamond-on-diamond chain test, the dying-target on-attack test, and the filtered-target on-attack test. ✅
 14. **Implementation order** — §9 reworked: `GolemTargetingMixin` moved early (step 7, right after `TargetFilter`) so spike-6's most-fragile mixin is validated against a real entity before the rest of V2 is built on it. Renderer and client work near the end. Lava-walking step removed entirely. Two explicit fail-fast checkpoints called out (steps 7 and 14). ✅
+
+### 13.3 Round 3 (precision pass on revised spec)
+
+1. **Diamond dying-target contradiction** — §11.2 now strict: if vanilla swing kills target, lightning does NOT fire and cooldown is NOT consumed. Matches the alive-check precondition in §4.5/§5.4. ✅
+2. **Diamond-on-diamond chain playtest reword** — split into two tests: (a) bystander immunity using a hostile near a second diamond golem (default targeting doesn't pick another diamond), (b) direct-hit immunity using `/summon lightning_bolt` or a debug harness to force diamond as the target. ✅
+3. **Config migration order clarified** — §6.2 now explicit: merge defaults → validate-and-canonicalize known fields in-place → compare → write. Lowercase `diamond_target_mode` gets rewritten uppercase by the canonicalization pass before the comparison decides whether to write. ✅
+4. **Atomic-write guarantee tightened** — §6.2 now chooses "leave file untouched, retry next startup" when ATOMIC_MOVE is unsupported, rather than falling back to non-atomic copy. The "never partial" guarantee holds unconditionally on disk. ✅
+5. **Spike 2 expanded** — now covers listener invocation order, short-circuit behavior, full `hurtServer` side-effect suppression on `false`, and per-strike event firing for `LIGHTNING_BOLT`. Copper's atomic cancel+heal explicitly depends on these. ✅
+6. **Spike 6 hook preference order corrected** — earlier-acquisition hooks (`canAttack`/`canUse`/`canContinueToUse`/`TargetingConditions#test`) are now preferred first; `Mob#setTarget` veto is the fallback; per-tick `setTarget(null)` is explicitly last resort with named risks (frame flicker, mod conflicts). ✅
+7. **Spike 8 fallback specified** — custom S2C packet fallback now details: send on `EntityTrackingEvents.START_TRACKING`, broadcast on `GolemVariantAttachment.set()`, cleanup via Fabric tracker teardown (no explicit work) + client-side cache cleared with world unload. ✅
+8. **§5.3 wording cleanup** — replaced specific "wandering traders converted to zombies during a raid" example with generic "entity replacement/removal" language covering all such cases. ✅
 
 ## 14. Open items for V2 implementation
 
