@@ -1,5 +1,6 @@
 package dev.charles.multigolem;
 
+import dev.charles.multigolem.ability.AbilityRegistry;
 import dev.charles.multigolem.attachment.GolemAbilityStateAttachment;
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
 import dev.charles.multigolem.attribute.VariantAttributes;
@@ -43,6 +44,8 @@ public class MultiGolem implements ModInitializer {
 
         Path configFile = FabricLoader.getInstance().getConfigDir().resolve(MOD_ID + ".json");
         CONFIG = MultiGolemConfig.loadOrCreate(configFile);
+
+        AbilityRegistry.register();
 
         Registry.register(
             BuiltInRegistries.LOOT_CONDITION_TYPE,
