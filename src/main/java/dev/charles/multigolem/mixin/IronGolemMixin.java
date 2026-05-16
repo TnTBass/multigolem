@@ -88,4 +88,15 @@ public abstract class IronGolemMixin {
         stack.consume(1, player);
         cir.setReturnValue(InteractionResult.SUCCESS);
     }
+
+    @Inject(method = "setLastHurtByMob(Lnet/minecraft/world/entity/LivingEntity;)V",
+            at = @At("HEAD"), cancellable = true)
+    private void multigolem$suppressPlayerAnger(net.minecraft.world.entity.LivingEntity hurtBy, CallbackInfo ci) {
+        if (!(hurtBy instanceof Player)) return;
+        IronGolem self = (IronGolem) (Object) this;
+        GolemVariant variant = GolemVariantAttachment.get(self);
+        if (!MultiGolem.config().tier(variant).angerOnHit()) {
+            ci.cancel();
+        }
+    }
 }
