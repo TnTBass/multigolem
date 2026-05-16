@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Tasks 17–19: DiamondAbility — passive LOS lightning tick, self-immunity to lightning (ALLOW_DAMAGE), cooldown-ready END_ROD visual
 - Tasks 14–16: IronGolemAttackMixin — diamond on-attack lightning + netherite ignite-on-hit via doHurtTarget TAIL inject
 - Task 13: Netherite fire/lava immunity via ALLOW_DAMAGE (cancels IS_FIRE tagged damage)
 - Task 12: Copper ability — lightning cancel-and-heal via ALLOW_DAMAGE
