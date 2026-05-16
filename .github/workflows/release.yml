@@ -90,7 +90,7 @@ jobs:
         run: |
           $version = $env:GITHUB_REF_NAME.Substring(1)
           ./scripts/upload-curseforge.ps1 `
-            -Slug "modern-multigolem" `
+            -Slug "multigolem" `
             -Version $version `
             -JarPath "build/libs/multigolem-$version.jar" `
             -ChangelogPath "release-notes.md"

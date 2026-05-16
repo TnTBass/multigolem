@@ -2,6 +2,7 @@
 
 ## Project Description
 
+````markdown
 MultiGolem adds five new Iron Golem variants — Copper, Gold, Emerald, Diamond, and Netherite — alongside the vanilla Iron Golem. Each variant has its own stats, drops, and healing material.
 
 - **Server-side functional.** Vanilla clients can connect to a server running MultiGolem with no mod installed.
@@ -11,3 +12,4 @@ MultiGolem adds five new Iron Golem variants — Copper, Gold, Emerald, Diamond,
 - **Configurable.** Per-tier health, damage, and "should this tier retaliate when hit" toggles in `config/multigolem.json`.
 
 A father-and-son project. Built with Charles.
+````
