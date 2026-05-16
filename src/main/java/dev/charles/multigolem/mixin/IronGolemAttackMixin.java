@@ -59,7 +59,7 @@ public abstract class IronGolemAttackMixin {
             long min = Math.max(0, stats.diamondCooldownMinSeconds()) * 20L;
             long max = Math.max(min, stats.diamondCooldownMaxSeconds()) * 20L;
             long span = Math.max(1, max - min + 1);
-            long nextAt = level.getGameTime() + min + (Math.abs(level.getRandom().nextLong()) % span);
+            long nextAt = level.getGameTime() + min + Math.floorMod(level.getRandom().nextLong(), span);
             GolemAbilityStateAttachment.set(self, ability.withDiamondCooldown(nextAt));
             return;
         }

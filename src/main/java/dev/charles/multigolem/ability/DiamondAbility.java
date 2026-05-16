@@ -91,7 +91,7 @@ public final class DiamondAbility {
         long min = Math.max(0, stats.diamondCooldownMinSeconds()) * 20L;
         long max = Math.max(min, stats.diamondCooldownMaxSeconds()) * 20L;
         long span = Math.max(1, max - min + 1);
-        long nextAt = now + min + (Math.abs(world.getRandom().nextLong()) % span);
+        long nextAt = now + min + Math.floorMod(world.getRandom().nextLong(), span);
         GolemAbilityStateAttachment.set(golem, ability.withDiamondCooldown(nextAt));
     }
 
