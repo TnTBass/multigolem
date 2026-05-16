@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Task 10: Gold ability — +25% movement speed modifier (ADD_MULTIPLIED_TOTAL on MOVEMENT_SPEED) + sprint-dust (POOF) + sunlight-shine (END_ROD) particles
 - Task 9: Texture generation pipeline — vanilla iron_golem.png template + HSL-shift Python script + genTextures Gradle task; 5 variant PNGs committed
 - Task 8: Add AbilityRegistry skeleton wired from MultiGolem.onInitialize
 - Fix Modrinth project description sync (wrap content in 4-backtick fenced block to match the script's regex)
