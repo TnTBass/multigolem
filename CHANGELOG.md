@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.1.0+mc26.1.2 — 2026-05-15
+
 - Initial V1: 6 golem variants (Copper, Iron, Gold, Emerald, Diamond, Netherite) as attachments on vanilla iron golems
 - T-pattern creation with each tier's material block
 - Per-tier stat scaling (HP and attack damage)
