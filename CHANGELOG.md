@@ -4,6 +4,7 @@
 
 - Fix Modrinth project description sync (wrap content in 4-backtick fenced block to match the script's regex)
 - Fix CurseForge upload slug in release workflow (`modern-multigolem` → `multigolem`)
+- V2 design doc drafted at `docs/superpowers/specs/2026-05-16-multigolem-v2-design.md` (Codex-reviewed; awaiting human review and implementation plan)
 
 ## 0.1.0+mc26.1.2 — 2026-05-15
 
