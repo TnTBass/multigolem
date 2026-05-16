@@ -13,8 +13,10 @@ import dev.charles.multigolem.MultiGolem;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
@@ -22,6 +24,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 public final class MultiGolemConfig {
 
@@ -91,24 +94,175 @@ public final class MultiGolemConfig {
     public static MultiGolemConfig loadOrCreate(Path path) {
         if (!Files.exists(path)) {
             MultiGolemConfig defaults = defaults();
-            writeQuietly(path, defaults);
+            JsonObject defaultsJson = toJson(defaults);
+            atomicWrite(path, defaultsJson);
             return defaults;
         }
+
+        String originalContent;
+        JsonObject onDisk;
         try {
-            String contents = Files.readString(path, StandardCharsets.UTF_8);
-            JsonObject root = GSON.fromJson(contents, JsonObject.class);
-            if (root == null) {
-                MultiGolem.LOG.warn("multigolem config at {} is empty; using defaults", path);
+            originalContent = Files.readString(path, StandardCharsets.UTF_8);
+            onDisk = GSON.fromJson(originalContent, JsonObject.class);
+            if (onDisk == null) {
+                MultiGolem.LOG.warn("multigolem config at {} is empty; using defaults; NOT overwriting", path);
                 return defaults();
             }
-            return parse(root);
         } catch (JsonSyntaxException e) {
-            MultiGolem.LOG.warn("multigolem config at {} is malformed; using defaults, NOT overwriting: {}",
+            MultiGolem.LOG.warn("multigolem config at {} is malformed; using defaults; NOT overwriting: {}",
                 path, e.getMessage());
             return defaults();
         } catch (IOException e) {
             MultiGolem.LOG.warn("could not read multigolem config at {}: {}", path, e.getMessage());
             return defaults();
+        }
+
+        JsonObject defaultsJson = toJson(defaults());
+        mergeDefaultsRecursive(onDisk, defaultsJson);   // (1) fill missing keys with defaults
+        canonicalizeAndValidateInPlace(onDisk);          // (2) clamp/canonicalize known fields in place
+        MultiGolemConfig parsed = parse(onDisk);         // (3) hand to runtime
+
+        String merged = GSON.toJson(onDisk);
+        if (!merged.equals(originalContent)) {           // (4) compare bytes
+            atomicWrite(path, onDisk);                   // (5) write if different
+        }
+        return parsed;
+    }
+
+    private static void mergeDefaultsRecursive(JsonObject onDisk, JsonObject defaults) {
+        for (Map.Entry<String, JsonElement> e : defaults.entrySet()) {
+            String key = e.getKey();
+            JsonElement defVal = e.getValue();
+            if (!onDisk.has(key)) {
+                onDisk.add(key, defVal.deepCopy());
+            } else if (defVal.isJsonObject() && onDisk.get(key).isJsonObject()) {
+                mergeDefaultsRecursive(onDisk.getAsJsonObject(key), defVal.getAsJsonObject());
+            }
+            // else: keep on-disk value as-is
+        }
+        // Unknown on-disk keys NOT in defaults are preserved untouched.
+    }
+
+    private static void canonicalizeAndValidateInPlace(JsonObject root) {
+        JsonObject tiers = root.has("tiers") && root.get("tiers").isJsonObject()
+            ? root.getAsJsonObject("tiers") : null;
+        if (tiers == null) return;
+        for (GolemVariant v : GolemVariant.values()) {
+            if (!tiers.has(v.id()) || !tiers.get(v.id()).isJsonObject()) continue;
+            canonicalizeTierInPlace(v, tiers.getAsJsonObject(v.id()));
+        }
+    }
+
+    private static void canonicalizeTierInPlace(GolemVariant variant, JsonObject t) {
+        // max_health clamp [1, 2048]
+        if (t.has("max_health") && t.get("max_health").isJsonPrimitive() && t.get("max_health").getAsJsonPrimitive().isNumber()) {
+            int v = t.get("max_health").getAsInt();
+            int c = Math.max(TierStats.MIN_HEALTH, Math.min(TierStats.MAX_HEALTH, v));
+            if (v != c) { MultiGolem.LOG.warn("max_health {} clamped to {}", v, c); t.addProperty("max_health", c); }
+        }
+        // attack_damage clamp [0, 2048]
+        canonicalizeDouble(t, "attack_damage", TierStats.MIN_DAMAGE, TierStats.MAX_DAMAGE, Double.NaN);
+        // ignored_target_types: drop unknowns
+        if (t.has("ignored_target_types") && t.get("ignored_target_types").isJsonArray()) {
+            JsonArray arr = t.getAsJsonArray("ignored_target_types");
+            JsonArray filtered = new JsonArray();
+            for (JsonElement el : arr) {
+                if (el.isJsonPrimitive() && el.getAsJsonPrimitive().isString()
+                        && RECOGNIZED_IGNORED_TARGET_TYPES.contains(el.getAsString())) {
+                    filtered.add(el);
+                }
+            }
+            t.add("ignored_target_types", filtered);
+        }
+        // Copper
+        canonicalizeDouble(t, "copper_lightning_heal_amount", 0.0, 2048.0, Double.NaN);
+        // Gold
+        canonicalizeDouble(t, "gold_speed_multiplier", 0.1, 10.0, Double.NaN);
+        // Emerald
+        canonicalizeInt(t, "emerald_aura_range", 1, 64);
+        canonicalizeDoubleMin(t, "emerald_heal_interval_seconds", 0.5);
+        canonicalizeDouble(t, "emerald_heal_per_tick", 0.0, 2048.0, Double.NaN);
+        // Diamond
+        if (variant == GolemVariant.DIAMOND) {
+            // diamond_target_mode: case-insensitive, canonical uppercase
+            if (t.has("diamond_target_mode") && t.get("diamond_target_mode").isJsonPrimitive()
+                    && t.get("diamond_target_mode").getAsJsonPrimitive().isString()) {
+                String raw = t.get("diamond_target_mode").getAsString();
+                String canonical = raw.toUpperCase(Locale.ROOT);
+                if (!RECOGNIZED_DIAMOND_TARGET_MODES.contains(canonical)) {
+                    MultiGolem.LOG.warn("unknown diamond_target_mode '{}'; using ALL_HOSTILE_MOBS", raw);
+                    t.addProperty("diamond_target_mode", "ALL_HOSTILE_MOBS");
+                } else {
+                    t.addProperty("diamond_target_mode", canonical);
+                }
+            }
+            canonicalizeInt(t, "diamond_cooldown_min_seconds", 0, 3600);
+            canonicalizeInt(t, "diamond_cooldown_max_seconds", 0, 3600);
+            // swap if min > max
+            if (t.has("diamond_cooldown_min_seconds") && t.has("diamond_cooldown_max_seconds")
+                    && t.get("diamond_cooldown_min_seconds").isJsonPrimitive()
+                    && t.get("diamond_cooldown_max_seconds").isJsonPrimitive()) {
+                int mn = t.get("diamond_cooldown_min_seconds").getAsInt();
+                int mx = t.get("diamond_cooldown_max_seconds").getAsInt();
+                if (mn > mx) {
+                    MultiGolem.LOG.warn("diamond cooldown min ({}) > max ({}); swapping", mn, mx);
+                    t.addProperty("diamond_cooldown_min_seconds", mx);
+                    t.addProperty("diamond_cooldown_max_seconds", mn);
+                }
+            }
+            canonicalizeInt(t, "diamond_aura_range", 1, 64);
+        }
+        // Netherite
+        canonicalizeInt(t, "netherite_ignite_seconds", 0, 300);
+    }
+
+    private static void canonicalizeInt(JsonObject t, String key, int min, int max) {
+        if (!t.has(key) || !t.get(key).isJsonPrimitive() || !t.get(key).getAsJsonPrimitive().isNumber()) return;
+        int v = t.get(key).getAsInt();
+        int c = Math.max(min, Math.min(max, v));
+        if (v != c) { MultiGolem.LOG.warn("field {} = {} clamped to {}", key, v, c); t.addProperty(key, c); }
+    }
+
+    private static void canonicalizeDouble(JsonObject t, String key, double min, double max, double nanDefault) {
+        if (!t.has(key) || t.get(key) instanceof JsonNull) return;
+        JsonElement el = t.get(key);
+        if (!el.isJsonPrimitive() || !el.getAsJsonPrimitive().isNumber()) return;
+        double v = el.getAsDouble();
+        if (!Double.isFinite(v)) {
+            MultiGolem.LOG.warn("field {} is non-finite; using default", key);
+            return;
+        }
+        double c = Math.max(min, Math.min(max, v));
+        if (v != c) { MultiGolem.LOG.warn("field {} = {} clamped to {}", key, v, c); t.addProperty(key, c); }
+    }
+
+    private static void canonicalizeDoubleMin(JsonObject t, String key, double min) {
+        if (!t.has(key) || t.get(key) instanceof JsonNull) return;
+        JsonElement el = t.get(key);
+        if (!el.isJsonPrimitive() || !el.getAsJsonPrimitive().isNumber()) return;
+        double v = el.getAsDouble();
+        if (!Double.isFinite(v)) return;
+        if (v < min) { MultiGolem.LOG.warn("field {} = {} below min {}; clamped", key, v, min); t.addProperty(key, min); }
+    }
+
+    private static void atomicWrite(Path target, JsonObject root) {
+        Path tmp = target.resolveSibling(target.getFileName() + ".tmp." + UUID.randomUUID());
+        try {
+            Files.createDirectories(target.getParent());
+            Files.writeString(tmp, GSON.toJson(root), StandardCharsets.UTF_8);
+            try {
+                Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException e) {
+                try {
+                    Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException fallbackEx) {
+                    try { Files.deleteIfExists(tmp); } catch (IOException ignored) {}
+                    MultiGolem.LOG.warn("could not write multigolem config at {} (atomic move unsupported, non-atomic fallback also failed): {}", target, fallbackEx.getMessage());
+                }
+            }
+        } catch (IOException e) {
+            try { Files.deleteIfExists(tmp); } catch (IOException ignored) {}
+            MultiGolem.LOG.warn("failed to write multigolem config at {}: {}", target, e.getMessage());
         }
     }
 
@@ -311,16 +465,6 @@ public final class MultiGolemConfig {
             return clamped;
         }
         return raw;
-    }
-
-    private static void writeQuietly(Path path, MultiGolemConfig cfg) {
-        try {
-            Files.createDirectories(path.getParent());
-            JsonObject root = toJson(cfg);
-            Files.writeString(path, GSON.toJson(root), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            MultiGolem.LOG.warn("could not write multigolem config to {}: {}", path, e.getMessage());
-        }
     }
 
     static JsonObject toJson(MultiGolemConfig cfg) {

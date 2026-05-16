@@ -160,4 +160,94 @@ class MultiGolemConfigV2Test {
         assertNull(cfg.tier(GolemVariant.COPPER).copperLightningHealAmount(),
             "explicit JSON null preserved as null (= full heal)");
     }
+
+    @Test
+    void migration_preservesUnknownTopLevelFields(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "_user_note": "lowered copper hp",
+              "_third_party_mod_settings": { "foo": 42 },
+              "allow_golem_healing": true,
+              "tiers": {}
+            }
+            """);
+        MultiGolemConfig.loadOrCreate(file);
+        String after = Files.readString(file);
+        assertTrue(after.contains("_user_note"), "unknown top-level field must be preserved");
+        assertTrue(after.contains("_third_party_mod_settings"), "unknown top-level object must be preserved");
+        assertTrue(after.contains("\"foo\""), "nested unknown fields must be preserved");
+    }
+
+    @Test
+    void migration_preservesUnknownTierFields(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "tiers": {
+                "copper": {
+                  "max_health": 60,
+                  "attack_damage": 8.5,
+                  "anger_on_hit": true,
+                  "_my_experimental_field": "preserve_me"
+                }
+              }
+            }
+            """);
+        MultiGolemConfig.loadOrCreate(file);
+        String after = Files.readString(file);
+        assertTrue(after.contains("_my_experimental_field"), "unknown per-tier field must be preserved");
+        assertTrue(after.contains("preserve_me"));
+    }
+
+    @Test
+    void migration_fillsV2Defaults_preservesV1Values(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        // V1-shaped config (no V2 fields)
+        Files.writeString(file, """
+            {
+              "allow_golem_healing": true,
+              "tiers": {
+                "copper": { "max_health": 75, "attack_damage": 10.0, "anger_on_hit": true }
+              }
+            }
+            """);
+        MultiGolemConfig cfg = MultiGolemConfig.loadOrCreate(file);
+        // V1 value preserved
+        assertEquals(75, cfg.tier(GolemVariant.COPPER).maxHealth());
+        // V2 default filled
+        assertTrue(cfg.tier(GolemVariant.COPPER).copperLightningImmune());
+        // Disk written with V2 schema
+        String after = Files.readString(file);
+        assertTrue(after.contains("\"copper_lightning_immune\""));
+        assertTrue(after.contains("\"max_health\": 75"), "V1 value preserved on disk");
+    }
+
+    @Test
+    void migration_canonicalizesDiamondTargetMode(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "tiers": { "diamond": { "diamond_target_mode": "all_hostile_mobs_and_players" } }
+            }
+            """);
+        MultiGolemConfig.loadOrCreate(file);
+        String after = Files.readString(file);
+        assertTrue(after.contains("\"ALL_HOSTILE_MOBS_AND_PLAYERS\""), "canonical uppercase rewritten on disk");
+        assertFalse(after.contains("all_hostile_mobs_and_players"), "lowercase removed");
+    }
+
+    @Test
+    void migration_doesNotRewriteIdenticalFile(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        // First load writes defaults
+        MultiGolemConfig.loadOrCreate(file);
+        long mtime1 = Files.getLastModifiedTime(file).toMillis();
+        // Tiny sleep so mtime would change if a re-write happens
+        try { Thread.sleep(100); } catch (InterruptedException ignored) {}
+        // Second load should NOT rewrite
+        MultiGolemConfig.loadOrCreate(file);
+        long mtime2 = Files.getLastModifiedTime(file).toMillis();
+        assertEquals(mtime1, mtime2, "identical config should not be rewritten");
+    }
 }
