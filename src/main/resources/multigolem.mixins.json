@@ -6,7 +6,8 @@
     "IronGolemMixin",
     "CarvedPumpkinBlockMixin",
     "LivingEntityMixin",
-    "GolemTargetingMixin"
+    "GolemTargetingMixin",
+    "IronGolemAttackMixin"
   ],
   "injectors": {
     "defaultRequire": 1

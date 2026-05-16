@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Tasks 14–16: IronGolemAttackMixin — diamond on-attack lightning + netherite ignite-on-hit via doHurtTarget TAIL inject
 - Task 13: Netherite fire/lava immunity via ALLOW_DAMAGE (cancels IS_FIRE tagged damage)
 - Task 12: Copper ability — lightning cancel-and-heal via ALLOW_DAMAGE
 - Task 11: Emerald ability — villager aura heal (heals when AbstractVillager in range)
