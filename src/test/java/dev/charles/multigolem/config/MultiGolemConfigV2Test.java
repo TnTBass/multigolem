@@ -162,6 +162,24 @@ class MultiGolemConfigV2Test {
     }
 
     @Test
+    void v2_stringCooldownValues_doNotCrash(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "tiers": {
+                "diamond": {
+                  "diamond_cooldown_min_seconds": "oops",
+                  "diamond_cooldown_max_seconds": "also_bad"
+                }
+              }
+            }
+            """);
+        MultiGolemConfig cfg = MultiGolemConfig.loadOrCreate(file);
+        assertEquals(30, cfg.tier(GolemVariant.DIAMOND).diamondCooldownMinSeconds());
+        assertEquals(60, cfg.tier(GolemVariant.DIAMOND).diamondCooldownMaxSeconds());
+    }
+
+    @Test
     void migration_preservesUnknownTopLevelFields(@TempDir Path tmp) throws IOException {
         Path file = tmp.resolve("multigolem.json");
         Files.writeString(file, """

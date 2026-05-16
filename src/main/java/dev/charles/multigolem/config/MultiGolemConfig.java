@@ -201,7 +201,9 @@ public final class MultiGolemConfig {
             // swap if min > max
             if (t.has("diamond_cooldown_min_seconds") && t.has("diamond_cooldown_max_seconds")
                     && t.get("diamond_cooldown_min_seconds").isJsonPrimitive()
-                    && t.get("diamond_cooldown_max_seconds").isJsonPrimitive()) {
+                    && t.get("diamond_cooldown_min_seconds").getAsJsonPrimitive().isNumber()
+                    && t.get("diamond_cooldown_max_seconds").isJsonPrimitive()
+                    && t.get("diamond_cooldown_max_seconds").getAsJsonPrimitive().isNumber()) {
                 int mn = t.get("diamond_cooldown_min_seconds").getAsInt();
                 int mx = t.get("diamond_cooldown_max_seconds").getAsInt();
                 if (mn > mx) {
