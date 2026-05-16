@@ -1,6 +1,6 @@
 param(
     [string] $ProjectId = "",
-    [string] $Slug = "modern-multigolem",
+    [string] $Slug = "multigolem",
     [string] $Version = "",
     [string] $JarPath = "",
     [string] $ChangelogPath = ""
