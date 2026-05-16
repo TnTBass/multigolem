@@ -1,6 +1,9 @@
 package dev.charles.multigolem;
 
 import com.mojang.serialization.Codec;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
@@ -19,6 +22,11 @@ public enum GolemVariant {
     EMERALD  ("emerald",   Blocks.EMERALD_BLOCK,   Items.EMERALD,         Items.EMERALD),
     DIAMOND  ("diamond",   Blocks.DIAMOND_BLOCK,   Items.DIAMOND,         Items.DIAMOND),
     NETHERITE("netherite", Blocks.NETHERITE_BLOCK, Items.NETHERITE_INGOT, Items.NETHERITE_SCRAP);
+
+    public static final StreamCodec<ByteBuf, GolemVariant> STREAM_CODEC =
+        ByteBufCodecs.STRING_UTF8.map(
+            s -> fromId(s).orElse(IRON),
+            GolemVariant::id);
 
     public static final Codec<GolemVariant> CODEC = Codec.STRING.flatXmap(
         id -> fromId(id)

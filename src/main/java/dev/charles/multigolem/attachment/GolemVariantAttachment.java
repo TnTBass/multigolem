@@ -3,6 +3,7 @@ package dev.charles.multigolem.attachment;
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import dev.charles.multigolem.attribute.VariantAttributes;
 import net.minecraft.resources.Identifier;
@@ -16,6 +17,7 @@ public final class GolemVariantAttachment {
     public static final AttachmentType<GolemVariant> TYPE = AttachmentRegistry
         .<GolemVariant>builder()
         .persistent(GolemVariant.CODEC)
+        .syncWith(GolemVariant.STREAM_CODEC, AttachmentSyncPredicate.all())
         .buildAndRegister(Identifier.fromNamespaceAndPath(MultiGolem.MOD_ID, "variant"));
 
     private GolemVariantAttachment() {}
