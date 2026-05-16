@@ -1,0 +1,116 @@
+package dev.charles.multigolem.config;
+
+import dev.charles.multigolem.GolemVariant;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class MultiGolemConfigTest {
+
+    @org.junit.jupiter.api.BeforeAll
+    static void bootstrapMinecraft() {
+        net.minecraft.SharedConstants.tryDetectVersion();
+        net.minecraft.server.Bootstrap.bootStrap();
+    }
+
+    @Test
+    void defaults_haveExpectedStats() {
+        MultiGolemConfig cfg = MultiGolemConfig.defaults();
+        assertTrue(cfg.allowGolemHealing());
+        assertEquals(60,   cfg.tier(GolemVariant.COPPER).maxHealth());
+        assertEquals(8.5,  cfg.tier(GolemVariant.COPPER).attackDamage(), 0.0001);
+        assertEquals(100,  cfg.tier(GolemVariant.IRON).maxHealth());
+        assertEquals(15.0, cfg.tier(GolemVariant.IRON).attackDamage(), 0.0001);
+        assertEquals(600,  cfg.tier(GolemVariant.NETHERITE).maxHealth());
+        assertEquals(85.0, cfg.tier(GolemVariant.NETHERITE).attackDamage(), 0.0001);
+        for (GolemVariant v : GolemVariant.values()) {
+            assertTrue(cfg.tier(v).angerOnHit(), v + " should default angerOnHit=true");
+        }
+    }
+
+    @Test
+    void loadFromFile_missingFile_writesDefaults(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        MultiGolemConfig loaded = MultiGolemConfig.loadOrCreate(file);
+        assertEquals(MultiGolemConfig.defaults(), loaded);
+        assertTrue(Files.exists(file), "default config should be written on first run");
+    }
+
+    @Test
+    void loadFromFile_validJson_parses(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "allow_golem_healing": false,
+              "tiers": {
+                "copper":    { "max_health": 50,  "attack_damage": 5.0,  "anger_on_hit": false },
+                "iron":      { "max_health": 100, "attack_damage": 15.0, "anger_on_hit": true  },
+                "gold":      { "max_health": 130, "attack_damage": 22.5, "anger_on_hit": true  },
+                "emerald":   { "max_health": 200, "attack_damage": 40.0, "anger_on_hit": true  },
+                "diamond":   { "max_health": 350, "attack_damage": 62.5, "anger_on_hit": true  },
+                "netherite": { "max_health": 600, "attack_damage": 85.0, "anger_on_hit": true  }
+              }
+            }
+            """);
+        MultiGolemConfig cfg = MultiGolemConfig.loadOrCreate(file);
+        assertFalse(cfg.allowGolemHealing());
+        assertEquals(50,  cfg.tier(GolemVariant.COPPER).maxHealth());
+        assertEquals(5.0, cfg.tier(GolemVariant.COPPER).attackDamage(), 0.0001);
+        assertFalse(cfg.tier(GolemVariant.COPPER).angerOnHit());
+    }
+
+    @Test
+    void loadFromFile_malformedJson_returnsDefaultsAndDoesNotOverwrite(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        String original = "{not valid json";
+        Files.writeString(file, original);
+        MultiGolemConfig cfg = MultiGolemConfig.loadOrCreate(file);
+        assertEquals(MultiGolemConfig.defaults(), cfg);
+        assertEquals(original, Files.readString(file), "malformed config must not be overwritten");
+    }
+
+    @Test
+    void loadFromFile_outOfRangeValues_clamped(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "allow_golem_healing": true,
+              "tiers": {
+                "copper":    { "max_health": -10,    "attack_damage": -5.0,  "anger_on_hit": true },
+                "iron":      { "max_health": 100,    "attack_damage": 15.0,  "anger_on_hit": true },
+                "gold":      { "max_health": 130,    "attack_damage": 22.5,  "anger_on_hit": true },
+                "emerald":   { "max_health": 200,    "attack_damage": 40.0,  "anger_on_hit": true },
+                "diamond":   { "max_health": 350,    "attack_damage": 62.5,  "anger_on_hit": true },
+                "netherite": { "max_health": 100000, "attack_damage": 1e9,   "anger_on_hit": true }
+              }
+            }
+            """);
+        MultiGolemConfig cfg = MultiGolemConfig.loadOrCreate(file);
+        assertEquals(1,    cfg.tier(GolemVariant.COPPER).maxHealth());
+        assertEquals(0.0,  cfg.tier(GolemVariant.COPPER).attackDamage(), 0.0001);
+        assertEquals(2048, cfg.tier(GolemVariant.NETHERITE).maxHealth());
+        assertEquals(2048.0, cfg.tier(GolemVariant.NETHERITE).attackDamage(), 0.0001);
+    }
+
+    @Test
+    void loadFromFile_partialTiers_filledWithDefaults(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "tiers": {
+                "copper": { "max_health": 70, "attack_damage": 10.0, "anger_on_hit": false }
+              }
+            }
+            """);
+        MultiGolemConfig cfg = MultiGolemConfig.loadOrCreate(file);
+        assertTrue(cfg.allowGolemHealing(), "missing top-level fields fall back to default");
+        assertEquals(70, cfg.tier(GolemVariant.COPPER).maxHealth());
+        assertEquals(100, cfg.tier(GolemVariant.IRON).maxHealth(), "missing tier uses default");
+        assertEquals(600, cfg.tier(GolemVariant.NETHERITE).maxHealth(), "missing tier uses default");
+    }
+}
