@@ -7,13 +7,12 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.animal.golem.IronGolem;
-import net.minecraft.world.phys.AABB;
+import net.minecraft.world.level.entity.EntityTypeTest;
 
 public final class GoldAbility {
 
     private static final double MOTION_THRESHOLD_SQR = 0.001;
     private static final int SHINE_INTERVAL_TICKS = 20;
-    private static final AABB WORLD_BOUNDS = new AABB(-30_000_000, -64, -30_000_000, 30_000_000, 320, 30_000_000);
 
     private GoldAbility() {}
 
@@ -24,7 +23,7 @@ public final class GoldAbility {
     private static void onTick(ServerLevel world) {
         var stats = MultiGolem.config().tier(GolemVariant.GOLD);
         if (!stats.goldSprintParticlesEnabled() && !stats.goldSunlightShineEnabled()) return;
-        for (IronGolem golem : world.getEntitiesOfClass(IronGolem.class, WORLD_BOUNDS)) {
+        for (IronGolem golem : world.getEntities(EntityTypeTest.forClass(IronGolem.class), e -> true)) {
             if (GolemVariantAttachment.get(golem) != GolemVariant.GOLD) continue;
             try {
                 tickGold(world, golem, stats);

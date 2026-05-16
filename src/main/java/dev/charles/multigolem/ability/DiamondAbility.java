@@ -15,6 +15,7 @@ import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.golem.IronGolem;
+import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
@@ -24,8 +25,6 @@ import java.util.Comparator;
 import java.util.List;
 
 public final class DiamondAbility {
-
-    private static final AABB WORLD_BOUNDS = new AABB(-30_000_000, -64, -30_000_000, 30_000_000, 320, 30_000_000);
 
     private DiamondAbility() {}
 
@@ -44,7 +43,7 @@ public final class DiamondAbility {
         var stats = MultiGolem.config().tier(GolemVariant.DIAMOND);
         if ("NONE".equals(stats.diamondTargetMode())) return;
 
-        for (IronGolem golem : world.getEntitiesOfClass(IronGolem.class, WORLD_BOUNDS)) {
+        for (IronGolem golem : world.getEntities(EntityTypeTest.forClass(IronGolem.class), e -> true)) {
             if (GolemVariantAttachment.get(golem) != GolemVariant.DIAMOND) continue;
             try {
                 tickDiamond(world, golem, stats);

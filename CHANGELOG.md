@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix server watchdog crash: replace world-wide AABB entity queries in DiamondAbility, GoldAbility, and EmeraldAbility with ServerLevel.getEntities(EntityTypeTest, Predicate) to avoid scanning the full LongAVLTreeSet on every tick
+
 ## 0.2.0+mc26.1.2 — 2026-05-16
 
 - Task 21: Client renderer — IronGolemRendererMixin selects per-variant texture; IronGolemRenderStateMixin captures GolemVariant into IronGolemRenderState via GolemRenderStateExtension; MultiGolemClient entrypoint

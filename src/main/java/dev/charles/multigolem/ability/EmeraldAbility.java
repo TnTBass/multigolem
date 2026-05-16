@@ -8,6 +8,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.minecraft.world.entity.npc.villager.AbstractVillager;
+import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.phys.AABB;
 
@@ -30,7 +31,7 @@ public final class EmeraldAbility {
         boolean countWandering = stats.emeraldCountWanderingTraders();
         float healAmount = stats.emeraldHealPerTick().floatValue();
 
-        for (IronGolem golem : world.getEntitiesOfClass(IronGolem.class, new AABB(-30_000_000, -64, -30_000_000, 30_000_000, 320, 30_000_000))) {
+        for (IronGolem golem : world.getEntities(EntityTypeTest.forClass(IronGolem.class), e -> true)) {
             if (GolemVariantAttachment.get(golem) != GolemVariant.EMERALD) continue;
             if (golem.getHealth() >= golem.getMaxHealth()) continue;
             try {
