@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.0+mc26.1.2 — 2026-05-16
+
 - Task 21: Client renderer — IronGolemRendererMixin selects per-variant texture; IronGolemRenderStateMixin captures GolemVariant into IronGolemRenderState via GolemRenderStateExtension; MultiGolemClient entrypoint
 - Task 20: Sync GolemVariant attachment to clients via syncWith(STREAM_CODEC, all()) for renderer pipeline
 - Tasks 17–19: DiamondAbility — passive LOS lightning tick, self-immunity to lightning (ALLOW_DAMAGE), cooldown-ready END_ROD visual

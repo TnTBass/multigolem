@@ -8,6 +8,17 @@
 - Heal each variant with its matching ingot
 - Per-tier `anger_on_hit` toggle in config
 - Server-side functional; vanilla clients welcome
+- Custom textures per variant on modded clients
+
+## Special Abilities (V2)
+
+- **Copper:** lightning strikes heal instead of damage
+- **Gold:** +25% movement speed + sprint/sunlight vanity particles
+- **Emerald:** heals passively near villagers or wandering traders
+- **Diamond:** passive LOS lightning zap (30–60s cooldown) + on-attack lightning; self-immune to lightning; creepers excluded by default
+- **Netherite:** fire and lava immune; ignites hit mobs for 5s (skips other netherite golems)
+
+Cross-tier `ignored_target_types` per-tier list (default: creepers on all non-iron tiers to prevent collateral block damage).
 
 ## Creation Recipes
 
@@ -31,8 +42,6 @@ Edit `config/multigolem.json` (created on first server start) to tune per-tier `
 - Fabric Loader 0.19.2+
 - Fabric API 0.148.0+26.1.2
 
-## V1 Limitations
+## Known Limitations
 
-- No client texture yet — all variants visually appear as iron golems on modded and vanilla clients alike. Custom textures coming in V2.
-- No special abilities yet — they arrive in V2 (copper-lightning-heal, gold-speed, emerald-villager-heal, diamond-lightning, netherite-fireproof + ignite).
-- No village natural-spawn variants yet — arriving in V3.
+- No village natural-spawn variant weighting yet — arriving in V3.
