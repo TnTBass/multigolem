@@ -1,0 +1,2864 @@
+# MultiGolem V2 Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Ship v0.2.0+mc26.1.2 adding client-side variant textures, five special abilities (one per non-iron tier), and a cross-tier `ignored_target_types` exclusion list — all on top of V1's attachment-driven foundation.
+
+**Architecture:** Vanilla `IronGolem` entities continue to carry the `GolemVariant` attachment from V1. V2 adds a sibling `GolemAbilityState` attachment for persistent per-entity ability state (diamond cooldown), a thin `AbilityRegistry` that wires Fabric event listeners for all abilities, a single shared `IronGolemAttackMixin` for both diamond on-attack and netherite ignite, and a client-side renderer mixin pipeline (state extraction → texture selection) that reads the synced variant attachment. Textures are programmatically generated from the vanilla iron golem template via a `genTextures` Gradle task so UV alignment is guaranteed correct.
+
+**Tech Stack:** Java 25 · Fabric Loader 0.19.2 · Fabric API 0.148.0+26.1.2 · Fabric Loom (matches V1) · Minecraft 26.1.2 with Mojang official mappings · JUnit 5 · Mixin · Python 3 for texture generation · GitHub Actions for build/release
+
+**Reference spec:** `docs/superpowers/specs/2026-05-16-multigolem-v2-design.md`
+**Predecessor plan (for style + conventions):** `docs/superpowers/plans/2026-05-15-multigolem-v1.md`
+**API source-of-truth doc (extend during Task 1):** `docs/26.1.2-mojang-targets.md`
+**Texture art-direction reference:** `docs/v2-texture-art-direction.png`
+
+---
+
+## File Structure (locks decomposition decisions)
+
+**New Java files (`src/main/java/dev/charles/multigolem/`):**
+
+```
+ability/
+  AbilityRegistry.java                # register() helper, wires Fabric events from MultiGolem.onInitialize
+  TargetFilter.java                   # Pure: ignored_target_types + diamond_target_mode predicates
+  CopperAbility.java                  # ALLOW_DAMAGE listener for cancel-and-heal
+  GoldAbility.java                    # Tick particle emitter; MOVEMENT_SPEED handled by VariantAttributes
+  EmeraldAbility.java                 # Tick handler: villager scan + heal
+  DiamondAbility.java                 # Tick handler: passive zap, cooldown management, cooldown-ready spark
+  NetheriteAbility.java               # ALLOW_DAMAGE listener for fire immunity
+attachment/
+  GolemAbilityState.java              # Record + AttachmentType: nextDiamondAbilityGameTime
+mixin/
+  IronGolemAttackMixin.java           # @Inject TAIL on doHurtTarget; dispatches diamond + netherite branches
+  GolemTargetingMixin.java            # Enforce ignored_target_types on melee AI (target hook from spike 6)
+```
+
+**Client source set (`src/client/java/dev/charles/multigolem/client/`):**
+
+```
+MultiGolemClient.java                 # ClientModInitializer entrypoint
+render/
+  GolemRenderStateExtension.java      # Interface: holds captured GolemVariant on render state
+  GolemTextureSelector.java           # Pure: GolemVariant → texture Identifier
+mixin/client/
+  IronGolemRenderStateMixin.java      # @Inject extractRenderState to capture variant
+  IronGolemRendererMixin.java         # @Inject texture selection to read variant
+```
+
+**Client resources:**
+
+```
+src/client/resources/multigolem.client.mixins.json   # Client mixin config, "environment": "client"
+```
+
+**Modified Java files:**
+
+```
+MultiGolem.java                       # Register GolemAbilityState attachment, call AbilityRegistry.register()
+attribute/VariantAttributes.java      # Add MOVEMENT_SPEED modifier branch for Gold
+attachment/GolemVariantAttachment.java # Add client sync (per spike 8)
+config/MultiGolemConfig.java          # New V2 fields, lossless JsonObject merge migration, atomic write
+config/TierStats.java                 # Extend with V2 ability fields per tier
+stats/GolemStatsResolver.java         # Accessors for V2 fields
+```
+
+**Tests (`src/test/java/dev/charles/multigolem/`):**
+
+```
+ability/TargetFilterTest.java         # ignored_target_types + diamond_target_mode predicates
+ability/DiamondCooldownTest.java      # Pure-Java cooldown bookkeeping
+ability/EmeraldHealMathTest.java      # Tick interval translation
+attachment/GolemAbilityStateTest.java # Codec round-trip
+config/MultiGolemConfigV2Test.java    # New V2 fields, V1→V2 lossless migration, validation
+test/MinecraftBootstrap.java          # Shared helper for tests that touch Blocks/Items
+```
+
+**Resources:**
+
+```
+src/main/resources/multigolem.mixins.json                                  # Add IronGolemAttackMixin, GolemTargetingMixin
+src/main/resources/fabric.mod.json                                          # Add client entrypoint, reference client mixin config
+src/main/resources/assets/multigolem/textures/entity/copper_golem.png      # Generated by script
+src/main/resources/assets/multigolem/textures/entity/gold_golem.png        # (no iron_golem.png — vanilla fallback)
+src/main/resources/assets/multigolem/textures/entity/emerald_golem.png
+src/main/resources/assets/multigolem/textures/entity/diamond_golem.png
+src/main/resources/assets/multigolem/textures/entity/netherite_golem.png
+```
+
+**Build inputs:**
+
+```
+build-inputs/textures/iron_golem.template.png                              # Committed vanilla MC 26.1.2 iron golem texture
+build-inputs/textures/LICENSE-AND-PROVENANCE.md                            # Source jar reference, SHA-256, EULA note
+scripts/generate-textures.py                                                # Reads template, applies per-tier transforms
+```
+
+**Build wiring:**
+
+```
+build.gradle                          # Add clientImplementation; genTextures task; wire into processResources
+gradle.properties                     # Bump mod_version at release time (Task 23, not before)
+```
+
+---
+
+## Conventions
+
+- **Mojang official mappings.** Class names like `IronGolem`, `Identifier`, `Attributes.MAX_HEALTH`. Spike output (Task 1) is authoritative for any name not already confirmed in `docs/26.1.2-mojang-targets.md`.
+- **Windows / Git Bash.** All gradle commands redirect to a temp file to avoid the 8191-char command-line limit. Never pipe `./gradlew` through `grep` in one command — redirect first, grep after.
+- **Commits.** Conventional Commits format. End every task with a working commit pushed to `origin/main`. The CI `checkChangelog` gate fires when `src/main/**`, `build.gradle`, `.github/workflows/**`, or `README.md` change — those tasks include a CHANGELOG note as a step.
+- **TDD where it applies.** Pure-Java helpers (`*Config`, `*Resolver`, `*Filter`, `*State`, math helpers) get failing tests written first. Mixin and Fabric-event tasks are verified by build + an in-game smoke instruction; full playtest is Task 22.
+- **Idempotency.** Subagents that finish work but skip the commit step should be unblocked by the controller running the commit + push themselves — same pattern as V1 plan.
+
+---
+
+## Task 1: Run all 8 spikes; update `docs/26.1.2-mojang-targets.md`
+
+No mod code is written until this task commits. Spike 6 in particular is high-risk — if no clean hook exists, escalate to the human before proceeding.
+
+**Files:**
+- Modify: `docs/26.1.2-mojang-targets.md`
+
+- [ ] **Step 1.1: Ensure decompiled sources are present**
+
+```bash
+./gradlew --quiet genSources > gensources_out.txt 2>&1; echo "exit=$?"
+```
+
+Expected: exit 0. Sources land under `.gradle/loom-cache/minecraftMaven/.../*-sources.jar`. Find the common jar:
+
+```bash
+find .gradle -name "minecraft-common-*-sources.jar" 2>/dev/null | head -1
+```
+
+Use this path for every `unzip -p` lookup below. Cleanup at end of task: `rm gensources_out.txt`.
+
+- [ ] **Step 1.2: Spike 1 — Renderer pipeline**
+
+Inspect the iron golem renderer:
+
+```bash
+JAR="$(find .gradle -name 'minecraft-common-*-sources.jar' 2>/dev/null | head -1)"
+unzip -l "$JAR" | grep -E "IronGolemRenderer|IronGolemRenderState|GolemRenderState"
+```
+
+Extract and read the relevant files. Document in `docs/26.1.2-mojang-targets.md`:
+- Exact `IronGolemRenderer` FQN
+- The render-state class name (likely `IronGolemRenderState` or similar)
+- The method on `IronGolemRenderer` that EXTRACTS the render state from an entity (likely `extractRenderState(IronGolem, IronGolemRenderState, float)` — confirm)
+- The method that picks the texture (likely `getTextureLocation(IronGolemRenderState)` — confirm signature takes state, not entity)
+- Whether the render-state class is final / can be mixed into (interface-injection or accessor mixin pattern needed?)
+- A one-sentence rationale for the chosen mixin point pair
+
+- [ ] **Step 1.3: Spike 2 — `ServerLivingEntityEvents.ALLOW_DAMAGE` semantics**
+
+Find the Fabric source:
+
+```bash
+find ~/.gradle/caches -name "fabric-lifecycle-events-v1*-sources.jar" 2>/dev/null | head -1
+```
+
+Extract `ServerLivingEntityEvents.java`. Document:
+- Exact listener interface FQN and method signature (returns `boolean`?)
+- How listeners are registered (`.register(listener)`)
+- Listener invocation order: first-registered-first? Is order configurable?
+- Short-circuit: does `false` from one listener prevent later listeners?
+- When `false` is returned, are these vanilla side effects suppressed: `lastHurtByMob` set? `setTarget` aggro? death triggers? advancement triggers?
+- For `DamageTypes.LIGHTNING_BOLT` specifically: does ALLOW_DAMAGE fire exactly once per bolt, or multiple times (e.g., if a bolt strikes via splash)?
+
+These details inform §5.1 copper atomic cancel+heal — if (c) or (d) don't hold, escalate.
+
+- [ ] **Step 1.4: Spike 3 — Fire-ticks API in 26.1.2**
+
+```bash
+JAR="$(find .gradle -name 'minecraft-common-*-sources.jar' 2>/dev/null | head -1)"
+unzip -p "$JAR" "net/minecraft/world/entity/Entity.java" | grep -nE "igniteForSeconds|setRemainingFireTicks|setSecondsOnFire" | head -10
+```
+
+Document the correct method name + signature for "set the entity on fire for N seconds." Likely either `Entity.igniteForSeconds(int)` (newer) or `Entity.setRemainingFireTicks(int)` (lower-level: multiply seconds by 20).
+
+- [ ] **Step 1.5: Spike 4 — Mixin `compatibilityLevel` for Java 25**
+
+```bash
+find ~/.gradle/caches -name "mixin-*-sources.jar" 2>/dev/null | head -1
+```
+
+Open `org/spongepowered/asm/mixin/MixinEnvironment$CompatibilityLevel.java` (or equivalent in newer Mixin layouts). List all `JAVA_*` constants. Document the highest available constant. If `JAVA_25` exists, V2 uses it; if not, V2 uses the highest available with a note explaining why.
+
+- [ ] **Step 1.6: Spike 5 — `DamageTypeTags.IS_FIRE`**
+
+```bash
+JAR="$(find .gradle -name 'minecraft-common-*-sources.jar' 2>/dev/null | head -1)"
+unzip -p "$JAR" "net/minecraft/tags/DamageTypeTags.java" | grep -E "IS_FIRE|FIRE" | head -10
+```
+
+Confirm the exact `TagKey<DamageType>` constant for "fire-typed damage." Document the FQN and confirm that `DamageSource.is(TagKey)` is the right way to test it.
+
+- [ ] **Step 1.7: Spike 6 — Mob targeting hook (HIGH RISK)**
+
+Per spec §7 spike 6, try candidate hooks in preferred order:
+
+```bash
+JAR="$(find .gradle -name 'minecraft-common-*-sources.jar' 2>/dev/null | head -1)"
+
+# Candidate (a): earlier-acquisition hooks
+unzip -p "$JAR" "net/minecraft/world/entity/ai/goal/target/TargetGoal.java" | grep -nE "canAttack|canUse" | head -10
+unzip -p "$JAR" "net/minecraft/world/entity/ai/goal/target/NearestAttackableTargetGoal.java" | grep -nE "canUse|canContinueToUse" | head -10
+unzip -p "$JAR" "net/minecraft/world/entity/ai/targeting/TargetingConditions.java" | grep -nE "public boolean test|public boolean canAttack" | head -10
+
+# Candidate (b): Mob#setTarget veto
+unzip -p "$JAR" "net/minecraft/world/entity/Mob.java" | grep -nE "public void setTarget" | head -3
+```
+
+Pick the **earliest in the targeting pipeline** that's accessible and narrow enough. Document:
+- Chosen hook with FQN + method signature + descriptor (for `method = "..."` in @Inject)
+- Why it was chosen over alternatives
+- If chosen hook is per-tick fallback (option d), escalate to human before continuing — that's the fragile case
+
+- [ ] **Step 1.8: Spike 7 — Server particle emission**
+
+```bash
+JAR="$(find .gradle -name 'minecraft-common-*-sources.jar' 2>/dev/null | head -1)"
+unzip -p "$JAR" "net/minecraft/server/level/ServerLevel.java" | grep -nE "public.*sendParticles" | head -5
+```
+
+Document the exact `sendParticles` signature (with count + spread + speed args).
+
+- [ ] **Step 1.9: Spike 8 — Attachment client sync**
+
+```bash
+find ~/.gradle/caches -name "fabric-data-attachment-api-*-sources.jar" 2>/dev/null | head -1
+```
+
+Extract `AttachmentRegistry.java` and `AttachmentRegistry$Builder.java`. Document:
+- Whether `syncWith(PacketCodec, AttachmentSyncPredicate)` (or similar) exists on the builder
+- Exact method names
+- The PacketCodec type expected
+- The `AttachmentSyncPredicate` enum values (likely `all()`, `targetOnly()`, etc.) and which one we want (`all()` — every nearby client renders)
+
+If the API exists as expected: V2 will use it. If not: V2 falls back to a custom S2C packet per spec §7 spike 8.
+
+- [ ] **Step 1.10: Write findings, commit, push**
+
+Append a new `## V2 Spike Findings (YYYY-MM-DD)` section to `docs/26.1.2-mojang-targets.md` with all 8 findings, structured per spike. Then:
+
+```bash
+git add docs/26.1.2-mojang-targets.md
+git commit -m "docs: V2 source-inspection spike for MC 26.1.2
+
+Findings for V2-specific Mojang/Fabric APIs:
+- Renderer pipeline (render-state extraction + texture selection)
+- ServerLivingEntityEvents.ALLOW_DAMAGE semantics
+- Fire-ticks API name
+- Mixin compatibility level for Java 25
+- DamageTypeTags fire tag
+- Mob targeting hook (chosen + rationale)
+- ServerLevel.sendParticles signature
+- AttachmentRegistry client-sync API"
+git push origin main
+```
+
+---
+
+## Task 2: Extend `MultiGolemConfig` + `TierStats` with V2 fields (TDD)
+
+**Files:**
+- Modify: `src/main/java/dev/charles/multigolem/config/TierStats.java`
+- Modify: `src/main/java/dev/charles/multigolem/config/MultiGolemConfig.java`
+- Modify: `src/test/java/dev/charles/multigolem/config/MultiGolemConfigTest.java` (add a few V2 default-checking assertions; keep V1 tests unchanged)
+- Create: `src/test/java/dev/charles/multigolem/config/MultiGolemConfigV2Test.java`
+- Create: `src/test/java/dev/charles/multigolem/test/MinecraftBootstrap.java`
+
+- [ ] **Step 2.1: Extract `MinecraftBootstrap` helper**
+
+V1 tests inline a `@BeforeAll` to call `SharedConstants.tryDetectVersion()` and `Bootstrap.bootStrap()`. V2 adds 4 new test classes — extract the helper now.
+
+Create `src/test/java/dev/charles/multigolem/test/MinecraftBootstrap.java`:
+
+```java
+package dev.charles.multigolem.test;
+
+import net.minecraft.SharedConstants;
+import net.minecraft.server.Bootstrap;
+
+/** Shared helper to bootstrap Minecraft static state for unit tests. */
+public final class MinecraftBootstrap {
+
+    private static boolean done = false;
+
+    private MinecraftBootstrap() {}
+
+    /** Idempotent. Call from @BeforeAll in any test that touches Blocks, Items, or other registry-backed statics. */
+    public static synchronized void ensure() {
+        if (done) return;
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
+        done = true;
+    }
+}
+```
+
+- [ ] **Step 2.2: Replace existing test bootstrap blocks with the helper**
+
+In each of these test files, replace the inline `@BeforeAll bootstrapMinecraft()` body with `MinecraftBootstrap.ensure();` (add the import):
+
+- `src/test/java/dev/charles/multigolem/GolemVariantTest.java`
+- `src/test/java/dev/charles/multigolem/config/MultiGolemConfigTest.java`
+- `src/test/java/dev/charles/multigolem/stats/GolemStatsResolverTest.java`
+
+Example replacement:
+
+```java
+import dev.charles.multigolem.test.MinecraftBootstrap;
+
+    @BeforeAll
+    static void bootstrap() {
+        MinecraftBootstrap.ensure();
+    }
+```
+
+- [ ] **Step 2.3: Verify existing tests still pass**
+
+```bash
+./gradlew --quiet test > test_out.txt 2>&1; echo "exit=$?"
+```
+
+Expected: exit 0, 16/16 V1 tests passing.
+
+- [ ] **Step 2.4: Write the failing V2 config test**
+
+Create `src/test/java/dev/charles/multigolem/config/MultiGolemConfigV2Test.java`:
+
+```java
+package dev.charles.multigolem.config;
+
+import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.test.MinecraftBootstrap;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class MultiGolemConfigV2Test {
+
+    @BeforeAll
+    static void bootstrap() {
+        MinecraftBootstrap.ensure();
+    }
+
+    @Test
+    void defaults_V2_perTierAbilityFields() {
+        MultiGolemConfig cfg = MultiGolemConfig.defaults();
+        // Copper
+        TierStats copper = cfg.tier(GolemVariant.COPPER);
+        assertEquals(List.of("CREEPERS"), copper.ignoredTargetTypes());
+        assertTrue(copper.copperLightningImmune());
+        assertNull(copper.copperLightningHealAmount(), "null = full heal");
+        // Iron — ignored_target_types defaults to empty
+        assertEquals(List.of(), cfg.tier(GolemVariant.IRON).ignoredTargetTypes());
+        // Gold
+        TierStats gold = cfg.tier(GolemVariant.GOLD);
+        assertEquals(1.25, gold.goldSpeedMultiplier(), 0.0001);
+        assertTrue(gold.goldSprintParticlesEnabled());
+        assertTrue(gold.goldSunlightShineEnabled());
+        // Emerald
+        TierStats em = cfg.tier(GolemVariant.EMERALD);
+        assertEquals(8, em.emeraldAuraRange());
+        assertEquals(2.0, em.emeraldHealIntervalSeconds(), 0.0001);
+        assertEquals(1.0, em.emeraldHealPerTick(), 0.0001);
+        assertTrue(em.emeraldCountWanderingTraders());
+        // Diamond
+        TierStats di = cfg.tier(GolemVariant.DIAMOND);
+        assertEquals("ALL_HOSTILE_MOBS", di.diamondTargetMode());
+        assertEquals(30, di.diamondCooldownMinSeconds());
+        assertEquals(60, di.diamondCooldownMaxSeconds());
+        assertEquals(12, di.diamondAuraRange());
+        assertTrue(di.diamondLightningProof());
+        // Netherite
+        TierStats nh = cfg.tier(GolemVariant.NETHERITE);
+        assertTrue(nh.netheriteFireImmune());
+        assertEquals(5, nh.netheriteIgniteSeconds());
+    }
+
+    @Test
+    void v2_clamps_outOfRange_values(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "allow_golem_healing": true,
+              "tiers": {
+                "copper":    { "max_health": 60, "attack_damage": 8.5, "anger_on_hit": true, "ignored_target_types": ["CREEPERS"], "copper_lightning_immune": true, "copper_lightning_heal_amount": -5.0 },
+                "iron":      { "max_health": 100, "attack_damage": 15.0, "anger_on_hit": true, "ignored_target_types": [] },
+                "gold":      { "max_health": 130, "attack_damage": 22.5, "anger_on_hit": true, "ignored_target_types": ["CREEPERS"], "gold_speed_multiplier": 0.0, "gold_sprint_particles_enabled": true, "gold_sunlight_shine_enabled": true },
+                "emerald":   { "max_health": 200, "attack_damage": 40.0, "anger_on_hit": true, "ignored_target_types": ["CREEPERS"], "emerald_aura_range": 0, "emerald_heal_interval_seconds": 0.0, "emerald_heal_per_tick": -1.0, "emerald_count_wandering_traders": true },
+                "diamond":   { "max_health": 350, "attack_damage": 62.5, "anger_on_hit": true, "ignored_target_types": ["CREEPERS"], "diamond_target_mode": "all_hostile_mobs", "diamond_cooldown_min_seconds": -10, "diamond_cooldown_max_seconds": 999999, "diamond_aura_range": 100, "diamond_lightning_proof": true },
+                "netherite": { "max_health": 600, "attack_damage": 85.0, "anger_on_hit": true, "ignored_target_types": ["CREEPERS"], "netherite_fire_immune": true, "netherite_ignite_seconds": -1 }
+              }
+            }
+            """);
+        MultiGolemConfig cfg = MultiGolemConfig.loadOrCreate(file);
+        assertEquals(0.0, cfg.tier(GolemVariant.COPPER).copperLightningHealAmount(), 0.0001);
+        assertEquals(0.1, cfg.tier(GolemVariant.GOLD).goldSpeedMultiplier(), 0.0001);
+        assertEquals(1, cfg.tier(GolemVariant.EMERALD).emeraldAuraRange());
+        assertEquals(0.5, cfg.tier(GolemVariant.EMERALD).emeraldHealIntervalSeconds(), 0.0001);
+        assertEquals(0.0, cfg.tier(GolemVariant.EMERALD).emeraldHealPerTick(), 0.0001);
+        assertEquals("ALL_HOSTILE_MOBS", cfg.tier(GolemVariant.DIAMOND).diamondTargetMode());
+        assertEquals(0, cfg.tier(GolemVariant.DIAMOND).diamondCooldownMinSeconds());
+        assertEquals(3600, cfg.tier(GolemVariant.DIAMOND).diamondCooldownMaxSeconds());
+        assertEquals(64, cfg.tier(GolemVariant.DIAMOND).diamondAuraRange());
+        assertEquals(0, cfg.tier(GolemVariant.NETHERITE).netheriteIgniteSeconds());
+    }
+
+    @Test
+    void v2_unknownDiamondTargetMode_fallsBackToDefault(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "tiers": {
+                "diamond": { "diamond_target_mode": "DRAGONS_ONLY" }
+              }
+            }
+            """);
+        MultiGolemConfig cfg = MultiGolemConfig.loadOrCreate(file);
+        assertEquals("ALL_HOSTILE_MOBS", cfg.tier(GolemVariant.DIAMOND).diamondTargetMode());
+    }
+
+    @Test
+    void v2_diamondCooldown_swapsIfMinGreaterThanMax(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "tiers": {
+                "diamond": { "diamond_cooldown_min_seconds": 90, "diamond_cooldown_max_seconds": 30 }
+              }
+            }
+            """);
+        MultiGolemConfig cfg = MultiGolemConfig.loadOrCreate(file);
+        assertEquals(30, cfg.tier(GolemVariant.DIAMOND).diamondCooldownMinSeconds());
+        assertEquals(90, cfg.tier(GolemVariant.DIAMOND).diamondCooldownMaxSeconds());
+    }
+
+    @Test
+    void v2_caseInsensitiveDiamondTargetMode(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "tiers": { "diamond": { "diamond_target_mode": "bosses_only" } }
+            }
+            """);
+        MultiGolemConfig cfg = MultiGolemConfig.loadOrCreate(file);
+        assertEquals("BOSSES_ONLY", cfg.tier(GolemVariant.DIAMOND).diamondTargetMode());
+    }
+
+    @Test
+    void v2_unknownIgnoredTargetTypeValue_dropped(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "tiers": { "copper": { "ignored_target_types": ["CREEPERS", "DRAGONS_AND_CASTLES", "ENDERMEN"] } }
+            }
+            """);
+        MultiGolemConfig cfg = MultiGolemConfig.loadOrCreate(file);
+        assertEquals(List.of("CREEPERS", "ENDERMEN"), cfg.tier(GolemVariant.COPPER).ignoredTargetTypes());
+    }
+
+    @Test
+    void v2_nonFiniteDoubles_replacedWithDefaults(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "tiers": { "gold": { "gold_speed_multiplier": "NaN" } }
+            }
+            """);
+        MultiGolemConfig cfg = MultiGolemConfig.loadOrCreate(file);
+        assertEquals(1.25, cfg.tier(GolemVariant.GOLD).goldSpeedMultiplier(), 0.0001);
+    }
+}
+```
+
+- [ ] **Step 2.5: Verify the V2 test FAILS to compile**
+
+```bash
+./gradlew --quiet test > test_out.txt 2>&1; echo "exit=$?"
+```
+
+Expected: non-zero, with errors about missing `TierStats` methods (`copperLightningImmune`, `goldSpeedMultiplier`, etc.) and missing `MultiGolemConfig` validation.
+
+- [ ] **Step 2.6: Extend `TierStats` record with V2 fields**
+
+Replace `src/main/java/dev/charles/multigolem/config/TierStats.java`:
+
+```java
+package dev.charles.multigolem.config;
+
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * Per-tier configuration. V1 fields plus all V2 ability fields.
+ * Optional V2 fields are null when the field doesn't apply to this tier
+ * (e.g., gold-specific fields are null on the copper tier).
+ */
+public record TierStats(
+    int maxHealth,
+    double attackDamage,
+    boolean angerOnHit,
+    List<String> ignoredTargetTypes,
+    // Copper
+    Boolean copperLightningImmune,
+    Double copperLightningHealAmount,  // null = full heal
+    // Gold
+    Double goldSpeedMultiplier,
+    Boolean goldSprintParticlesEnabled,
+    Boolean goldSunlightShineEnabled,
+    // Emerald
+    Integer emeraldAuraRange,
+    Double emeraldHealIntervalSeconds,
+    Double emeraldHealPerTick,
+    Boolean emeraldCountWanderingTraders,
+    // Diamond
+    String diamondTargetMode,
+    Integer diamondCooldownMinSeconds,
+    Integer diamondCooldownMaxSeconds,
+    Integer diamondAuraRange,
+    Boolean diamondLightningProof,
+    // Netherite
+    Boolean netheriteFireImmune,
+    Integer netheriteIgniteSeconds
+) {
+
+    public static final int MIN_HEALTH = 1;
+    public static final int MAX_HEALTH = 2048;
+    public static final double MIN_DAMAGE = 0.0;
+    public static final double MAX_DAMAGE = 2048.0;
+
+    public TierStats {
+        Objects.requireNonNull(ignoredTargetTypes, "ignoredTargetTypes");
+        ignoredTargetTypes = List.copyOf(ignoredTargetTypes);
+    }
+
+    public TierStats clampedHealthDamage() {
+        int h = Math.max(MIN_HEALTH, Math.min(MAX_HEALTH, maxHealth));
+        double d = Math.max(MIN_DAMAGE, Math.min(MAX_DAMAGE, attackDamage));
+        if (h == maxHealth && d == attackDamage) return this;
+        return new TierStats(h, d, angerOnHit, ignoredTargetTypes,
+            copperLightningImmune, copperLightningHealAmount,
+            goldSpeedMultiplier, goldSprintParticlesEnabled, goldSunlightShineEnabled,
+            emeraldAuraRange, emeraldHealIntervalSeconds, emeraldHealPerTick, emeraldCountWanderingTraders,
+            diamondTargetMode, diamondCooldownMinSeconds, diamondCooldownMaxSeconds, diamondAuraRange, diamondLightningProof,
+            netheriteFireImmune, netheriteIgniteSeconds);
+    }
+
+    public boolean isHealthDamageClamped() {
+        return maxHealth < MIN_HEALTH || maxHealth > MAX_HEALTH
+            || attackDamage < MIN_DAMAGE || attackDamage > MAX_DAMAGE;
+    }
+}
+```
+
+- [ ] **Step 2.7: Rewrite `MultiGolemConfig` with V2 fields, validation, and lossless migration**
+
+This is the heart of Task 2 — see Task 3 for the lossless migration logic specifically. For now, replace `src/main/java/dev/charles/multigolem/config/MultiGolemConfig.java` with a version that:
+1. Defines all V2 defaults
+2. Validates per §6.1 of the spec
+3. Uses a parse-and-recopy approach (Task 3 swaps this for the lossless merge)
+
+Replacement file contents are long — see the spec §6.1 for the full validation rules. The implementer should follow this skeleton:
+
+```java
+package dev.charles.multigolem.config;
+
+import com.google.gson.*;
+import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.MultiGolem;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+
+public final class MultiGolemConfig {
+
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().serializeNulls().create();
+
+    private static final Set<String> RECOGNIZED_IGNORED_TARGET_TYPES =
+        Set.of("CREEPERS", "ENDERMEN", "PLAYERS", "ALL_BOSSES");
+    private static final Set<String> RECOGNIZED_DIAMOND_TARGET_MODES =
+        Set.of("ALL_HOSTILE_MOBS", "ALL_HOSTILE_MOBS_AND_PLAYERS", "BOSSES_ONLY", "NONE");
+
+    private final boolean allowGolemHealing;
+    private final Map<GolemVariant, TierStats> tiers;
+
+    private MultiGolemConfig(boolean allowGolemHealing, Map<GolemVariant, TierStats> tiers) {
+        this.allowGolemHealing = allowGolemHealing;
+        this.tiers = new EnumMap<>(tiers);
+    }
+
+    public boolean allowGolemHealing() { return allowGolemHealing; }
+    public TierStats tier(GolemVariant variant) { return tiers.get(variant); }
+
+    public static MultiGolemConfig defaults() {
+        EnumMap<GolemVariant, TierStats> m = new EnumMap<>(GolemVariant.class);
+        m.put(GolemVariant.COPPER,    new TierStats(60,  8.5,  true, List.of("CREEPERS"),
+            true, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null));
+        m.put(GolemVariant.IRON,      new TierStats(100, 15.0, true, List.of(),
+            null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null));
+        m.put(GolemVariant.GOLD,      new TierStats(130, 22.5, true, List.of("CREEPERS"),
+            null, null, 1.25, true, true, null, null, null, null, null, null, null, null, null, null, null));
+        m.put(GolemVariant.EMERALD,   new TierStats(200, 40.0, true, List.of("CREEPERS"),
+            null, null, null, null, null, 8, 2.0, 1.0, true, null, null, null, null, null, null, null));
+        m.put(GolemVariant.DIAMOND,   new TierStats(350, 62.5, true, List.of("CREEPERS"),
+            null, null, null, null, null, null, null, null, null,
+            "ALL_HOSTILE_MOBS", 30, 60, 12, true, null, null));
+        m.put(GolemVariant.NETHERITE, new TierStats(600, 85.0, true, List.of("CREEPERS"),
+            null, null, null, null, null, null, null, null, null, null, null, null, null, null, true, 5));
+        return new MultiGolemConfig(true, m);
+    }
+
+    public static MultiGolemConfig loadOrCreate(Path path) {
+        // V1-equivalent stub for now; Task 3 replaces this with the lossless merge.
+        if (!Files.exists(path)) {
+            MultiGolemConfig defaults = defaults();
+            writeQuietly(path, defaults);
+            return defaults;
+        }
+        try {
+            String contents = Files.readString(path, StandardCharsets.UTF_8);
+            JsonObject root = GSON.fromJson(contents, JsonObject.class);
+            if (root == null) {
+                MultiGolem.LOG.warn("multigolem config at {} is empty; using defaults", path);
+                return defaults();
+            }
+            return parse(root);
+        } catch (JsonSyntaxException e) {
+            MultiGolem.LOG.warn("multigolem config at {} is malformed; using defaults: {}", path, e.getMessage());
+            return defaults();
+        } catch (IOException e) {
+            MultiGolem.LOG.warn("could not read multigolem config at {}: {}", path, e.getMessage());
+            return defaults();
+        }
+    }
+
+    // ... parse(), validators, writeQuietly() — implementer fills in following the spec §6.1 rules
+    // and the V1 MultiGolemConfig.parse() structure. The full helper set:
+    //   - readInt / readDouble / readBoolean / readString / readStringList (with malformed-type fallback)
+    //   - finiteOrDefault(double, default) for NaN/Infinity replacement
+    //   - parseDiamondTargetMode(String) — case-insensitive, returns canonical uppercase or default
+    //   - filterIgnoredTargetTypes(List<String>) — drops unknowns with WARN
+    //   - All per-field clamps from spec §6.1
+}
+```
+
+(The implementer expands the `parse(...)` method following V1's `parse()` shape, adding the per-field V2 validation rules from spec §6.1. Per-tier null-handling is critical: gold-specific fields are null on copper, etc.)
+
+- [ ] **Step 2.8: Build, run all tests**
+
+```bash
+./gradlew --quiet test > test_out.txt 2>&1; echo "exit=$?"
+```
+
+Expected: exit 0; test count goes from 16 to 22+ (V1 unchanged + V2 additions).
+
+- [ ] **Step 2.9: Commit, push**
+
+```bash
+rm -f test_out.txt
+git add src/main/java/dev/charles/multigolem/config/ \
+        src/test/java/dev/charles/multigolem/config/ \
+        src/test/java/dev/charles/multigolem/test/MinecraftBootstrap.java \
+        src/test/java/dev/charles/multigolem/GolemVariantTest.java \
+        src/test/java/dev/charles/multigolem/stats/GolemStatsResolverTest.java
+git commit -m "feat: extend MultiGolemConfig + TierStats with V2 ability fields
+
+Per-tier ability config + validation per spec §6.1:
+- ignored_target_types (default: iron empty, others [CREEPERS])
+- Copper: lightning_immune, lightning_heal_amount (null=full heal)
+- Gold: speed_multiplier, sprint/sunlight particle toggles
+- Emerald: aura_range, heal_interval, heal_per_tick, count_wandering_traders
+- Diamond: target_mode (case-insensitive), cooldown min/max, aura_range,
+  lightning_proof
+- Netherite: fire_immune, ignite_seconds
+
+Extracted MinecraftBootstrap.ensure() helper; all existing tests
+migrated to use it.
+
+22+ tests passing."
+git push origin main
+```
+
+---
+
+## Task 3: Lossless JSON-merge migration + atomic write
+
+**Files:**
+- Modify: `src/main/java/dev/charles/multigolem/config/MultiGolemConfig.java`
+- Modify: `src/test/java/dev/charles/multigolem/config/MultiGolemConfigV2Test.java` (add migration tests)
+
+- [ ] **Step 3.1: Write failing migration tests**
+
+Append to `MultiGolemConfigV2Test.java`:
+
+```java
+    @Test
+    void migration_preservesUnknownTopLevelFields(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "_user_note": "lowered copper hp",
+              "_third_party_mod_settings": { "foo": 42 },
+              "allow_golem_healing": true,
+              "tiers": {}
+            }
+            """);
+        MultiGolemConfig.loadOrCreate(file);
+        String after = Files.readString(file);
+        assertTrue(after.contains("_user_note"), "unknown top-level field must be preserved");
+        assertTrue(after.contains("_third_party_mod_settings"), "unknown top-level object must be preserved");
+        assertTrue(after.contains("\"foo\""), "nested unknown fields must be preserved");
+    }
+
+    @Test
+    void migration_preservesUnknownTierFields(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "tiers": {
+                "copper": {
+                  "max_health": 60,
+                  "attack_damage": 8.5,
+                  "anger_on_hit": true,
+                  "_my_experimental_field": "preserve_me"
+                }
+              }
+            }
+            """);
+        MultiGolemConfig.loadOrCreate(file);
+        String after = Files.readString(file);
+        assertTrue(after.contains("_my_experimental_field"), "unknown per-tier field must be preserved");
+        assertTrue(after.contains("preserve_me"));
+    }
+
+    @Test
+    void migration_fillsV2Defaults_preservesV1Values(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        // V1-shaped config (no V2 fields)
+        Files.writeString(file, """
+            {
+              "allow_golem_healing": true,
+              "tiers": {
+                "copper": { "max_health": 75, "attack_damage": 10.0, "anger_on_hit": true }
+              }
+            }
+            """);
+        MultiGolemConfig cfg = MultiGolemConfig.loadOrCreate(file);
+        // V1 value preserved
+        assertEquals(75, cfg.tier(GolemVariant.COPPER).maxHealth());
+        // V2 default filled
+        assertTrue(cfg.tier(GolemVariant.COPPER).copperLightningImmune());
+        // Disk written with V2 schema
+        String after = Files.readString(file);
+        assertTrue(after.contains("\"copper_lightning_immune\""));
+        assertTrue(after.contains("\"max_health\": 75"), "V1 value preserved on disk");
+    }
+
+    @Test
+    void migration_canonicalizesDiamondTargetMode(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "tiers": { "diamond": { "diamond_target_mode": "all_hostile_mobs_and_players" } }
+            }
+            """);
+        MultiGolemConfig.loadOrCreate(file);
+        String after = Files.readString(file);
+        assertTrue(after.contains("\"ALL_HOSTILE_MOBS_AND_PLAYERS\""), "canonical uppercase rewritten on disk");
+        assertFalse(after.contains("all_hostile_mobs_and_players"), "lowercase removed");
+    }
+
+    @Test
+    void migration_doesNotRewriteIdenticalFile(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        // First load writes defaults
+        MultiGolemConfig.loadOrCreate(file);
+        long mtime1 = Files.getLastModifiedTime(file).toMillis();
+        // Tiny sleep so mtime would change if a re-write happens
+        try { Thread.sleep(100); } catch (InterruptedException ignored) {}
+        // Second load should NOT rewrite
+        MultiGolemConfig.loadOrCreate(file);
+        long mtime2 = Files.getLastModifiedTime(file).toMillis();
+        assertEquals(mtime1, mtime2, "identical config should not be rewritten");
+    }
+```
+
+- [ ] **Step 3.2: Verify the new tests fail**
+
+```bash
+./gradlew --quiet test > test_out.txt 2>&1; echo "exit=$?"
+```
+
+Expected: non-zero. The migration tests fail because `loadOrCreate` doesn't yet preserve unknown fields or canonicalize on write-back.
+
+- [ ] **Step 3.3: Replace `loadOrCreate` with merge-validate-compare-write**
+
+In `MultiGolemConfig.java`, replace the simple parse-on-read approach with the algorithm from spec §6.2. Key implementation points:
+
+```java
+public static MultiGolemConfig loadOrCreate(Path path) {
+    if (!Files.exists(path)) {
+        MultiGolemConfig defaults = defaults();
+        JsonObject defaultsJson = toJson(defaults);
+        atomicWrite(path, defaultsJson);
+        return defaults;
+    }
+
+    String originalContent;
+    JsonObject onDisk;
+    try {
+        originalContent = Files.readString(path, StandardCharsets.UTF_8);
+        onDisk = GSON.fromJson(originalContent, JsonObject.class);
+        if (onDisk == null) {
+            MultiGolem.LOG.warn("multigolem config at {} is empty; using defaults; NOT overwriting", path);
+            return defaults();
+        }
+    } catch (JsonSyntaxException e) {
+        MultiGolem.LOG.warn("multigolem config at {} is malformed; using defaults; NOT overwriting: {}",
+            path, e.getMessage());
+        return defaults();
+    } catch (IOException e) {
+        MultiGolem.LOG.warn("could not read multigolem config at {}: {}", path, e.getMessage());
+        return defaults();
+    }
+
+    JsonObject defaultsJson = toJson(defaults());
+    mergeDefaultsRecursive(onDisk, defaultsJson);  // step (1) merge
+    canonicalizeAndValidateInPlace(onDisk);         // step (2) validate & canonicalize known fields
+    MultiGolemConfig parsed = parse(onDisk);        // step (3) hand to runtime
+
+    String merged = GSON.toJson(onDisk);
+    if (!merged.equals(originalContent)) {          // step (4) compare bytes
+        atomicWrite(path, onDisk);                  // step (5) write
+    }
+    return parsed;
+}
+
+private static void mergeDefaultsRecursive(JsonObject onDisk, JsonObject defaults) {
+    for (Map.Entry<String, JsonElement> e : defaults.entrySet()) {
+        String key = e.getKey();
+        JsonElement defVal = e.getValue();
+        if (!onDisk.has(key)) {
+            onDisk.add(key, defVal.deepCopy());
+        } else if (defVal.isJsonObject() && onDisk.get(key).isJsonObject()) {
+            mergeDefaultsRecursive(onDisk.getAsJsonObject(key), defVal.getAsJsonObject());
+        }
+        // else: keep on-disk value as-is (could be a clamped number, list, etc.)
+    }
+    // Unknown on-disk keys NOT in defaults are preserved untouched.
+}
+
+private static void canonicalizeAndValidateInPlace(JsonObject root) {
+    JsonObject tiers = root.has("tiers") && root.get("tiers").isJsonObject() ? root.getAsJsonObject("tiers") : null;
+    if (tiers == null) return;
+    for (GolemVariant v : GolemVariant.values()) {
+        if (!tiers.has(v.id()) || !tiers.get(v.id()).isJsonObject()) continue;
+        JsonObject t = tiers.getAsJsonObject(v.id());
+        canonicalizeTierInPlace(v, t);
+    }
+}
+
+private static void canonicalizeTierInPlace(GolemVariant variant, JsonObject t) {
+    // For each known field per spec §6.1: clamp, replace NaN/Infinity with default, etc.
+    // Diamond target mode: case-insensitive parse, canonical uppercase rewrite.
+    if (variant == GolemVariant.DIAMOND && t.has("diamond_target_mode")
+            && t.get("diamond_target_mode").isJsonPrimitive()
+            && t.get("diamond_target_mode").getAsJsonPrimitive().isString()) {
+        String raw = t.get("diamond_target_mode").getAsString();
+        String canonical = raw == null ? null : raw.toUpperCase(Locale.ROOT);
+        if (canonical == null || !RECOGNIZED_DIAMOND_TARGET_MODES.contains(canonical)) {
+            MultiGolem.LOG.warn("unknown diamond_target_mode '{}'; using ALL_HOSTILE_MOBS", raw);
+            t.addProperty("diamond_target_mode", "ALL_HOSTILE_MOBS");
+        } else if (!canonical.equals(raw)) {
+            t.addProperty("diamond_target_mode", canonical);
+        }
+    }
+    // ... per spec §6.1, implementer adds clamp logic for each numeric field
+    // and rewrites the JsonObject value in place.
+}
+
+private static void atomicWrite(Path target, JsonObject root) {
+    Path tmp = target.resolveSibling(target.getFileName() + ".tmp." + UUID.randomUUID());
+    try {
+        Files.createDirectories(target.getParent());
+        Files.writeString(tmp, GSON.toJson(root), StandardCharsets.UTF_8);
+        try {
+            Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+        } catch (AtomicMoveNotSupportedException e) {
+            // Leave the original file untouched; retry next start.
+            try { Files.deleteIfExists(tmp); } catch (IOException ignored) {}
+            MultiGolem.LOG.warn("filesystem does not support atomic move; on-disk config not upgraded this run; in-memory config is the V2-merged version");
+        }
+    } catch (IOException e) {
+        try { Files.deleteIfExists(tmp); } catch (IOException ignored) {}
+        MultiGolem.LOG.warn("failed to write multigolem config at {}: {}", target, e.getMessage());
+    }
+}
+```
+
+(The full `canonicalizeTierInPlace` implementation enumerates every per-field validation from spec §6.1. The implementer writes this out — it's mechanical but long.)
+
+- [ ] **Step 3.4: Run tests, fix until green**
+
+```bash
+./gradlew --quiet test > test_out.txt 2>&1; echo "exit=$?"
+```
+
+If any of the 5 new migration tests fail, the implementer reads the failure detail (`grep -A 5 FAILED test_out.txt`) and fixes the canonicalize/merge logic. **Do not change the test assertions** — they encode spec §6.2 requirements.
+
+- [ ] **Step 3.5: Commit, push**
+
+```bash
+rm -f test_out.txt
+git add src/main/java/dev/charles/multigolem/config/MultiGolemConfig.java \
+        src/test/java/dev/charles/multigolem/config/MultiGolemConfigV2Test.java
+git commit -m "feat: lossless V1→V2 config migration with atomic write
+
+Implements spec §6.2: merge defaults → validate/canonicalize in place
+→ compare bytes → atomic write. Preserves unknown top-level + per-tier
+fields (user-added underscored notes, third-party mod settings).
+Canonicalizes diamond_target_mode to uppercase on disk. Skips
+write-back when on-disk file is byte-identical to merged form.
+
+Atomic write uses tmp file + ATOMIC_MOVE; if unsupported, leaves the
+original file untouched and retries next startup (no torn writes)."
+git push origin main
+```
+
+---
+
+## Task 4: `GolemStatsResolver` accessors for V2 fields
+
+**Files:**
+- Modify: `src/main/java/dev/charles/multigolem/stats/GolemStatsResolver.java`
+- Modify: `src/test/java/dev/charles/multigolem/stats/GolemStatsResolverTest.java`
+
+- [ ] **Step 4.1: Write failing accessor tests**
+
+Append to `GolemStatsResolverTest.java`:
+
+```java
+    @Test
+    void resolvesV2_copperFields() {
+        GolemStatsResolver r = new GolemStatsResolver(MultiGolemConfig.defaults());
+        assertTrue(r.copperLightningImmune());
+        assertNull(r.copperLightningHealAmount());
+    }
+
+    @Test
+    void resolvesV2_goldFields() {
+        GolemStatsResolver r = new GolemStatsResolver(MultiGolemConfig.defaults());
+        assertEquals(1.25, r.goldSpeedMultiplier(), 0.0001);
+        assertTrue(r.goldSprintParticlesEnabled());
+        assertTrue(r.goldSunlightShineEnabled());
+    }
+
+    @Test
+    void resolvesV2_emeraldFields() {
+        GolemStatsResolver r = new GolemStatsResolver(MultiGolemConfig.defaults());
+        assertEquals(8, r.emeraldAuraRange());
+        assertEquals(2.0, r.emeraldHealIntervalSeconds(), 0.0001);
+        assertEquals(1.0, r.emeraldHealPerTick(), 0.0001);
+        assertTrue(r.emeraldCountWanderingTraders());
+    }
+
+    @Test
+    void resolvesV2_diamondFields() {
+        GolemStatsResolver r = new GolemStatsResolver(MultiGolemConfig.defaults());
+        assertEquals("ALL_HOSTILE_MOBS", r.diamondTargetMode());
+        assertEquals(30, r.diamondCooldownMinSeconds());
+        assertEquals(60, r.diamondCooldownMaxSeconds());
+        assertEquals(12, r.diamondAuraRange());
+        assertTrue(r.diamondLightningProof());
+    }
+
+    @Test
+    void resolvesV2_netheriteFields() {
+        GolemStatsResolver r = new GolemStatsResolver(MultiGolemConfig.defaults());
+        assertTrue(r.netheriteFireImmune());
+        assertEquals(5, r.netheriteIgniteSeconds());
+    }
+
+    @Test
+    void resolvesV2_ignoredTargetTypes() {
+        GolemStatsResolver r = new GolemStatsResolver(MultiGolemConfig.defaults());
+        assertEquals(List.of(), r.ignoredTargetTypes(GolemVariant.IRON));
+        assertEquals(List.of("CREEPERS"), r.ignoredTargetTypes(GolemVariant.COPPER));
+    }
+```
+
+Add the necessary imports (`List`, `GolemVariant`, `MultiGolemConfig`, `assertNull`).
+
+- [ ] **Step 4.2: Add accessors to `GolemStatsResolver`**
+
+Replace the body of `GolemStatsResolver` with one accessor per V2 field, each reading from the relevant tier's config. The variant-of-interest is implicit per-method (copper-only fields read from COPPER, etc.) since V1 already follows this convention:
+
+```java
+package dev.charles.multigolem.stats;
+
+import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.config.MultiGolemConfig;
+import dev.charles.multigolem.config.TierStats;
+
+import java.util.List;
+
+public final class GolemStatsResolver {
+
+    private final MultiGolemConfig config;
+
+    public GolemStatsResolver(MultiGolemConfig config) { this.config = config; }
+
+    // V1
+    public int maxHealth(GolemVariant v) { return config.tier(v).maxHealth(); }
+    public double attackDamage(GolemVariant v) { return config.tier(v).attackDamage(); }
+    public boolean angerOnHit(GolemVariant v) { return config.tier(v).angerOnHit(); }
+    public TierStats stats(GolemVariant v) { return config.tier(v); }
+
+    // V2 cross-tier
+    public List<String> ignoredTargetTypes(GolemVariant v) { return config.tier(v).ignoredTargetTypes(); }
+
+    // V2 copper-only
+    public boolean copperLightningImmune() { return config.tier(GolemVariant.COPPER).copperLightningImmune(); }
+    public Double copperLightningHealAmount() { return config.tier(GolemVariant.COPPER).copperLightningHealAmount(); }
+
+    // V2 gold-only
+    public double goldSpeedMultiplier() { return config.tier(GolemVariant.GOLD).goldSpeedMultiplier(); }
+    public boolean goldSprintParticlesEnabled() { return config.tier(GolemVariant.GOLD).goldSprintParticlesEnabled(); }
+    public boolean goldSunlightShineEnabled() { return config.tier(GolemVariant.GOLD).goldSunlightShineEnabled(); }
+
+    // V2 emerald-only
+    public int emeraldAuraRange() { return config.tier(GolemVariant.EMERALD).emeraldAuraRange(); }
+    public double emeraldHealIntervalSeconds() { return config.tier(GolemVariant.EMERALD).emeraldHealIntervalSeconds(); }
+    public double emeraldHealPerTick() { return config.tier(GolemVariant.EMERALD).emeraldHealPerTick(); }
+    public boolean emeraldCountWanderingTraders() { return config.tier(GolemVariant.EMERALD).emeraldCountWanderingTraders(); }
+
+    // V2 diamond-only
+    public String diamondTargetMode() { return config.tier(GolemVariant.DIAMOND).diamondTargetMode(); }
+    public int diamondCooldownMinSeconds() { return config.tier(GolemVariant.DIAMOND).diamondCooldownMinSeconds(); }
+    public int diamondCooldownMaxSeconds() { return config.tier(GolemVariant.DIAMOND).diamondCooldownMaxSeconds(); }
+    public int diamondAuraRange() { return config.tier(GolemVariant.DIAMOND).diamondAuraRange(); }
+    public boolean diamondLightningProof() { return config.tier(GolemVariant.DIAMOND).diamondLightningProof(); }
+
+    // V2 netherite-only
+    public boolean netheriteFireImmune() { return config.tier(GolemVariant.NETHERITE).netheriteFireImmune(); }
+    public int netheriteIgniteSeconds() { return config.tier(GolemVariant.NETHERITE).netheriteIgniteSeconds(); }
+}
+```
+
+- [ ] **Step 4.3: Run tests; commit**
+
+```bash
+./gradlew --quiet test > test_out.txt 2>&1; echo "exit=$?"
+# Expected: exit 0
+rm -f test_out.txt
+git add src/main/java/dev/charles/multigolem/stats/ src/test/java/dev/charles/multigolem/stats/
+git commit -m "feat: add GolemStatsResolver accessors for V2 fields"
+git push origin main
+```
+
+---
+
+## Task 5: `GolemAbilityState` attachment
+
+**Files:**
+- Create: `src/main/java/dev/charles/multigolem/attachment/GolemAbilityState.java`
+- Create: `src/test/java/dev/charles/multigolem/attachment/GolemAbilityStateTest.java`
+- Modify: `src/main/java/dev/charles/multigolem/MultiGolem.java`
+
+- [ ] **Step 5.1: Write failing codec round-trip test**
+
+Create `src/test/java/dev/charles/multigolem/attachment/GolemAbilityStateTest.java`:
+
+```java
+package dev.charles.multigolem.attachment;
+
+import com.mojang.serialization.JsonOps;
+import dev.charles.multigolem.test.MinecraftBootstrap;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+class GolemAbilityStateTest {
+
+    @BeforeAll
+    static void bootstrap() { MinecraftBootstrap.ensure(); }
+
+    @Test
+    void empty_roundTrips() {
+        GolemAbilityState empty = GolemAbilityState.fresh();
+        var encoded = GolemAbilityState.CODEC.encodeStart(JsonOps.INSTANCE, empty).result().orElseThrow();
+        GolemAbilityState decoded = GolemAbilityState.CODEC.parse(JsonOps.INSTANCE, encoded).result().orElseThrow();
+        assertEquals(empty, decoded);
+    }
+
+    @Test
+    void populated_roundTrips() {
+        GolemAbilityState s = new GolemAbilityState(123456789L);
+        var encoded = GolemAbilityState.CODEC.encodeStart(JsonOps.INSTANCE, s).result().orElseThrow();
+        GolemAbilityState decoded = GolemAbilityState.CODEC.parse(JsonOps.INSTANCE, encoded).result().orElseThrow();
+        assertEquals(s.nextDiamondAbilityGameTime(), decoded.nextDiamondAbilityGameTime());
+    }
+
+    @Test
+    void fresh_hasZeroCooldown() {
+        assertEquals(0L, GolemAbilityState.fresh().nextDiamondAbilityGameTime());
+    }
+}
+```
+
+- [ ] **Step 5.2: Implement `GolemAbilityState`**
+
+Create `src/main/java/dev/charles/multigolem/attachment/GolemAbilityState.java`:
+
+```java
+package dev.charles.multigolem.attachment;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import dev.charles.multigolem.MultiGolem;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.Entity;
+
+/**
+ * Per-entity ability state. V2 starts with just the diamond cooldown timestamp.
+ * Designed to extend for V3+ abilities by adding fields.
+ */
+public record GolemAbilityState(long nextDiamondAbilityGameTime) {
+
+    public static final Codec<GolemAbilityState> CODEC = RecordCodecBuilder.create(i -> i.group(
+        Codec.LONG.optionalFieldOf("next_diamond_ability_game_time", 0L)
+            .forGetter(GolemAbilityState::nextDiamondAbilityGameTime)
+    ).apply(i, GolemAbilityState::new));
+
+    public static final AttachmentType<GolemAbilityState> TYPE = AttachmentRegistry
+        .<GolemAbilityState>builder()
+        .persistent(CODEC)
+        .initializer(GolemAbilityState::fresh)
+        .buildAndRegister(Identifier.fromNamespaceAndPath(MultiGolem.MOD_ID, "ability_state"));
+
+    public static GolemAbilityState fresh() {
+        return new GolemAbilityState(0L);
+    }
+
+    /** Convenience: read or initialize. */
+    public static GolemAbilityState get(Entity entity) {
+        GolemAbilityState s = entity.getAttached(TYPE);
+        return s != null ? s : fresh();
+    }
+
+    public static void set(Entity entity, GolemAbilityState state) {
+        entity.setAttached(TYPE, state);
+    }
+
+    public GolemAbilityState withDiamondCooldown(long nextGameTime) {
+        return new GolemAbilityState(nextGameTime);
+    }
+
+    public boolean diamondCooldownReady(long currentGameTime) {
+        return currentGameTime >= nextDiamondAbilityGameTime;
+    }
+
+    public static void touch() {
+        // Force class load + TYPE registration when called from MultiGolem.onInitialize.
+    }
+}
+```
+
+- [ ] **Step 5.3: Register the attachment via the entrypoint**
+
+Edit `MultiGolem.java` — in `onInitialize()`, add `GolemAbilityState.touch();` right after the existing `GolemVariantAttachment.touch();` line.
+
+- [ ] **Step 5.4: Build + test + commit**
+
+```bash
+./gradlew --quiet build > build_out.txt 2>&1; echo "exit=$?"
+# Expected: exit 0
+rm -f build_out.txt
+git add src/main/java/dev/charles/multigolem/attachment/GolemAbilityState.java \
+        src/test/java/dev/charles/multigolem/attachment/GolemAbilityStateTest.java \
+        src/main/java/dev/charles/multigolem/MultiGolem.java
+git commit -m "feat: register GolemAbilityState persistent attachment
+
+Stores per-entity ability state (currently diamond cooldown timestamp).
+Codec-backed for save/load and chunk-unload survival. Registered via
+the same Fabric AttachmentRegistry pattern as GolemVariant."
+git push origin main
+```
+
+---
+
+## Task 6: `TargetFilter` pure helper (TDD)
+
+**Files:**
+- Create: `src/main/java/dev/charles/multigolem/ability/TargetFilter.java`
+- Create: `src/test/java/dev/charles/multigolem/ability/TargetFilterTest.java`
+
+- [ ] **Step 6.1: Write failing tests**
+
+Create `src/test/java/dev/charles/multigolem/ability/TargetFilterTest.java`:
+
+```java
+package dev.charles.multigolem.ability;
+
+import dev.charles.multigolem.test.MinecraftBootstrap;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+import net.minecraft.world.entity.boss.wither.WitherBoss;
+import net.minecraft.world.entity.monster.Creeper;
+import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.Skeleton;
+import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.monster.warden.Warden;
+import net.minecraft.world.entity.player.Player;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class TargetFilterTest {
+
+    @BeforeAll
+    static void bootstrap() { MinecraftBootstrap.ensure(); }
+
+    private static Entity mock(Class<? extends Entity> type) {
+        return Mockito.mock(type);
+    }
+
+    @Test
+    void ignored_creepers_excludesCreepers() {
+        TargetFilter f = TargetFilter.fromIgnoredList(List.of("CREEPERS"));
+        assertTrue(f.isExcluded(mock(Creeper.class)));
+        assertFalse(f.isExcluded(mock(Zombie.class)));
+    }
+
+    @Test
+    void ignored_endermen_excludesEndermen() {
+        TargetFilter f = TargetFilter.fromIgnoredList(List.of("ENDERMEN"));
+        assertTrue(f.isExcluded(mock(EnderMan.class)));
+        assertFalse(f.isExcluded(mock(Zombie.class)));
+    }
+
+    @Test
+    void ignored_players_excludesPlayers() {
+        TargetFilter f = TargetFilter.fromIgnoredList(List.of("PLAYERS"));
+        assertTrue(f.isExcluded(mock(Player.class)));
+    }
+
+    @Test
+    void ignored_allBosses_excludesBosses() {
+        TargetFilter f = TargetFilter.fromIgnoredList(List.of("ALL_BOSSES"));
+        assertTrue(f.isExcluded(mock(WitherBoss.class)));
+        assertTrue(f.isExcluded(mock(EnderDragon.class)));
+        assertTrue(f.isExcluded(mock(Warden.class)));
+        assertFalse(f.isExcluded(mock(Skeleton.class)));
+    }
+
+    @Test
+    void ignored_empty_excludesNothing() {
+        TargetFilter f = TargetFilter.fromIgnoredList(List.of());
+        assertFalse(f.isExcluded(mock(Creeper.class)));
+        assertFalse(f.isExcluded(mock(EnderMan.class)));
+    }
+
+    @Test
+    void diamondMode_allHostileMobs_matchesEnemies() {
+        DiamondTargetPredicate p = DiamondTargetPredicate.of("ALL_HOSTILE_MOBS");
+        assertTrue(p.matches(mock(Zombie.class)));   // implements Enemy
+        assertTrue(p.matches(mock(Creeper.class)));  // implements Enemy
+        assertFalse(p.matches(mock(Player.class))); // not in this mode
+    }
+
+    @Test
+    void diamondMode_allHostileMobsAndPlayers_includesPlayers() {
+        DiamondTargetPredicate p = DiamondTargetPredicate.of("ALL_HOSTILE_MOBS_AND_PLAYERS");
+        assertTrue(p.matches(mock(Zombie.class)));
+        assertTrue(p.matches(mock(Player.class)));
+    }
+
+    @Test
+    void diamondMode_bossesOnly_matchesBossesOnly() {
+        DiamondTargetPredicate p = DiamondTargetPredicate.of("BOSSES_ONLY");
+        assertTrue(p.matches(mock(WitherBoss.class)));
+        assertTrue(p.matches(mock(EnderDragon.class)));
+        assertTrue(p.matches(mock(Warden.class)));
+        assertFalse(p.matches(mock(Zombie.class)));
+    }
+
+    @Test
+    void diamondMode_none_matchesNothing() {
+        DiamondTargetPredicate p = DiamondTargetPredicate.of("NONE");
+        assertFalse(p.matches(mock(Zombie.class)));
+        assertFalse(p.matches(mock(WitherBoss.class)));
+    }
+}
+```
+
+Add Mockito to `build.gradle` dependencies if not already present:
+
+```gradle
+testImplementation "org.mockito:mockito-core:5.14.2"
+```
+
+- [ ] **Step 6.2: Implement `TargetFilter` (and helper `DiamondTargetPredicate`)**
+
+Create `src/main/java/dev/charles/multigolem/ability/TargetFilter.java`:
+
+```java
+package dev.charles.multigolem.ability;
+
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+import net.minecraft.world.entity.boss.wither.WitherBoss;
+import net.minecraft.world.entity.monster.Creeper;
+import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.monster.warden.Warden;
+import net.minecraft.world.entity.player.Player;
+
+import java.util.List;
+import java.util.Set;
+
+/** Pure: tests whether an entity should be excluded from a tier's targeting (melee AI + diamond zap). */
+public final class TargetFilter {
+
+    private final boolean excludeCreepers;
+    private final boolean excludeEndermen;
+    private final boolean excludePlayers;
+    private final boolean excludeAllBosses;
+
+    private TargetFilter(Set<String> names) {
+        this.excludeCreepers = names.contains("CREEPERS");
+        this.excludeEndermen = names.contains("ENDERMEN");
+        this.excludePlayers = names.contains("PLAYERS");
+        this.excludeAllBosses = names.contains("ALL_BOSSES");
+    }
+
+    public static TargetFilter fromIgnoredList(List<String> ignoredTypes) {
+        return new TargetFilter(Set.copyOf(ignoredTypes));
+    }
+
+    public boolean isExcluded(Entity entity) {
+        if (excludeCreepers && entity instanceof Creeper) return true;
+        if (excludeEndermen && entity instanceof EnderMan) return true;
+        if (excludePlayers && entity instanceof Player) return true;
+        if (excludeAllBosses && (entity instanceof WitherBoss || entity instanceof EnderDragon || entity instanceof Warden)) return true;
+        return false;
+    }
+
+    /** Predicate that turns a `diamond_target_mode` string into an entity-matching test. */
+    public interface DiamondTargetPredicate {
+        boolean matches(Entity entity);
+
+        static DiamondTargetPredicate of(String mode) {
+            return switch (mode) {
+                case "ALL_HOSTILE_MOBS" -> e -> e instanceof Enemy;
+                case "ALL_HOSTILE_MOBS_AND_PLAYERS" -> e -> e instanceof Enemy || e instanceof Player;
+                case "BOSSES_ONLY" -> e -> e instanceof WitherBoss || e instanceof EnderDragon || e instanceof Warden;
+                case "NONE" -> e -> false;
+                default -> e -> e instanceof Enemy; // fallback to default behavior
+            };
+        }
+    }
+}
+```
+
+- [ ] **Step 6.3: Build, test, commit**
+
+```bash
+./gradlew --quiet test > test_out.txt 2>&1; echo "exit=$?"
+# Expected: exit 0
+rm -f test_out.txt
+git add src/main/java/dev/charles/multigolem/ability/TargetFilter.java \
+        src/test/java/dev/charles/multigolem/ability/TargetFilterTest.java \
+        build.gradle
+git commit -m "feat: add TargetFilter pure helper for ignored_target_types + diamond_target_mode
+
+Pure-Java predicates with Mockito-based unit tests covering all
+recognized ignored_target_types values and all diamond_target_mode
+values. Used by GolemTargetingMixin (Task 7), DiamondAbility (Task 16),
+and CopperAbility / NetheriteAbility for filter logic."
+git push origin main
+```
+
+---
+
+## Task 7: `GolemTargetingMixin` — fail-fast checkpoint
+
+This is the FIRST mixin of V2 and validates spike 6's chosen hook works on a real entity. **If this task fails, escalate before proceeding.**
+
+The exact mixin shape depends on spike 6's outcome. The plan shows the **preferred path (option a — earlier acquisition hook)**. If spike 6 picked option (b) `Mob#setTarget` or option (d) per-tick fallback, the implementer adjusts accordingly per spike output.
+
+**Files:**
+- Create: `src/main/java/dev/charles/multigolem/mixin/GolemTargetingMixin.java`
+- Modify: `src/main/resources/multigolem.mixins.json`
+
+- [ ] **Step 7.1: Add the mixin to the config**
+
+Edit `src/main/resources/multigolem.mixins.json`. Append `GolemTargetingMixin` to the `mixins` array. Final file:
+
+```json
+{
+  "required": true,
+  "package": "dev.charles.multigolem.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "IronGolemMixin",
+    "CarvedPumpkinBlockMixin",
+    "LivingEntityMixin",
+    "GolemTargetingMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
+```
+
+(Update `compatibilityLevel` per spike 4 if `JAVA_25` is available.)
+
+- [ ] **Step 7.2: Implement the mixin per spike 6 output**
+
+**Preferred path (spike picked option a — `NearestAttackableTargetGoal#canUse` or similar):**
+
+Create `src/main/java/dev/charles/multigolem/mixin/GolemTargetingMixin.java`. The exact target signature is from spike 6 output in `docs/26.1.2-mojang-targets.md`. As an example shape (substitute the spike-confirmed target):
+
+```java
+package dev.charles.multigolem.mixin;
+
+import dev.charles.multigolem.MultiGolem;
+import dev.charles.multigolem.ability.TargetFilter;
+import dev.charles.multigolem.attachment.GolemVariantAttachment;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.animal.golem.IronGolem;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+/**
+ * Enforces ignored_target_types on iron-golem melee AI.
+ * Targets the broadest veto point — Mob#setTarget — and filters
+ * immediately to IronGolem instances. This is the spike-6 option-(b)
+ * implementation. If spike 6 picked option (a) (earlier acquisition
+ * hook), retarget this mixin accordingly.
+ */
+@Mixin(Mob.class)
+public abstract class GolemTargetingMixin {
+
+    @Inject(method = "setTarget(Lnet/minecraft/world/entity/LivingEntity;)V",
+            at = @At("HEAD"), cancellable = true)
+    private void multigolem$filterExcludedTarget(LivingEntity target, CallbackInfo ci) {
+        Mob self = (Mob) (Object) this;
+        if (!(self instanceof IronGolem golem)) return;
+        if (target == null) return;
+        var variant = GolemVariantAttachment.get(golem);
+        var filter = TargetFilter.fromIgnoredList(MultiGolem.config().tier(variant).ignoredTargetTypes());
+        if (filter.isExcluded(target)) {
+            ci.cancel();
+        }
+    }
+}
+```
+
+- [ ] **Step 7.3: Build**
+
+```bash
+./gradlew --quiet build > build_out.txt 2>&1; echo "exit=$?"
+```
+
+Expected: exit 0. If build fails with "mixin apply failed," the target method signature is wrong — re-check spike 6 output, adjust descriptor, retry.
+
+- [ ] **Step 7.4: In-game smoke (fail-fast checkpoint)**
+
+```bash
+./gradlew runServer > run_out.txt 2>&1 &
+```
+
+Connect via dev client. In creative mode:
+
+1. Spawn a copper golem (Task 7 of V1 plan: copper-block T-pattern + pumpkin)
+2. `/give @s creeper_spawn_egg` and spawn a creeper near the copper golem
+3. Verify the copper golem does NOT attack the creeper (default `ignored_target_types: ["CREEPERS"]` for copper)
+4. Repeat with an iron golem (default `ignored_target_types: []` for iron) and verify it DOES attack the creeper
+
+Stop the server. If the smoke test passes, V2's targeting foundation is sound and the rest of V2 can build on it. If it fails:
+- Read `run_out.txt` for mixin-apply errors
+- Verify the chosen mixin target from spike 6 still matches the source on disk
+- Escalate to human if blocked
+
+- [ ] **Step 7.5: Commit, push**
+
+```bash
+rm -f build_out.txt run_out.txt
+git add src/main/resources/multigolem.mixins.json \
+        src/main/java/dev/charles/multigolem/mixin/GolemTargetingMixin.java
+git commit -m "feat: enforce ignored_target_types on iron-golem melee AI
+
+GolemTargetingMixin injects HEAD on Mob#setTarget, filters to
+IronGolem instances, cancels target acquisition for entities
+excluded by the tier's ignored_target_types list.
+
+This is the V2 fail-fast checkpoint — validates spike 6's
+chosen hook works on real entities before the rest of V2
+is built on it. Smoke-tested: copper golem ignores creepers,
+iron golem still attacks them (defaults preserved)."
+git push origin main
+```
+
+---
+
+## Task 8: `AbilityRegistry` skeleton
+
+Thin `register()` helper called from `MultiGolem.onInitialize`. No abilities wired yet; subsequent tasks add their listeners here.
+
+**Files:**
+- Create: `src/main/java/dev/charles/multigolem/ability/AbilityRegistry.java`
+- Modify: `src/main/java/dev/charles/multigolem/MultiGolem.java`
+
+- [ ] **Step 8.1: Create the registry skeleton**
+
+```java
+package dev.charles.multigolem.ability;
+
+import dev.charles.multigolem.MultiGolem;
+
+/**
+ * Single entry point called from MultiGolem.onInitialize to wire all V2 ability event listeners.
+ * Each ability class's register() method adds its own Fabric event listeners.
+ * No interfaces, no polymorphic framework — just a fan-out to keep onInitialize clean.
+ */
+public final class AbilityRegistry {
+
+    private AbilityRegistry() {}
+
+    public static void register() {
+        // Wired in subsequent tasks:
+        // CopperAbility.register();    (Task 12)
+        // GoldAbility.register();      (Task 10)
+        // EmeraldAbility.register();   (Task 11)
+        // DiamondAbility.register();   (Tasks 16–19)
+        // NetheriteAbility.register(); (Task 13)
+        MultiGolem.LOG.debug("AbilityRegistry: wired all V2 abilities");
+    }
+}
+```
+
+- [ ] **Step 8.2: Call from entrypoint**
+
+In `MultiGolem.java` `onInitialize`, add `AbilityRegistry.register();` after the attachment touches and config load.
+
+- [ ] **Step 8.3: Build, commit, push**
+
+```bash
+./gradlew --quiet build > build_out.txt 2>&1; echo "exit=$?"
+# Expected: exit 0
+rm -f build_out.txt
+git add src/main/java/dev/charles/multigolem/ability/AbilityRegistry.java \
+        src/main/java/dev/charles/multigolem/MultiGolem.java
+git commit -m "feat: add AbilityRegistry skeleton — wired in subsequent tasks"
+git push origin main
+```
+
+---
+
+## Task 9: Texture pipeline (template, script, Gradle task)
+
+**Files:**
+- Create: `build-inputs/textures/iron_golem.template.png`
+- Create: `build-inputs/textures/LICENSE-AND-PROVENANCE.md`
+- Create: `scripts/generate-textures.py`
+- Modify: `build.gradle`
+- Create (generated, committed): `src/main/resources/assets/multigolem/textures/entity/{copper,gold,emerald,diamond,netherite}_golem.png`
+
+- [ ] **Step 9.1: Extract vanilla iron golem texture from MC sources**
+
+```bash
+JAR="$(find .gradle -name 'minecraft-clientOnly-*.jar' 2>/dev/null | grep -v sources | grep -v backup | head -1)"
+mkdir -p build-inputs/textures
+unzip -p "$JAR" "assets/minecraft/textures/entity/iron_golem/iron_golem.png" > build-inputs/textures/iron_golem.template.png
+```
+
+Verify the file is non-empty:
+
+```bash
+ls -l build-inputs/textures/iron_golem.template.png
+file build-inputs/textures/iron_golem.template.png   # should say "PNG image data, 128 x 128"
+```
+
+- [ ] **Step 9.2: Create provenance note**
+
+`build-inputs/textures/LICENSE-AND-PROVENANCE.md`:
+
+```markdown
+# Vanilla iron_golem.png template — provenance
+
+**Source:** Minecraft 26.1.2 client jar, asset path
+`assets/minecraft/textures/entity/iron_golem/iron_golem.png`
+
+**Extracted:** YYYY-MM-DD via Loom-decompiled client jar at
+`.gradle/loom-cache/minecraftMaven/.../minecraft-clientOnly-*.jar`
+
+**SHA-256:**
+[fill in with `sha256sum iron_golem.template.png` output]
+
+**License:** This file is a verbatim copy of Mojang's vanilla iron golem
+texture. It is committed to this repo as a build input only — the
+generated per-tier textures derived from it (in `src/main/resources/assets/`)
+are the deliverables that ship in the mod jar. Mojang's Minecraft EULA
+applies to this template file; do not redistribute outside this build
+pipeline.
+
+**Refresh procedure:** when Minecraft updates and the UV layout changes,
+re-run `Task 9.1` of the V2 plan to extract the fresh template, update the
+SHA-256 above, and re-run `genTextures` to regenerate the per-tier textures.
+```
+
+Run `sha256sum build-inputs/textures/iron_golem.template.png` and paste the hex output into the file.
+
+- [ ] **Step 9.3: Create the generation script**
+
+`scripts/generate-textures.py`:
+
+```python
+#!/usr/bin/env python3
+"""Generate per-tier golem textures from the vanilla iron_golem.png template.
+
+Reads build-inputs/textures/iron_golem.template.png, applies per-tier
+color transforms + overlay details, writes 5 PNGs to
+src/main/resources/assets/multigolem/textures/entity/.
+
+Visual targets: see docs/v2-texture-art-direction.png for color palette
+and detail character per tier.
+"""
+from __future__ import annotations
+import sys
+from pathlib import Path
+from PIL import Image
+
+REPO = Path(__file__).resolve().parent.parent
+TEMPLATE = REPO / "build-inputs" / "textures" / "iron_golem.template.png"
+OUT_DIR = REPO / "src" / "main" / "resources" / "assets" / "multigolem" / "textures" / "entity"
+
+# Per-tier HSL shifts and overlay tints. Values tuned against
+# docs/v2-texture-art-direction.png. Implementer may iterate on these.
+TIERS = {
+    "copper":    {"hue_shift": -10, "saturation": 1.25, "lightness": 0.95, "overlay": (180, 90, 50, 0)},
+    "gold":      {"hue_shift": 35,  "saturation": 1.55, "lightness": 1.10, "overlay": None},
+    "emerald":   {"hue_shift": 110, "saturation": 1.45, "lightness": 0.85, "overlay": None},
+    "diamond":   {"hue_shift": 165, "saturation": 0.75, "lightness": 1.20, "overlay": None},
+    "netherite": {"hue_shift": 280, "saturation": 0.40, "lightness": 0.40, "overlay": (255, 100, 0, 0)},
+}
+
+def shift_hue(img: Image.Image, hue_deg: float, sat_mul: float, lum_mul: float) -> Image.Image:
+    """Apply HSL shift across the entire texture (preserves alpha)."""
+    import colorsys
+    img = img.convert("RGBA")
+    pixels = img.load()
+    for y in range(img.height):
+        for x in range(img.width):
+            r, g, b, a = pixels[x, y]
+            if a == 0:
+                continue
+            h, l, s = colorsys.rgb_to_hls(r / 255.0, g / 255.0, b / 255.0)
+            h = (h + hue_deg / 360.0) % 1.0
+            s = max(0.0, min(1.0, s * sat_mul))
+            l = max(0.0, min(1.0, l * lum_mul))
+            nr, ng, nb = colorsys.hls_to_rgb(h, l, s)
+            pixels[x, y] = (int(nr * 255), int(ng * 255), int(nb * 255), a)
+    return img
+
+def main() -> int:
+    if not TEMPLATE.exists():
+        print(f"ERROR: template not found at {TEMPLATE}", file=sys.stderr)
+        return 1
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    template = Image.open(TEMPLATE)
+    for tier, params in TIERS.items():
+        img = shift_hue(template.copy(), params["hue_shift"], params["saturation"], params["lightness"])
+        out = OUT_DIR / f"{tier}_golem.png"
+        img.save(out, "PNG")
+        print(f"wrote {out.relative_to(REPO)}")
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
+```
+
+This is a starting point — the implementer iterates on per-tier params until visual fidelity to `docs/v2-texture-art-direction.png` is acceptable. Detail overlays (oxidation streaks for copper, ember-crack lines for netherite, emerald cabochons, etc.) are added in subsequent script revisions; this initial version ships solid color-shifted bases.
+
+- [ ] **Step 9.4: Add `genTextures` Gradle task**
+
+Append to `build.gradle`:
+
+```gradle
+tasks.register("genTextures") {
+    group = "build"
+    description = "Regenerate per-tier golem textures from build-inputs/textures/iron_golem.template.png"
+
+    inputs.file("build-inputs/textures/iron_golem.template.png")
+    inputs.file("scripts/generate-textures.py")
+    outputs.dir("src/main/resources/assets/multigolem/textures/entity")
+
+    doLast {
+        def python = providers.environmentVariable("PYTHON").getOrElse("python")
+        def result = exec {
+            commandLine(python, "scripts/generate-textures.py")
+            ignoreExitValue = true
+        }
+        if (result.exitValue != 0) {
+            throw new GradleException("genTextures: scripts/generate-textures.py failed with exit ${result.exitValue}")
+        }
+    }
+}
+
+processResources.dependsOn("genTextures")
+```
+
+(If the engineer's environment doesn't have Python's PIL, install via `pip install Pillow`.)
+
+- [ ] **Step 9.5: Run the task; verify outputs**
+
+```bash
+./gradlew --quiet genTextures > gen_out.txt 2>&1; echo "exit=$?"
+ls src/main/resources/assets/multigolem/textures/entity/
+file src/main/resources/assets/multigolem/textures/entity/copper_golem.png
+```
+
+Expected: exit 0; 5 PNGs in the entity directory; each is 128×128 PNG.
+
+- [ ] **Step 9.6: Visual check against art direction**
+
+Open `src/main/resources/assets/multigolem/textures/entity/copper_golem.png` and compare against `docs/v2-texture-art-direction.png` copper row. If colors are noticeably off, tune the `copper` entry in `TIERS` and re-run. Iterate per tier until acceptable. **Visual fidelity to the reference is the success criterion** — exact match isn't required, recognizable per-tier identity is.
+
+- [ ] **Step 9.7: Build, commit, push**
+
+```bash
+./gradlew --quiet build > build_out.txt 2>&1; echo "exit=$?"
+# Expected: exit 0
+rm -f build_out.txt gen_out.txt
+git add build-inputs/textures/ scripts/generate-textures.py build.gradle \
+        src/main/resources/assets/multigolem/textures/entity/
+git commit -m "feat: texture generation pipeline + 5 variant textures
+
+Vanilla iron_golem.png committed as build input with SHA-256
+provenance. scripts/generate-textures.py applies per-tier HSL
+shifts; genTextures Gradle task runs it before processResources.
+
+Initial textures are solid color-shifted bases tuned against
+docs/v2-texture-art-direction.png. Detail overlays (oxidation
+streaks, ember cracks, emerald cabochons) can be added in
+follow-up script revisions without changing the pipeline."
+git push origin main
+```
+
+---
+
+## Task 10: Gold ability — speed + vanity particles
+
+**Files:**
+- Create: `src/main/java/dev/charles/multigolem/ability/GoldAbility.java`
+- Modify: `src/main/java/dev/charles/multigolem/attribute/VariantAttributes.java`
+- Modify: `src/main/java/dev/charles/multigolem/ability/AbilityRegistry.java`
+
+- [ ] **Step 10.1: Extend `VariantAttributes` with MOVEMENT_SPEED modifier for gold**
+
+The existing class applies HP and ATTACK_DAMAGE modifiers per V1 spec. Add a MOVEMENT_SPEED branch for the Gold variant. The vanilla iron golem base MOVEMENT_SPEED is 0.25; gold's multiplier (default 1.25) gives 0.3125.
+
+Read the current `VariantAttributes.java` to see its shape, then add a parallel `MOVEMENT_SPEED_MODIFIER_ID` identifier and an `applyMovementSpeed(golem, variant)` method that adds an `ADD_MULTIPLIED_TOTAL` modifier with value `(multiplier - 1.0)`. Call it from the existing `apply(IronGolem)` method for the Gold variant only. Remove the modifier (or set delta to 0) for non-Gold variants so a variant change clears any stale modifier.
+
+- [ ] **Step 10.2: Implement `GoldAbility` (particles)**
+
+```java
+package dev.charles.multigolem.ability;
+
+import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.MultiGolem;
+import dev.charles.multigolem.attachment.GolemVariantAttachment;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.animal.golem.IronGolem;
+
+/** Particle effects for Gold variant: sprint dust when moving, sunlight shine when stationary outdoors during day. */
+public final class GoldAbility {
+
+    private static final double MOTION_THRESHOLD_SQR = 0.001;
+    private static final int SHINE_INTERVAL_TICKS = 20;
+
+    private GoldAbility() {}
+
+    public static void register() {
+        ServerTickEvents.START_WORLD_TICK.register(GoldAbility::onTick);
+    }
+
+    private static void onTick(ServerLevel world) {
+        if (!MultiGolem.config().tier(GolemVariant.GOLD).goldSprintParticlesEnabled()
+                && !MultiGolem.config().tier(GolemVariant.GOLD).goldSunlightShineEnabled()) {
+            return;
+        }
+        for (IronGolem golem : world.getEntitiesOfClass(IronGolem.class, world.getWorldBorder().getCollisionShape().bounds())) {
+            if (GolemVariantAttachment.get(golem) != GolemVariant.GOLD) continue;
+            try {
+                tickGold(world, golem);
+            } catch (Throwable t) {
+                MultiGolem.LOG.error("GoldAbility tick failed for golem {}", golem.getId(), t);
+            }
+        }
+    }
+
+    private static void tickGold(ServerLevel world, IronGolem golem) {
+        boolean moving = golem.getDeltaMovement().horizontalDistanceSqr() > MOTION_THRESHOLD_SQR;
+        if (moving && MultiGolem.config().tier(GolemVariant.GOLD).goldSprintParticlesEnabled()) {
+            world.sendParticles(ParticleTypes.POOF,
+                golem.getX(), golem.getY() + 0.1, golem.getZ(),
+                2, 0.3, 0.05, 0.3, 0.0);
+        }
+        if (!moving
+                && world.getGameTime() % SHINE_INTERVAL_TICKS == 0
+                && MultiGolem.config().tier(GolemVariant.GOLD).goldSunlightShineEnabled()
+                && world.canSeeSky(golem.blockPosition())
+                && world.isDay()
+                && !world.isThundering()
+                && !world.isRaining()) {
+            world.sendParticles(ParticleTypes.END_ROD,
+                golem.getX(), golem.getEyeY() + 0.5, golem.getZ(),
+                1, 0.2, 0.0, 0.2, 0.0);
+        }
+    }
+}
+```
+
+(The `getEntitiesOfClass` call with the world border bounds is inefficient — iterating every loaded iron golem each tick. For V2 baseline this is acceptable for tens of golems; optimization is a future-version concern.)
+
+- [ ] **Step 10.3: Wire from `AbilityRegistry`**
+
+Edit `AbilityRegistry.register()` to add `GoldAbility.register();`.
+
+- [ ] **Step 10.4: Build, commit, push**
+
+```bash
+./gradlew --quiet build > build_out.txt 2>&1; echo "exit=$?"
+# Expected: exit 0
+rm -f build_out.txt
+git add src/main/java/dev/charles/multigolem/ability/GoldAbility.java \
+        src/main/java/dev/charles/multigolem/ability/AbilityRegistry.java \
+        src/main/java/dev/charles/multigolem/attribute/VariantAttributes.java
+git commit -m "feat: Gold ability — +25% speed (default) + vanity particles
+
+VariantAttributes extended with MOVEMENT_SPEED modifier for Gold
+variant. GoldAbility tick handler emits sprint-dust (POOF) when
+moving and a sunlight shine (END_ROD) when stationary outdoors
+during day. Both particle effects toggleable in config."
+git push origin main
+```
+
+---
+
+## Task 11: Emerald ability — villager aura heal
+
+**Files:**
+- Create: `src/main/java/dev/charles/multigolem/ability/EmeraldAbility.java`
+- Modify: `src/main/java/dev/charles/multigolem/ability/AbilityRegistry.java`
+
+- [ ] **Step 11.1: Implement `EmeraldAbility`**
+
+```java
+package dev.charles.multigolem.ability;
+
+import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.MultiGolem;
+import dev.charles.multigolem.attachment.GolemVariantAttachment;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.animal.golem.IronGolem;
+import net.minecraft.world.entity.npc.AbstractVillager;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.WanderingTrader;
+import net.minecraft.world.phys.AABB;
+
+import java.util.List;
+
+/** Heals emerald golem when at least one AbstractVillager is within configured range. */
+public final class EmeraldAbility {
+
+    private EmeraldAbility() {}
+
+    public static void register() {
+        ServerTickEvents.START_WORLD_TICK.register(EmeraldAbility::onTick);
+    }
+
+    private static void onTick(ServerLevel world) {
+        var stats = MultiGolem.config().tier(GolemVariant.EMERALD);
+        long intervalTicks = (long) Math.max(1, stats.emeraldHealIntervalSeconds() * 20.0);
+        if (world.getGameTime() % intervalTicks != 0) return;
+
+        int range = stats.emeraldAuraRange();
+        boolean countWandering = stats.emeraldCountWanderingTraders();
+        float healAmount = (float) stats.emeraldHealPerTick();
+
+        for (IronGolem golem : world.getEntitiesOfClass(IronGolem.class, world.getWorldBorder().getCollisionShape().bounds())) {
+            if (GolemVariantAttachment.get(golem) != GolemVariant.EMERALD) continue;
+            if (golem.getHealth() >= golem.getMaxHealth()) continue;
+            try {
+                tickEmerald(world, golem, range, countWandering, healAmount);
+            } catch (Throwable t) {
+                MultiGolem.LOG.error("EmeraldAbility tick failed for golem {}", golem.getId(), t);
+            }
+        }
+    }
+
+    private static void tickEmerald(ServerLevel world, IronGolem golem, int range, boolean countWandering, float healAmount) {
+        AABB box = golem.getBoundingBox().inflate(range);
+        List<AbstractVillager> nearby = world.getEntitiesOfClass(AbstractVillager.class, box, v ->
+            v.isAlive() && !v.isRemoved() && (countWandering || v instanceof Villager));
+        if (nearby.isEmpty()) return;
+
+        // Per §5.3 edge case: re-check liveness immediately before heal.
+        AbstractVillager source = nearby.get(0);
+        if (!source.isAlive() || source.isRemoved()) return;
+
+        golem.heal(healAmount);
+        world.sendParticles(ParticleTypes.HAPPY_VILLAGER,
+            golem.getX(), golem.getEyeY() + 0.3, golem.getZ(),
+            1, 0.2, 0.2, 0.2, 0.0);
+    }
+}
+```
+
+- [ ] **Step 11.2: Wire, build, commit, push**
+
+Add `EmeraldAbility.register();` to `AbilityRegistry.register()`. Build, commit:
+
+```bash
+./gradlew --quiet build > build_out.txt 2>&1; echo "exit=$?"
+rm -f build_out.txt
+git add src/main/java/dev/charles/multigolem/ability/EmeraldAbility.java \
+        src/main/java/dev/charles/multigolem/ability/AbilityRegistry.java
+git commit -m "feat: Emerald ability — villager aura heal
+
+Tick handler scans AbstractVillager (regular + wandering trader, per
+config) within emerald_aura_range. Heals emerald golem by
+emerald_heal_per_tick HP every emerald_heal_interval_seconds (default
+1 HP / 2s within 8 blocks). Emits HAPPY_VILLAGER particle on each
+heal. Re-checks liveness immediately before heal call per §5.3 edge
+case (handles villager replacement/removal between scan and heal)."
+git push origin main
+```
+
+---
+
+## Task 12: Copper ability — ALLOW_DAMAGE cancel-and-heal
+
+**Files:**
+- Create: `src/main/java/dev/charles/multigolem/ability/CopperAbility.java`
+- Modify: `src/main/java/dev/charles/multigolem/ability/AbilityRegistry.java`
+
+- [ ] **Step 12.1: Implement `CopperAbility`**
+
+```java
+package dev.charles.multigolem.ability;
+
+import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.MultiGolem;
+import dev.charles.multigolem.attachment.GolemVariantAttachment;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.entity.animal.golem.IronGolem;
+
+/**
+ * Lightning that strikes a copper-variant golem is cancelled and heals the golem.
+ * Atomic single-listener operation per spec §5.1.
+ */
+public final class CopperAbility {
+
+    private CopperAbility() {}
+
+    public static void register() {
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
+            if (!(entity instanceof IronGolem golem)) return true;
+            if (GolemVariantAttachment.get(golem) != GolemVariant.COPPER) return true;
+            if (!source.is(DamageTypes.LIGHTNING_BOLT)) return true;
+            if (!MultiGolem.config().tier(GolemVariant.COPPER).copperLightningImmune()) return true;
+
+            // Side effects: heal + particles. Wrapped so any exception still cancels damage.
+            try {
+                Double configHeal = MultiGolem.config().tier(GolemVariant.COPPER).copperLightningHealAmount();
+                float missingHp = golem.getMaxHealth() - golem.getHealth();
+                float healAmount = configHeal == null ? missingHp : (float) Math.min(configHeal, missingHp);
+                if (healAmount > 0) {
+                    golem.heal(healAmount);
+                }
+                if (golem.level() instanceof ServerLevel sw) {
+                    sw.sendParticles(ParticleTypes.ELECTRIC_SPARK,
+                        golem.getX(), golem.getY() + 1.0, golem.getZ(),
+                        40, 0.6, 1.0, 0.6, 0.1);
+                }
+            } catch (Throwable t) {
+                MultiGolem.LOG.error("CopperAbility heal/visual failed; damage still cancelled", t);
+            }
+
+            return false; // cancel damage regardless of side-effect outcome
+        });
+    }
+}
+```
+
+- [ ] **Step 12.2: Wire, build, commit, push**
+
+Add `CopperAbility.register();` to `AbilityRegistry.register()`. Build, commit:
+
+```bash
+./gradlew --quiet build > build_out.txt 2>&1; echo "exit=$?"
+rm -f build_out.txt
+git add src/main/java/dev/charles/multigolem/ability/CopperAbility.java \
+        src/main/java/dev/charles/multigolem/ability/AbilityRegistry.java
+git commit -m "feat: Copper ability — lightning cancel-and-heal
+
+Single-listener ALLOW_DAMAGE: when LIGHTNING_BOLT hits a copper-
+variant iron golem and copper_lightning_immune is true, cancel damage
++ heal by copper_lightning_heal_amount (null=full heal) + emit
+ELECTRIC_SPARK particles. All side effects wrapped in try/catch;
+damage cancellation never depends on heal/visual succeeding per
+spec §5.1."
+git push origin main
+```
+
+---
+
+## Task 13: Netherite fire-immunity — ALLOW_DAMAGE listener
+
+**Files:**
+- Create: `src/main/java/dev/charles/multigolem/ability/NetheriteAbility.java`
+- Modify: `src/main/java/dev/charles/multigolem/ability/AbilityRegistry.java`
+
+- [ ] **Step 13.1: Implement `NetheriteAbility`**
+
+```java
+package dev.charles.multigolem.ability;
+
+import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.MultiGolem;
+import dev.charles.multigolem.attachment.GolemVariantAttachment;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.entity.animal.golem.IronGolem;
+
+/** Netherite-variant golems take zero damage from fire-typed sources. */
+public final class NetheriteAbility {
+
+    private NetheriteAbility() {}
+
+    public static void register() {
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
+            if (!(entity instanceof IronGolem golem)) return true;
+            if (GolemVariantAttachment.get(golem) != GolemVariant.NETHERITE) return true;
+            if (!MultiGolem.config().tier(GolemVariant.NETHERITE).netheriteFireImmune()) return true;
+            if (source.is(DamageTypeTags.IS_FIRE)) return false;
+            return true;
+        });
+    }
+}
+```
+
+- [ ] **Step 13.2: Wire, build, commit, push**
+
+Add `NetheriteAbility.register();` to `AbilityRegistry.register()`. Build, commit:
+
+```bash
+./gradlew --quiet build > build_out.txt 2>&1; echo "exit=$?"
+rm -f build_out.txt
+git add src/main/java/dev/charles/multigolem/ability/NetheriteAbility.java \
+        src/main/java/dev/charles/multigolem/ability/AbilityRegistry.java
+git commit -m "feat: Netherite fire/lava immunity via ALLOW_DAMAGE listener
+
+Cancels all damage tagged IS_FIRE on netherite-variant iron golems
+when netherite_fire_immune is enabled. Covers lava, magma, fire,
+blaze fireballs, ghast fireballs — anything with the fire damage
+tag."
+git push origin main
+```
+
+---
+
+## Task 14: `IronGolemAttackMixin` skeleton with universal preconditions
+
+**Files:**
+- Create: `src/main/java/dev/charles/multigolem/mixin/IronGolemAttackMixin.java`
+- Modify: `src/main/resources/multigolem.mixins.json`
+
+- [ ] **Step 14.1: Add to mixins config**
+
+Append `IronGolemAttackMixin` to `multigolem.mixins.json` mixins array (final entry; final array order: IronGolemMixin, CarvedPumpkinBlockMixin, LivingEntityMixin, GolemTargetingMixin, IronGolemAttackMixin).
+
+- [ ] **Step 14.2: Create the skeleton mixin**
+
+```java
+package dev.charles.multigolem.mixin;
+
+import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.MultiGolem;
+import dev.charles.multigolem.attachment.GolemVariantAttachment;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.animal.golem.IronGolem;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+/**
+ * Single attack-hook mixin for V2. Universal preconditions per spec §4.5
+ * (vanilla returned true, target alive, target not removed) are checked
+ * at the top; branches for diamond on-attack lightning and netherite ignite
+ * are added in Tasks 15-16.
+ */
+@Mixin(IronGolem.class)
+public abstract class IronGolemAttackMixin {
+
+    @Inject(method = "doHurtTarget(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;)Z",
+            at = @At("TAIL"))
+    private void multigolem$variantAttackEffects(ServerLevel level, Entity target,
+                                                  CallbackInfoReturnable<Boolean> cir) {
+        if (!Boolean.TRUE.equals(cir.getReturnValue())) return;
+        if (target == null || !target.isAlive() || target.isRemoved()) return;
+
+        IronGolem self = (IronGolem) (Object) this;
+        GolemVariant variant = GolemVariantAttachment.get(self);
+        if (variant == GolemVariant.IRON) return;
+
+        try {
+            // Branches added in subsequent tasks:
+            // - Diamond on-attack lightning (Task 16)
+            // - Netherite ignite-on-hit (Task 15)
+            dispatchVariantEffect(level, self, target, variant);
+        } catch (Throwable t) {
+            MultiGolem.LOG.error("IronGolemAttackMixin variant effect failed for variant {}", variant.id(), t);
+        }
+    }
+
+    private static void dispatchVariantEffect(ServerLevel level, IronGolem self, Entity target, GolemVariant variant) {
+        // Filled in by Tasks 15 and 16
+    }
+}
+```
+
+- [ ] **Step 14.3: Build, commit, push**
+
+```bash
+./gradlew --quiet build > build_out.txt 2>&1; echo "exit=$?"
+rm -f build_out.txt
+git add src/main/resources/multigolem.mixins.json \
+        src/main/java/dev/charles/multigolem/mixin/IronGolemAttackMixin.java
+git commit -m "feat: IronGolemAttackMixin skeleton with universal preconditions
+
+@Inject TAIL on doHurtTarget. Checks vanilla returned true, target
+alive, target not removed before dispatching to variant branches
+(added in Tasks 15-16)."
+git push origin main
+```
+
+---
+
+## Task 15: Netherite ignite-on-hit branch
+
+**Files:**
+- Modify: `src/main/java/dev/charles/multigolem/mixin/IronGolemAttackMixin.java`
+
+- [ ] **Step 15.1: Add netherite branch to `dispatchVariantEffect`**
+
+```java
+    private static void dispatchVariantEffect(ServerLevel level, IronGolem self, Entity target, GolemVariant variant) {
+        if (variant == GolemVariant.NETHERITE) {
+            if (!MultiGolem.config().tier(GolemVariant.NETHERITE).netheriteFireImmune()) return;
+            // Skip ignite on netherite-variant golem targets — per spec §5.5 edge cases.
+            if (target instanceof IronGolem otherGolem
+                    && GolemVariantAttachment.get(otherGolem) == GolemVariant.NETHERITE
+                    && MultiGolem.config().tier(GolemVariant.NETHERITE).netheriteFireImmune()) {
+                return;
+            }
+            int seconds = MultiGolem.config().tier(GolemVariant.NETHERITE).netheriteIgniteSeconds();
+            if (seconds > 0) {
+                // The spike-confirmed method name from Task 1 spike 3.
+                // Likely: target.igniteForSeconds(seconds);
+                target.igniteForSeconds(seconds);
+            }
+        }
+    }
+```
+
+- [ ] **Step 15.2: Build, commit, push**
+
+```bash
+./gradlew --quiet build > build_out.txt 2>&1; echo "exit=$?"
+rm -f build_out.txt
+git add src/main/java/dev/charles/multigolem/mixin/IronGolemAttackMixin.java
+git commit -m "feat: Netherite ignite-on-hit via attack mixin
+
+Netherite golem hits set the target on fire for netherite_ignite_
+seconds (default 5). Skips ignite if target is itself a netherite-
+variant golem (event-cancellation immunity wouldn't catch the visual
+fire ticks otherwise) per spec §5.5 edge cases."
+git push origin main
+```
+
+---
+
+## Task 16: Diamond on-attack lightning branch
+
+**Files:**
+- Modify: `src/main/java/dev/charles/multigolem/mixin/IronGolemAttackMixin.java`
+
+- [ ] **Step 16.1: Add diamond branch with cooldown + filter checks**
+
+Replace `dispatchVariantEffect` to add the diamond branch (keeping the netherite branch):
+
+```java
+    private static void dispatchVariantEffect(ServerLevel level, IronGolem self, Entity target, GolemVariant variant) {
+        if (variant == GolemVariant.DIAMOND) {
+            var stats = MultiGolem.config().tier(GolemVariant.DIAMOND);
+            var ability = dev.charles.multigolem.attachment.GolemAbilityState.get(self);
+            if (!ability.diamondCooldownReady(level.getGameTime())) return;
+            // Re-check filters: target must match diamond_target_mode AND not be excluded
+            var modePredicate = dev.charles.multigolem.ability.TargetFilter.DiamondTargetPredicate.of(stats.diamondTargetMode());
+            if (!modePredicate.matches(target)) return;
+            var excludeFilter = dev.charles.multigolem.ability.TargetFilter.fromIgnoredList(stats.ignoredTargetTypes());
+            if (excludeFilter.isExcluded(target)) return;
+            // All checks passed: spawn lightning + spend cooldown
+            var bolt = net.minecraft.world.entity.EntityType.LIGHTNING_BOLT.create(level, net.minecraft.world.entity.EntitySpawnReason.TRIGGERED);
+            if (bolt != null) {
+                bolt.moveTo(target.getX(), target.getY(), target.getZ());
+                level.addFreshEntity(bolt);
+            }
+            long min = Math.max(0, stats.diamondCooldownMinSeconds()) * 20L;
+            long max = Math.max(min, stats.diamondCooldownMaxSeconds()) * 20L;
+            long span = Math.max(1, max - min + 1);
+            long nextAt = level.getGameTime() + min + level.getRandom().nextLong(span);
+            dev.charles.multigolem.attachment.GolemAbilityState.set(self, ability.withDiamondCooldown(nextAt));
+            return;
+        }
+        if (variant == GolemVariant.NETHERITE) {
+            if (!MultiGolem.config().tier(GolemVariant.NETHERITE).netheriteFireImmune()) return;
+            if (target instanceof IronGolem otherGolem
+                    && GolemVariantAttachment.get(otherGolem) == GolemVariant.NETHERITE
+                    && MultiGolem.config().tier(GolemVariant.NETHERITE).netheriteFireImmune()) {
+                return;
+            }
+            int seconds = MultiGolem.config().tier(GolemVariant.NETHERITE).netheriteIgniteSeconds();
+            if (seconds > 0) {
+                target.igniteForSeconds(seconds);
+            }
+        }
+    }
+```
+
+- [ ] **Step 16.2: Build, commit, push**
+
+```bash
+./gradlew --quiet build > build_out.txt 2>&1; echo "exit=$?"
+rm -f build_out.txt
+git add src/main/java/dev/charles/multigolem/mixin/IronGolemAttackMixin.java
+git commit -m "feat: Diamond on-attack lightning via attack mixin
+
+Diamond golem swings summon LightningBolt on target when shared
+cooldown ready, target passes diamond_target_mode predicate, AND
+target not excluded by ignored_target_types. Cooldown spent only
+when bolt actually fires — failed precondition or filter check
+preserves cooldown for next valid attack per spec §4.5."
+git push origin main
+```
+
+---
+
+## Task 17: Diamond passive lightning (tick handler with LOS scan)
+
+**Files:**
+- Create: `src/main/java/dev/charles/multigolem/ability/DiamondAbility.java`
+- Modify: `src/main/java/dev/charles/multigolem/ability/AbilityRegistry.java`
+
+- [ ] **Step 17.1: Implement `DiamondAbility`**
+
+```java
+package dev.charles.multigolem.ability;
+
+import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.MultiGolem;
+import dev.charles.multigolem.attachment.GolemAbilityState;
+import dev.charles.multigolem.attachment.GolemVariantAttachment;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.golem.IronGolem;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+
+import java.util.Comparator;
+import java.util.List;
+
+public final class DiamondAbility {
+
+    private DiamondAbility() {}
+
+    public static void register() {
+        ServerTickEvents.START_WORLD_TICK.register(DiamondAbility::onTick);
+    }
+
+    private static void onTick(ServerLevel world) {
+        var stats = MultiGolem.config().tier(GolemVariant.DIAMOND);
+        if ("NONE".equals(stats.diamondTargetMode())) return;
+
+        for (IronGolem golem : world.getEntitiesOfClass(IronGolem.class, world.getWorldBorder().getCollisionShape().bounds())) {
+            if (GolemVariantAttachment.get(golem) != GolemVariant.DIAMOND) continue;
+            try {
+                tickDiamond(world, golem, stats);
+            } catch (Throwable t) {
+                MultiGolem.LOG.error("DiamondAbility tick failed for golem {}", golem.getId(), t);
+            }
+        }
+    }
+
+    private static void tickDiamond(ServerLevel world, IronGolem golem, dev.charles.multigolem.config.TierStats stats) {
+        GolemAbilityState ability = GolemAbilityState.get(golem);
+        long now = world.getGameTime();
+        if (!ability.diamondCooldownReady(now)) return;
+
+        int range = stats.diamondAuraRange();
+        var modePredicate = TargetFilter.DiamondTargetPredicate.of(stats.diamondTargetMode());
+        var excludeFilter = TargetFilter.fromIgnoredList(stats.ignoredTargetTypes());
+
+        AABB box = golem.getBoundingBox().inflate(range);
+        List<Entity> candidates = world.getEntities(golem, box, e ->
+            e.isAlive() && !e.isRemoved()
+                && modePredicate.matches(e)
+                && !excludeFilter.isExcluded(e)
+                && hasLineOfSight(world, golem, e));
+        if (candidates.isEmpty()) return;
+
+        Entity target = candidates.stream()
+            .min(Comparator.comparingDouble(e -> e.distanceToSqr(golem)))
+            .orElseThrow();
+
+        var bolt = EntityType.LIGHTNING_BOLT.create(world, EntitySpawnReason.TRIGGERED);
+        if (bolt != null) {
+            bolt.moveTo(target.getX(), target.getY(), target.getZ());
+            world.addFreshEntity(bolt);
+        }
+
+        long min = Math.max(0, stats.diamondCooldownMinSeconds()) * 20L;
+        long max = Math.max(min, stats.diamondCooldownMaxSeconds()) * 20L;
+        long span = Math.max(1, max - min + 1);
+        long nextAt = now + min + world.getRandom().nextLong(span);
+        GolemAbilityState.set(golem, ability.withDiamondCooldown(nextAt));
+    }
+
+    private static boolean hasLineOfSight(ServerLevel world, LivingEntity from, Entity to) {
+        Vec3 start = new Vec3(from.getX(), from.getEyeY(), from.getZ());
+        Vec3 end = new Vec3(to.getX(), to.getEyeY(), to.getZ());
+        var hit = world.clip(new ClipContext(start, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, from));
+        return hit.getType() == net.minecraft.world.phys.HitResult.Type.MISS;
+    }
+}
+```
+
+- [ ] **Step 17.2: Wire, build, commit, push**
+
+Add `DiamondAbility.register();` to `AbilityRegistry.register()`. Build, commit:
+
+```bash
+./gradlew --quiet build > build_out.txt 2>&1; echo "exit=$?"
+rm -f build_out.txt
+git add src/main/java/dev/charles/multigolem/ability/DiamondAbility.java \
+        src/main/java/dev/charles/multigolem/ability/AbilityRegistry.java
+git commit -m "feat: Diamond passive lightning tick handler
+
+When cooldown ready, scans diamond_aura_range for entities matching
+diamond_target_mode predicate + not in ignored_target_types + has LOS
+from golem eye to target eye. Picks nearest qualifying target,
+summons LightningBolt, sets cooldown to currentTime + random(min, max)
+seconds. Shared cooldown timestamp with the on-attack branch
+(Task 16) via GolemAbilityState attachment."
+git push origin main
+```
+
+---
+
+## Task 18: Diamond self-immunity — ALLOW_DAMAGE listener
+
+**Files:**
+- Modify: `src/main/java/dev/charles/multigolem/ability/DiamondAbility.java`
+
+- [ ] **Step 18.1: Add ALLOW_DAMAGE listener for self-immunity**
+
+In `DiamondAbility.register()`, also register a `ServerLivingEntityEvents.ALLOW_DAMAGE` listener:
+
+```java
+    public static void register() {
+        ServerTickEvents.START_WORLD_TICK.register(DiamondAbility::onTick);
+        net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
+            if (!(entity instanceof IronGolem golem)) return true;
+            if (GolemVariantAttachment.get(golem) != GolemVariant.DIAMOND) return true;
+            if (!MultiGolem.config().tier(GolemVariant.DIAMOND).diamondLightningProof()) return true;
+            if (source.is(net.minecraft.world.damagesource.DamageTypes.LIGHTNING_BOLT)) return false;
+            return true;
+        });
+    }
+```
+
+- [ ] **Step 18.2: Build, commit, push**
+
+```bash
+./gradlew --quiet build > build_out.txt 2>&1; echo "exit=$?"
+rm -f build_out.txt
+git add src/main/java/dev/charles/multigolem/ability/DiamondAbility.java
+git commit -m "feat: Diamond self-immunity to lightning damage
+
+ALLOW_DAMAGE listener cancels any LIGHTNING_BOLT damage on diamond-
+variant iron golems when diamond_lightning_proof is true. Cooldown
+NOT consumed by being struck — only by zapping (per spec §11.2
+diamond bystander/direct-hit playtest rows)."
+git push origin main
+```
+
+---
+
+## Task 19: Diamond cooldown-ready visual
+
+**Files:**
+- Modify: `src/main/java/dev/charles/multigolem/ability/DiamondAbility.java`
+
+- [ ] **Step 19.1: Add cooldown-ready spark in `tickDiamond`**
+
+Before the `if (!ability.diamondCooldownReady(now)) return;` line, add a visual emission when the cooldown IS ready:
+
+```java
+        if (ability.diamondCooldownReady(now) && now % 20 == 0) {
+            world.sendParticles(ParticleTypes.END_ROD,
+                golem.getX(), golem.getEyeY() + 0.4, golem.getZ(),
+                1, 0.05, 0.05, 0.05, 0.0);
+        }
+```
+
+- [ ] **Step 19.2: Build, commit, push**
+
+```bash
+./gradlew --quiet build > build_out.txt 2>&1; echo "exit=$?"
+rm -f build_out.txt
+git add src/main/java/dev/charles/multigolem/ability/DiamondAbility.java
+git commit -m "feat: Diamond cooldown-ready visual indicator
+
+Emits a subtle END_ROD particle near the golem's head every 20 ticks
+while the diamond ability cooldown is ready. Visual confirms primed
+state at a glance. (END_ROD may be too bright — tunable to
+SOUL_FIRE_FLAME during playtest if needed per spec §14.)"
+git push origin main
+```
+
+---
+
+## Task 20: Enable client sync on `GolemVariant` attachment
+
+The exact API call depends on spike 8 output. The plan shows the preferred Fabric-native approach.
+
+**Files:**
+- Modify: `src/main/java/dev/charles/multigolem/attachment/GolemVariantAttachment.java`
+
+- [ ] **Step 20.1: Add `syncWith(...)` to the attachment registration**
+
+Per spike 8, add the sync configuration to the existing `AttachmentRegistry.builder()` chain in `GolemVariantAttachment`. Example (substitute spike-confirmed names):
+
+```java
+public static final AttachmentType<GolemVariant> TYPE = AttachmentRegistry
+    .<GolemVariant>builder()
+    .persistent(GolemVariant.CODEC)
+    .syncWith(GolemVariant.STREAM_CODEC, net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate.all())
+    .buildAndRegister(Identifier.fromNamespaceAndPath(MultiGolem.MOD_ID, "variant"));
+```
+
+This requires defining a `STREAM_CODEC` constant on `GolemVariant`:
+
+```java
+public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, GolemVariant> STREAM_CODEC =
+    net.minecraft.network.codec.ByteBufCodecs.STRING_UTF8.map(
+        s -> fromId(s).orElse(IRON),
+        GolemVariant::id);
+```
+
+If the spike found the API differs significantly: implement the custom S2C packet fallback per spec §7 spike 8 (entity tracking start + attachment-set broadcast + Fabric-handled cleanup).
+
+- [ ] **Step 20.2: Build, commit, push**
+
+```bash
+./gradlew --quiet build > build_out.txt 2>&1; echo "exit=$?"
+rm -f build_out.txt
+git add src/main/java/dev/charles/multigolem/attachment/GolemVariantAttachment.java \
+        src/main/java/dev/charles/multigolem/GolemVariant.java
+git commit -m "feat: sync GolemVariant attachment to clients
+
+Adds .syncWith(STREAM_CODEC, AttachmentSyncPredicate.all()) to the
+attachment registration so all nearby clients receive the variant
+per entity. Required for the client renderer (Task 21) to read
+variant data per entity. GolemAbilityState remains server-only —
+clients don't need cooldown timestamps."
+git push origin main
+```
+
+---
+
+## Task 21: Client source set + renderer mixins
+
+The exact mixin targets depend on spike 1 output. The plan shows the render-state pattern; substitute the spike-confirmed names.
+
+**Files:**
+- Modify: `build.gradle` (add `clientImplementation`)
+- Modify: `src/main/resources/fabric.mod.json` (add `client` entrypoint, reference client mixin config)
+- Create: `src/client/resources/multigolem.client.mixins.json`
+- Create: `src/client/java/dev/charles/multigolem/client/MultiGolemClient.java`
+- Create: `src/client/java/dev/charles/multigolem/client/render/GolemRenderStateExtension.java`
+- Create: `src/client/java/dev/charles/multigolem/client/render/GolemTextureSelector.java`
+- Create: `src/client/java/dev/charles/multigolem/client/mixin/IronGolemRenderStateMixin.java`
+- Create: `src/client/java/dev/charles/multigolem/client/mixin/IronGolemRendererMixin.java`
+
+- [ ] **Step 21.1: Wire Gradle client source set + dependency**
+
+In `build.gradle` dependencies, add (if not present):
+
+```gradle
+clientImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+```
+
+- [ ] **Step 21.2: Client mixin config**
+
+`src/client/resources/multigolem.client.mixins.json`:
+
+```json
+{
+  "required": true,
+  "package": "dev.charles.multigolem.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "environment": "client",
+  "mixins": [],
+  "client": [
+    "IronGolemRenderStateMixin",
+    "IronGolemRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
+```
+
+- [ ] **Step 21.3: Update `fabric.mod.json`**
+
+Add to the `entrypoints` block:
+
+```json
+  "entrypoints": {
+    "main": ["dev.charles.multigolem.MultiGolem"],
+    "client": ["dev.charles.multigolem.client.MultiGolemClient"]
+  },
+  "mixins": [
+    "multigolem.mixins.json",
+    { "config": "multigolem.client.mixins.json", "environment": "client" }
+  ],
+```
+
+- [ ] **Step 21.4: Client initializer**
+
+```java
+package dev.charles.multigolem.client;
+
+import dev.charles.multigolem.MultiGolem;
+import net.fabricmc.api.ClientModInitializer;
+
+public class MultiGolemClient implements ClientModInitializer {
+    @Override
+    public void onInitializeClient() {
+        MultiGolem.LOG.info("MultiGolem client initializing");
+    }
+}
+```
+
+- [ ] **Step 21.5: Texture selector (pure helper)**
+
+```java
+package dev.charles.multigolem.client.render;
+
+import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.MultiGolem;
+import net.minecraft.resources.Identifier;
+
+public final class GolemTextureSelector {
+
+    private static final Identifier VANILLA_IRON = Identifier.fromNamespaceAndPath("minecraft", "textures/entity/iron_golem/iron_golem.png");
+
+    private GolemTextureSelector() {}
+
+    public static Identifier textureFor(GolemVariant variant) {
+        if (variant == null || variant == GolemVariant.IRON) return VANILLA_IRON;
+        return Identifier.fromNamespaceAndPath(MultiGolem.MOD_ID, "textures/entity/" + variant.id() + "_golem.png");
+    }
+}
+```
+
+- [ ] **Step 21.6: Render-state extension interface (duck-typed via mixin accessor)**
+
+```java
+package dev.charles.multigolem.client.render;
+
+import dev.charles.multigolem.GolemVariant;
+
+public interface GolemRenderStateExtension {
+    GolemVariant multigolem$getVariant();
+    void multigolem$setVariant(GolemVariant variant);
+}
+```
+
+- [ ] **Step 21.7: Render-state capture mixin**
+
+The exact target class + method depends on spike 1. Example:
+
+```java
+package dev.charles.multigolem.client.mixin;
+
+import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.attachment.GolemVariantAttachment;
+import dev.charles.multigolem.client.render.GolemRenderStateExtension;
+// Substitute spike-confirmed FQNs:
+import net.minecraft.client.renderer.entity.IronGolemRenderer;
+import net.minecraft.client.renderer.entity.state.IronGolemRenderState;
+import net.minecraft.world.entity.animal.golem.IronGolem;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+@Mixin(IronGolemRenderer.class)
+public abstract class IronGolemRenderStateMixin {
+
+    @Inject(method = "extractRenderState", at = @At("TAIL"))
+    private void multigolem$captureVariant(IronGolem entity, IronGolemRenderState state, float partialTick, CallbackInfo ci) {
+        GolemVariant variant = GolemVariantAttachment.get(entity);
+        ((GolemRenderStateExtension) state).multigolem$setVariant(variant);
+    }
+}
+```
+
+Plus an interface-injection mixin on `IronGolemRenderState` to satisfy the cast (or a separate mixin that adds the field — exact pattern per spike 1 output):
+
+```java
+package dev.charles.multigolem.client.mixin;
+
+import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.client.render.GolemRenderStateExtension;
+import net.minecraft.client.renderer.entity.state.IronGolemRenderState;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
+
+@Mixin(IronGolemRenderState.class)
+public abstract class IronGolemRenderStateExtensionMixin implements GolemRenderStateExtension {
+
+    @Unique
+    private GolemVariant multigolem$variant;
+
+    @Override
+    public GolemVariant multigolem$getVariant() {
+        return multigolem$variant;
+    }
+
+    @Override
+    public void multigolem$setVariant(GolemVariant variant) {
+        this.multigolem$variant = variant;
+    }
+}
+```
+
+Add this new mixin to the client mixins config (`multigolem.client.mixins.json` → `client`: append `"IronGolemRenderStateExtensionMixin"`).
+
+- [ ] **Step 21.8: Texture selection mixin**
+
+```java
+package dev.charles.multigolem.client.mixin;
+
+import dev.charles.multigolem.client.render.GolemRenderStateExtension;
+import dev.charles.multigolem.client.render.GolemTextureSelector;
+import net.minecraft.client.renderer.entity.IronGolemRenderer;
+import net.minecraft.client.renderer.entity.state.IronGolemRenderState;
+import net.minecraft.resources.Identifier;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+@Mixin(IronGolemRenderer.class)
+public abstract class IronGolemRendererMixin {
+
+    @Inject(method = "getTextureLocation(Lnet/minecraft/client/renderer/entity/state/IronGolemRenderState;)Lnet/minecraft/resources/Identifier;",
+            at = @At("HEAD"), cancellable = true)
+    private void multigolem$pickVariantTexture(IronGolemRenderState state, CallbackInfoReturnable<Identifier> cir) {
+        var ext = (GolemRenderStateExtension) state;
+        var variant = ext.multigolem$getVariant();
+        if (variant == null) return;
+        cir.setReturnValue(GolemTextureSelector.textureFor(variant));
+    }
+}
+```
+
+- [ ] **Step 21.9: Build, smoke-test (in-game)**
+
+```bash
+./gradlew --quiet build > build_out.txt 2>&1; echo "exit=$?"
+```
+
+Then `./gradlew runClient` and spawn each variant in creative; verify each one shows its tinted texture. Iron remains vanilla.
+
+- [ ] **Step 21.10: Commit, push**
+
+```bash
+rm -f build_out.txt
+git add build.gradle src/main/resources/fabric.mod.json \
+        src/client/
+git commit -m "feat: client renderer + variant texture selection
+
+Client source set + ClientModInitializer + 3 render mixins:
+- IronGolemRenderStateExtensionMixin: adds variant field to state
+- IronGolemRenderStateMixin: captures variant from attachment
+- IronGolemRendererMixin: selects texture via GolemTextureSelector
+
+Iron variant returns vanilla texture identifier (no iron_golem.png
+ships in this mod). Required client mixins per spec §10 — modded
+client fails fast with Mixin error if any injection fails."
+git push origin main
+```
+
+---
+
+## Task 22: Full V2 playtest
+
+**Files:**
+- Modify: `docs/playtest-checklist.md` (append V2 rows from spec §11.2)
+
+- [ ] **Step 22.1: Append V2 playtest rows**
+
+Open `docs/playtest-checklist.md` and append a `## V2 — v0.2.0` section containing every row from spec §11.2 (textures, copper lightning heal, gold speed + vanity, emerald villager aura, diamond lightning including bystander + direct-hit + dying-target + filtered-target + BOSSES_ONLY, netherite fire/lava + ignite, ignored_target_types, save/load + migration, vanilla parity preserved).
+
+- [ ] **Step 22.2: Build a release-shaped jar**
+
+```bash
+./gradlew --quiet build > build_out.txt 2>&1; echo "exit=$?"
+ls -l build/libs/multigolem-*.jar
+```
+
+- [ ] **Step 22.3: Run the playtest checklist against a real Fabric server**
+
+Drop the jar into a fresh MC 26.1.2 server's `mods/` folder (plus Fabric API). Start server. Connect with a modded client and a vanilla client. Work through every row of the V2 section in `docs/playtest-checklist.md`. Tick boxes as they pass; file issues for any failures and fix in dedicated commits before continuing.
+
+- [ ] **Step 22.4: Commit checklist additions**
+
+```bash
+rm -f build_out.txt
+git add docs/playtest-checklist.md
+git commit -m "docs: append V2 playtest checklist rows"
+git push origin main
+```
+
+---
+
+## Task 23: Release v0.2.0+mc26.1.2
+
+**Files:**
+- Modify: `gradle.properties` (bump version)
+- Modify: `CHANGELOG.md` (release section)
+- Modify: `docs/modrinth-listing.md` and `docs/curseforge-listing.md` (V2 sections)
+
+- [ ] **Step 23.1: Update `CHANGELOG.md`**
+
+Replace `## Unreleased` with `## 0.2.0+mc26.1.2 — <today>`, then add a fresh empty `## Unreleased` section above.
+
+- [ ] **Step 23.2: Bump version**
+
+In `gradle.properties`:
+```
+mod_version=0.2.0+mc26.1.2
+```
+
+- [ ] **Step 23.3: Update listing descriptions**
+
+In `docs/modrinth-listing.md` (inside the 4-backtick fenced block) and `docs/curseforge-listing.md`, add V2-specific content describing the 5 abilities, textures, and `ignored_target_types`.
+
+- [ ] **Step 23.4: Commit version bump**
+
+```bash
+git add gradle.properties CHANGELOG.md docs/modrinth-listing.md docs/curseforge-listing.md
+git commit -m "chore: release v0.2.0+mc26.1.2
+
+V2: client textures + 5 special abilities + ignored_target_types."
+git push origin main
+```
+
+- [ ] **Step 23.5: Tag and push**
+
+```bash
+git tag -a "v0.2.0+mc26.1.2" -m "MultiGolem v0.2.0 for Minecraft 26.1.2
+
+Client textures for all 5 non-iron variants. Five special abilities:
+- Copper: lightning strikes heal (and never damage)
+- Gold: +25% movement speed + sprint dust + sunlight shine
+- Emerald: heals when villagers are nearby
+- Diamond: combined passive + on-attack lightning (30-60s shared
+  cooldown), self-immune to lightning damage
+- Netherite: full fire/lava immunity + ignite-on-hit
+
+Cross-tier ignored_target_types per-tier exclusion list — defaults
+to ['CREEPERS'] on all new tiers (iron unchanged) to prevent
+collateral block damage and avoid charged-creeper events from
+the diamond zap.
+
+V1 config files migrate losslessly to V2 schema.
+
+Built by Tyler and Charles."
+git push origin "v0.2.0+mc26.1.2"
+```
+
+- [ ] **Step 23.6: Verify release**
+
+After CI runs, verify:
+- GitHub release at `https://github.com/TnTBass/multigolem/releases/tag/v0.2.0+mc26.1.2`
+- Modrinth version listed
+- CurseForge file uploaded (may pend moderator approval)
+
+Charles plays the new build. V2 done.
+
+---
+
+## V2 done. V3 (village natural-spawn variant weighting) gets its own plan.
