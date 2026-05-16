@@ -1,6 +1,8 @@
 package dev.charles.multigolem.config;
 
 import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.test.MinecraftBootstrap;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -12,10 +14,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class MultiGolemConfigTest {
 
-    @org.junit.jupiter.api.BeforeAll
-    static void bootstrapMinecraft() {
-        net.minecraft.SharedConstants.tryDetectVersion();
-        net.minecraft.server.Bootstrap.bootStrap();
+    @BeforeAll
+    static void bootstrap() {
+        MinecraftBootstrap.ensure();
     }
 
     @Test

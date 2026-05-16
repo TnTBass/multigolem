@@ -2,6 +2,7 @@ package dev.charles.multigolem.stats;
 
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.config.MultiGolemConfig;
+import dev.charles.multigolem.test.MinecraftBootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -10,9 +11,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class GolemStatsResolverTest {
 
     @BeforeAll
-    static void bootstrapMinecraft() {
-        net.minecraft.SharedConstants.tryDetectVersion();
-        net.minecraft.server.Bootstrap.bootStrap();
+    static void bootstrap() {
+        MinecraftBootstrap.ensure();
     }
 
     @Test

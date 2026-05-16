@@ -1,7 +1,6 @@
 package dev.charles.multigolem;
 
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
+import dev.charles.multigolem.test.MinecraftBootstrap;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import org.junit.jupiter.api.BeforeAll;
@@ -12,9 +11,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class GolemVariantTest {
 
     @BeforeAll
-    static void bootstrapMinecraft() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+    static void bootstrap() {
+        MinecraftBootstrap.ensure();
     }
 
     @Test
