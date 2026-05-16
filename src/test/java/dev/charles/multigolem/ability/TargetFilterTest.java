@@ -3,6 +3,7 @@ package dev.charles.multigolem.ability;
 import dev.charles.multigolem.ability.TargetFilter.DiamondTargetPredicate;
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragonPart;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.EnderMan;
@@ -52,6 +53,12 @@ class TargetFilterTest {
     }
 
     @Test
+    void ignored_allBosses_excludesEnderDragonPart() {
+        TargetFilter f = TargetFilter.fromIgnoredList(List.of("ALL_BOSSES"));
+        assertTrue(f.isExcludedClass(EnderDragonPart.class));
+    }
+
+    @Test
     void ignored_empty_excludesNothing() {
         TargetFilter f = TargetFilter.fromIgnoredList(List.of());
         assertFalse(f.isExcludedClass(Creeper.class));
@@ -78,6 +85,7 @@ class TargetFilterTest {
         DiamondTargetPredicate p = DiamondTargetPredicate.of("BOSSES_ONLY");
         assertTrue(p.matchesClass(WitherBoss.class));
         assertTrue(p.matchesClass(EnderDragon.class));
+        assertTrue(p.matchesClass(EnderDragonPart.class));
         assertTrue(p.matchesClass(Warden.class));
         assertFalse(p.matchesClass(Zombie.class));
     }

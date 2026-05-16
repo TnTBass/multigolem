@@ -2,6 +2,7 @@ package dev.charles.multigolem.ability;
 
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragonPart;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.EnderMan;
@@ -47,6 +48,7 @@ public final class TargetFilter {
     private static boolean isBossClass(Class<?> type) {
         return WitherBoss.class.isAssignableFrom(type)
             || EnderDragon.class.isAssignableFrom(type)
+            || EnderDragonPart.class.isAssignableFrom(type)
             || Warden.class.isAssignableFrom(type);
     }
 
