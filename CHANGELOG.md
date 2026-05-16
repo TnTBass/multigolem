@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Task 9: Texture generation pipeline — vanilla iron_golem.png template + HSL-shift Python script + genTextures Gradle task; 5 variant PNGs committed
 - Task 8: Add AbilityRegistry skeleton wired from MultiGolem.onInitialize
 - Fix Modrinth project description sync (wrap content in 4-backtick fenced block to match the script's regex)
 - Fix CurseForge upload slug in release workflow (`modern-multigolem` → `multigolem`)

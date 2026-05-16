@@ -271,6 +271,29 @@ jar {
 	}
 }
 
+tasks.register("genTextures") {
+    group = "build"
+    description = "Regenerate per-tier golem textures from build-inputs/textures/iron_golem.template.png"
+
+    inputs.file("build-inputs/textures/iron_golem.template.png")
+    inputs.file("scripts/generate-textures.py")
+    outputs.dir("src/main/resources/assets/multigolem/textures/entity")
+
+    doLast {
+        def python = providers.environmentVariable("PYTHON").getOrElse("python")
+        def result = providers.exec {
+            commandLine(python, "scripts/generate-textures.py")
+            ignoreExitValue = true
+        }
+        if (result.result.get().exitValue != 0) {
+            throw new GradleException("genTextures: scripts/generate-textures.py failed with exit ${result.result.get().exitValue}")
+        }
+    }
+}
+
+processResources.dependsOn("genTextures")
+tasks.named("sourcesJar") { dependsOn("genTextures") }
+
 // configure the maven publication
 publishing {
 	publications {
