@@ -53,3 +53,79 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 - [ ] Run the modded server. Connect with a vanilla MC 26.1.2 client.
 - [ ] Verify the vanilla client doesn't get kicked at login.
 - [ ] Have a modded player create a copper-variant golem on the same world; verify the vanilla client sees it as an iron golem (appearance) but reacts correctly to its stats (e.g., dies in copper-golem hit counts, drops copper ingots when killed).
+
+---
+
+# V2 — v0.2.0
+
+## Textures (modded client)
+
+- [ ] Copper golem displays with copper-tinted skin.
+- [ ] Repeat for gold, emerald, diamond, netherite.
+- [ ] Iron golem displays as vanilla (no change).
+
+## Textures (vanilla client)
+
+- [ ] Vanilla client connects to V2 server; sees all variants as iron golems.
+- [ ] Modded player and vanilla player share the same world; modded sees colors, vanilla sees iron — no desync.
+
+## Copper lightning heal
+
+- [ ] Stand near copper golem in thunderstorm OR strike with channeling trident — golem takes no damage AND heals.
+- [ ] Set `copper_lightning_heal_amount: 0` — lightning still doesn't damage, but no heal either.
+- [ ] Set `copper_lightning_immune: false` — lightning damages normally.
+
+## Gold speed + vanity
+
+- [ ] Gold golem moves visibly faster than iron.
+- [ ] Sprint-dust particles emit when gold golem walks.
+- [ ] Sunlight-shine particle appears when gold golem is stationary outdoors during day.
+- [ ] No shine particle indoors or at night.
+
+## Emerald villager aura
+
+- [ ] Damage emerald golem; stand near a villager; verify heal every 2s.
+- [ ] Move villager out of 8-block range; heal stops.
+- [ ] Wandering trader nearby with `emerald_count_wandering_traders: true` — heal proceeds.
+- [ ] Zombie villager nearby — no heal triggered.
+- [ ] Particle emits with each heal tick.
+
+## Diamond lightning
+
+- [ ] Approach diamond golem with creeper at 12 blocks → no zap (creeper in `ignored_target_types`).
+- [ ] Approach with skeleton at 12 blocks → zap; verify cooldown timing (30–60s before next).
+- [ ] Hit something with diamond golem when cooldown ready → swing summons lightning.
+- [ ] Block line-of-sight with a wall — passive zap doesn't fire through wall.
+- [ ] Lightning bolt hits diamond golem — no damage (self-immunity).
+- [ ] **Bystander immunity (default targeting):** spawn two diamond golems with a hostile mob (e.g., skeleton) near both, within passive aura range. Diamond A zaps the hostile. Verify (a) bolt hits hostile, not bystander diamond B; (b) incidental AoE lightning doesn't damage diamond B (self-immunity); (c) diamond B's cooldown is not consumed or reset; (d) no chain reaction.
+- [ ] **Direct-hit immunity (forced):** use `/summon lightning_bolt ~ ~ ~` directly on a diamond golem. Verify (a) no damage; (b) cooldown unchanged.
+- [ ] **On-attack with dying target (strict):** hit a mob whose HP < diamond golem's per-swing damage; vanilla swing kills it; verify on-attack lightning does NOT fire and cooldown is NOT consumed.
+- [ ] **On-attack with filtered target:** have diamond golem swing at a creeper (in `ignored_target_types`); verify cooldown is NOT consumed.
+- [ ] Set `diamond_target_mode: BOSSES_ONLY`; restart; verify normal hostiles aren't zapped.
+
+## Netherite fire/lava + ignite
+
+- [ ] Netherite golem stands in lava — no damage.
+- [ ] Hit by ghast fireball — no damage.
+- [ ] Magma block — no damage.
+- [ ] Hit a mob — mob catches fire for 5 seconds.
+- [ ] Hit a vanilla fire-immune mob (blaze) — no fire effect, no error.
+- [ ] **Hit another netherite-variant golem** — no fire effect on target (netherite ignite skips netherite-variant targets).
+- *Lava-walking is not in V2 — no row for this release.*
+
+## `ignored_target_types`
+
+- [ ] Default: copper/gold/emerald/diamond/netherite ignore creepers in melee.
+- [ ] Default: iron attacks creepers (vanilla behavior preserved).
+- [ ] Set `iron.ignored_target_types: ["CREEPERS"]` → iron now ignores creepers too.
+- [ ] Unknown value in list (`"DRAGONS_AND_CASTLES"`) → warning logged at startup, value dropped, other entries preserved.
+
+## Save/load + migration
+
+- [ ] V1 config (no V2 fields) loads into V2 server; defaults appear in file after first run.
+- [ ] World with active diamond cooldown saved, server restarted — cooldown still active when world loads.
+- [ ] V2 client connects to V1 server — variant textures don't appear (V1 doesn't sync the attachment), no crash, no errors logged.
+
+## Vanilla parity preserved
+
+- [ ] Existing V1 playtest checklist (all rows) still passes — V2 adds, doesn't break.
