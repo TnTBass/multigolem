@@ -16,10 +16,14 @@
   "entrypoints": {
     "main": [
       "dev.charles.multigolem.MultiGolem"
+    ],
+    "client": [
+      "dev.charles.multigolem.client.MultiGolemClient"
     ]
   },
   "mixins": [
-    "multigolem.mixins.json"
+    "multigolem.mixins.json",
+    { "config": "multigolem.client.mixins.json", "environment": "client" }
   ],
   "depends": {
     "fabricloader": ">=0.19.2",

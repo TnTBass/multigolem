@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "package": "dev.charles.multigolem.client.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "environment": "client",
+  "mixins": [],
+  "client": [
+    "IronGolemRenderStateExtensionMixin",
+    "IronGolemRenderStateMixin",
+    "IronGolemRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
