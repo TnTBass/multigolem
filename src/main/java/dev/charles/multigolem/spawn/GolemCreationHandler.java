@@ -1,0 +1,78 @@
+package dev.charles.multigolem.spawn;
+
+import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.MultiGolem;
+import dev.charles.multigolem.attachment.GolemVariantAttachment;
+import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.golem.IronGolem;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CarvedPumpkinBlock;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.pattern.BlockInWorld;
+import net.minecraft.world.level.block.state.pattern.BlockPattern;
+import net.minecraft.world.level.block.state.pattern.BlockPatternBuilder;
+import net.minecraft.world.level.block.state.predicate.BlockStatePredicate;
+
+import java.util.EnumMap;
+import java.util.Map;
+
+public final class GolemCreationHandler {
+
+    private static final Map<GolemVariant, BlockPattern> PATTERNS = new EnumMap<>(GolemVariant.class);
+
+    private GolemCreationHandler() {}
+
+    private static BlockPattern patternFor(GolemVariant variant) {
+        return PATTERNS.computeIfAbsent(variant, v -> BlockPatternBuilder.start()
+            .aisle("~^~", "###", "~#~")
+            .where('^', BlockInWorld.hasState(s -> s.is(Blocks.CARVED_PUMPKIN) || s.is(Blocks.JACK_O_LANTERN)))
+            .where('#', BlockInWorld.hasState(BlockStatePredicate.forBlock(v.bodyBlock())))
+            .where('~', BlockInWorld.hasState(BlockBehaviour.BlockStateBase::isAir))
+            .build());
+    }
+
+    /**
+     * Returns true if a variant golem was spawned (caller should cancel vanilla logic).
+     * Returns false if no MultiGolem T-pattern matched (caller should fall through to vanilla).
+     */
+    public static boolean trySpawnVariant(Level level, BlockPos topPos) {
+        if (!(level instanceof ServerLevel server)) return false;
+
+        for (GolemVariant variant : GolemVariant.values()) {
+            // Skip IRON - vanilla iron T-pattern is handled by vanilla's own check.
+            if (variant == GolemVariant.IRON) continue;
+
+            BlockPattern.BlockPatternMatch match = patternFor(variant).find(server, topPos);
+            if (match == null) continue;
+
+            IronGolem golem = EntityType.IRON_GOLEM.create(server, EntitySpawnReason.TRIGGERED);
+            if (golem == null) {
+                MultiGolem.LOG.warn("Failed to create iron golem entity for variant {}", variant.id());
+                return false;
+            }
+            golem.setPlayerCreated(true);
+            GolemVariantAttachment.set(golem, variant);
+
+            // Vanilla's spawn order: clear blocks first, then position+spawn, then trigger, then updateNeighbors.
+            CarvedPumpkinBlock.clearPatternBlocks(server, match);
+            BlockPos spawnPos = match.getBlock(1, 2, 0).getPos();
+            golem.snapTo(spawnPos.getX() + 0.5, spawnPos.getY() + 0.05, spawnPos.getZ() + 0.5, 0.0F, 0.0F);
+            // Set HP to variant's configured max so it spawns at full health.
+            golem.setHealth(MultiGolem.config().tier(variant).maxHealth());
+            server.addFreshEntity(golem);
+
+            for (ServerPlayer player : server.getEntitiesOfClass(ServerPlayer.class, golem.getBoundingBox().inflate(5.0))) {
+                CriteriaTriggers.SUMMONED_ENTITY.trigger(player, golem);
+            }
+            CarvedPumpkinBlock.updatePatternBlocks(server, match);
+            return true;
+        }
+        return false;
+    }
+}

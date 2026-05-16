@@ -2,7 +2,10 @@
   "required": true,
   "package": "dev.charles.multigolem.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": ["IronGolemMixin"],
+  "mixins": [
+    "IronGolemMixin",
+    "CarvedPumpkinBlockMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }
