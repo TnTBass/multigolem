@@ -10,3 +10,4 @@
 - Material-specific drops on death
 - Server-side functional; vanilla clients work without the mod
 - Build/release CI (GitHub Actions) and Modrinth/CurseForge upload scripts
+- README and playtest checklist for the V1 release
