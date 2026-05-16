@@ -1,5 +1,6 @@
 package dev.charles.multigolem;
 
+import dev.charles.multigolem.attachment.GolemAbilityStateAttachment;
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
 import dev.charles.multigolem.attribute.VariantAttributes;
 import dev.charles.multigolem.config.MultiGolemConfig;
@@ -38,6 +39,7 @@ public class MultiGolem implements ModInitializer {
     @Override
     public void onInitialize() {
         GolemVariantAttachment.touch();
+        GolemAbilityStateAttachment.touch();
 
         Path configFile = FabricLoader.getInstance().getConfigDir().resolve(MOD_ID + ".json");
         CONFIG = MultiGolemConfig.loadOrCreate(configFile);

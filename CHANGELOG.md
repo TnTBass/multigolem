@@ -9,6 +9,7 @@
 - V2 spec revised per Codex round-2 review: lava-walking made hard non-goal; lossless `JsonObject` merge migration + atomic write; renderer fails fast (no silent fallback); diamond on-attack preserves cooldown on failed targets; netherite ignite skips netherite-variant targets; expanded validation rules; case-insensitive `diamond_target_mode`; spike 6 targeting candidates enumerated; implementation order reworked to fail-fast on targeting mixin
 - V2 spec revised per Codex round-3 review: diamond dying-target made strict (no fire, no cooldown); diamond bystander/direct-hit playtests rewritten correctly; config migration order clarified (merge → validate → compare → write) with canonicalized rewrite; atomic-write guarantee tightened (leave-untouched fallback rather than non-atomic copy); spike 2 expanded to cover ALLOW_DAMAGE semantics; spike 6 hook preference reordered (earlier-acquisition hooks first); spike 8 S2C packet fallback details specified; §5.3 wording generalized
 - V2 implementation plan drafted at `docs/superpowers/plans/2026-05-16-multigolem-v2.md` (23 tasks, spike-first, GolemTargetingMixin as fail-fast checkpoint at Task 7)
+- V2 Tasks 3–5: lossless V1→V2 config migration (merge defaults → canonicalize → atomic write); `GolemStatsResolver` V2 accessors; `GolemAbilityState` persistent attachment for diamond cooldown tracking
 
 ## 0.1.0+mc26.1.2 — 2026-05-15
 
