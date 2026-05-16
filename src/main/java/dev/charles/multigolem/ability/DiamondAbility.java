@@ -65,6 +65,7 @@ public final class DiamondAbility {
         }
 
         if (!ability.diamondCooldownReady(now)) return;
+        if (!ability.diamondScanReady(now)) return;
 
         int range = stats.diamondAuraRange();
         var modePredicate = TargetFilter.DiamondTargetPredicate.of(stats.diamondTargetMode());
@@ -76,7 +77,10 @@ public final class DiamondAbility {
                 && modePredicate.matches(e)
                 && !excludeFilter.isExcluded(e)
                 && hasLineOfSight(world, golem, e));
-        if (candidates.isEmpty()) return;
+        if (candidates.isEmpty()) {
+            GolemAbilityStateAttachment.set(golem, ability.withDiamondScanBackoff(now + 40L));
+            return;
+        }
 
         Entity target = candidates.stream()
             .min(Comparator.comparingDouble(e -> e.distanceToSqr(golem)))

@@ -23,7 +23,7 @@ class GolemAbilityStateTest {
 
     @Test
     void populated_roundTrips() {
-        GolemAbilityState s = new GolemAbilityState(123456789L);
+        GolemAbilityState s = new GolemAbilityState(123456789L, 0L);
         var encoded = GolemAbilityState.CODEC.encodeStart(JsonOps.INSTANCE, s).result().orElseThrow();
         GolemAbilityState decoded = GolemAbilityState.CODEC.parse(JsonOps.INSTANCE, encoded).result().orElseThrow();
         assertEquals(s.nextDiamondAbilityGameTime(), decoded.nextDiamondAbilityGameTime());
