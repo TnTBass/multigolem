@@ -1,10 +1,13 @@
 package dev.charles.multigolem;
 
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
+import dev.charles.multigolem.attribute.VariantAttributes;
 import dev.charles.multigolem.config.MultiGolemConfig;
 import dev.charles.multigolem.loot.HasGolemVariantLootCondition;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
+import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -46,6 +49,12 @@ public class MultiGolem implements ModInitializer {
         );
 
         registerVariantLoot();
+
+        ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
+            if (entity instanceof IronGolem golem) {
+                VariantAttributes.apply(golem);
+            }
+        });
 
         LOG.info("MultiGolem starting up - config loaded from {}", configFile);
     }

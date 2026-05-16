@@ -4,8 +4,10 @@ import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
+import dev.charles.multigolem.attribute.VariantAttributes;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.animal.golem.IronGolem;
 
 import java.util.Optional;
 
@@ -29,6 +31,9 @@ public final class GolemVariantAttachment {
 
     public static void set(Entity entity, GolemVariant variant) {
         entity.setAttached(TYPE, variant);
+        if (entity instanceof IronGolem golem) {
+            VariantAttributes.apply(golem);
+        }
     }
 
     public static void touch() {
