@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "multigolem",
+  "version": "${version}",
+  "name": "MultiGolem",
+  "description": "Adds Copper, Gold, Emerald, Diamond, and Netherite Iron Golem variants. Server-side functional; vanilla clients welcome.",
+  "authors": [
+    "Tyler",
+    "Charles"
+  ],
+  "contact": {
+    "homepage": "https://github.com/TnTBass/multigolem"
+  },
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "dev.charles.multigolem.MultiGolem"
+    ]
+  },
+  "mixins": [
+    "multigolem.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.2",
+    "fabric-api": "*",
+    "minecraft": "~26.1.2",
+    "java": ">=25"
+  }
+}
