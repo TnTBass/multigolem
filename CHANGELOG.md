@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Task 13: Netherite fire/lava immunity via ALLOW_DAMAGE (cancels IS_FIRE tagged damage)
+- Task 12: Copper ability — lightning cancel-and-heal via ALLOW_DAMAGE
+- Task 11: Emerald ability — villager aura heal (heals when AbstractVillager in range)
 - Task 10: Gold ability — +25% movement speed modifier (ADD_MULTIPLIED_TOTAL on MOVEMENT_SPEED) + sprint-dust (POOF) + sunlight-shine (END_ROD) particles
 - Task 9: Texture generation pipeline — vanilla iron_golem.png template + HSL-shift Python script + genTextures Gradle task; 5 variant PNGs committed
 - Task 8: Add AbilityRegistry skeleton wired from MultiGolem.onInitialize

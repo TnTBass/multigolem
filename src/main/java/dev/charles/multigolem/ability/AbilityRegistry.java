@@ -12,11 +12,11 @@ public final class AbilityRegistry {
     private AbilityRegistry() {}
 
     public static void register() {
-        GoldAbility.register();          // Task 10
-        // EmeraldAbility.register();   (Task 11)
-        // CopperAbility.register();    (Task 12)
-        // NetheriteAbility.register(); (Task 13)
-        // DiamondAbility.register();   (Tasks 16–19)
+        GoldAbility.register();       // Task 10
+        EmeraldAbility.register();    // Task 11
+        CopperAbility.register();     // Task 12
+        NetheriteAbility.register();  // Task 13
+        // DiamondAbility.register(); (Tasks 16–19)
         MultiGolem.LOG.debug("AbilityRegistry: wired all V2 abilities");
     }
 }
