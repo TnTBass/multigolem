@@ -9,3 +9,4 @@
 - Per-tier `anger_on_hit` toggle
 - Material-specific drops on death
 - Server-side functional; vanilla clients work without the mod
+- Build/release CI (GitHub Actions) and Modrinth/CurseForge upload scripts
