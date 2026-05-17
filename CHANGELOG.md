@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fixed disabled golem healing giving misleading visual feedback when players use matching ingots on damaged golems.
 - Villages can now naturally spawn MultiGolem variants as defenders.
 - Added server config for village spawn weights. Iron, Copper, Gold, and Emerald are common by default, while Diamond and Netherite are rare.
 - Existing golems, player-built golems, mob spawners, spawn eggs, and command-spawned iron golems are unchanged.

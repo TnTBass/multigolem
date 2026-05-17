@@ -28,7 +28,7 @@ public abstract class IronGolemMixin {
             // so the iron-ingot heal doesn't sneak through.
             ItemStack stack = player.getItemInHand(hand);
             if (GolemVariant.fromIngot(stack.getItem()).isPresent()) {
-                cir.setReturnValue(InteractionResult.PASS);
+                cir.setReturnValue(InteractionResult.FAIL);
             }
             return;
         }
