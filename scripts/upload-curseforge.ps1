@@ -61,8 +61,10 @@ function Get-Changelog {
     $lines = Get-Content -LiteralPath (Join-Path $root "CHANGELOG.md")
     $capturing = $false
     $captured = New-Object System.Collections.Generic.List[string]
+    $escapedVersion = [regex]::Escape($Version)
+    $sectionPattern = "^##\s+$escapedVersion(\s+[-–—]\s+.*)?$"
     foreach ($line in $lines) {
-        if ($line -eq "## $Version" -or $line -like "## $Version - *") {
+        if ($line -match $sectionPattern) {
             $capturing = $true
             continue
         }

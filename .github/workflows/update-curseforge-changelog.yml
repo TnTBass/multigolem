@@ -1,0 +1,32 @@
+name: update curseforge changelog
+
+on:
+  workflow_dispatch:
+    inputs:
+      file_id:
+        description: CurseForge file ID to update
+        required: true
+        type: string
+      version:
+        description: Version section to read from CHANGELOG.md
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  update-curseforge-changelog:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - name: update curseforge file changelog
+        shell: pwsh
+        env:
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          CURSEFORGE_PROJECT_ID: ${{ secrets.CURSEFORGE_PROJECT_ID }}
+        run: |
+          ./scripts/update-curseforge-changelog.ps1 `
+            -FileId "${{ inputs.file_id }}" `
+            -Version "${{ inputs.version }}"
