@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Villages can now naturally spawn MultiGolem variants as defenders.
+- Added server config for village spawn weights. Iron, Copper, Gold, and Emerald are common by default, while Diamond and Netherite are rare.
+- Existing golems, player-built golems, mob spawners, spawn eggs, and command-spawned iron golems are unchanged.
+
 ## 0.2.2+mc26.1.2 — 2026-05-17
 
 - Fixed waxed and oxidized copper blocks not creating MultiGolem Copper golems in the iron-golem T-pattern.
