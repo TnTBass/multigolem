@@ -183,6 +183,35 @@ tasks.register("checkWrapperChecksum") {
 	}
 }
 
+tasks.register("checkReleaseNotesStyle") {
+	group = "verification"
+	description = "Requires CHANGELOG.md release notes to be written for players and server admins."
+
+	inputs.file("CHANGELOG.md")
+	inputs.file("scripts/check-changelog-style.py")
+
+	doLast {
+		def python = providers.environmentVariable("PYTHON").getOrElse("python")
+		def githubRefName = System.getenv("GITHUB_REF_NAME") ?: ""
+		def section = githubRefName.startsWith("v") ? githubRefName.substring(1) : "Unreleased"
+		def result = providers.exec {
+			commandLine(python, "scripts/check-changelog-style.py", "--section", section)
+			ignoreExitValue = true
+		}
+		def stdout = result.standardOutput.asText.get()
+		def stderr = result.standardError.asText.get()
+		if (!stdout.isBlank()) {
+			logger.lifecycle(stdout)
+		}
+		if (!stderr.isBlank()) {
+			logger.error(stderr)
+		}
+		if (result.result.get().exitValue != 0) {
+			throw new GradleException("Release notes style gate failed for CHANGELOG.md section '${section}'.")
+		}
+	}
+}
+
 tasks.register("checkUnitTestCompanions") {
 	group = "verification"
 	description = "Requires unit-test companions for pure helper/state classes."
@@ -245,7 +274,7 @@ tasks.register("releaseReminder") {
 }
 
 tasks.named("check") {
-	dependsOn("checkChangelog", "checkWrapperChecksum", "checkUnitTestCompanions")
+	dependsOn("checkChangelog", "checkWrapperChecksum", "checkReleaseNotesStyle", "checkUnitTestCompanions")
 }
 
 tasks.named("build") {
@@ -286,6 +315,14 @@ tasks.register("genTextures") {
             ignoreExitValue = true
         }
         if (result.result.get().exitValue != 0) {
+            def stdout = result.standardOutput.asText.get()
+            def stderr = result.standardError.asText.get()
+            if (!stdout.isBlank()) {
+                logger.error(stdout)
+            }
+            if (!stderr.isBlank()) {
+                logger.error(stderr)
+            }
             throw new GradleException("genTextures: scripts/generate-textures.py failed with exit ${result.result.get().exitValue}")
         }
     }

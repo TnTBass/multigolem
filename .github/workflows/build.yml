@@ -26,6 +26,8 @@ jobs:
           distribution: 'microsoft'
       - name: setup gradle
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6
+      - name: install texture generator dependencies
+        run: python -m pip install -r requirements.txt
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
       - name: build
