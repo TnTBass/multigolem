@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-17
 **Status:** Draft, approved for spec write-up
-**Target phase:** post-V3 permissions phase
+**Target phase:** V3.1 permissions phase
 **Dependency direction:** integrate through `fabric-permissions-api`, not direct LuckPerms APIs
 
 ## 1. Summary
