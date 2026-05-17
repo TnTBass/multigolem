@@ -3,7 +3,8 @@ param(
     [string] $Version = "",
     [string] $JarPath = "",
     [string] $SourcesJarPath = "",
-    [string] $ChangelogPath = ""
+    [string] $ChangelogPath = "",
+    [switch] $SyncDescriptionOnly
 )
 
 $ErrorActionPreference = "Stop"
@@ -20,7 +21,9 @@ if ([string]::IsNullOrWhiteSpace($Version)) {
 }
 
 if ([string]::IsNullOrWhiteSpace($Version)) {
-    throw "Version was not provided and could not be read from gradle.properties."
+    if (!$SyncDescriptionOnly) {
+        throw "Version was not provided and could not be read from gradle.properties."
+    }
 }
 
 if ([string]::IsNullOrWhiteSpace($JarPath)) {
@@ -120,6 +123,15 @@ if (Test-Path -LiteralPath $listingDoc) {
     }
 } else {
     Write-Warning "[MultiGolem] docs/modrinth-listing.md not found — Modrinth project description was not synced."
+}
+
+if ($SyncDescriptionOnly) {
+    [pscustomobject]@{
+        ProjectSlug = $Slug
+        ProjectUrl = "https://modrinth.com/mod/$Slug"
+        DescriptionSynced = $true
+    } | ConvertTo-Json -Depth 4
+    return
 }
 
 $versionData = @{

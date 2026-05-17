@@ -4,6 +4,7 @@
 
 - Fix server watchdog crash: replace world-wide AABB entity queries in DiamondAbility, GoldAbility, and EmeraldAbility with ServerLevel.getEntities(EntityTypeTest, Predicate) to avoid scanning the full LongAVLTreeSet on every tick
 - Improve variant textures: per-tier material-detail overlays (copper patina streaks, gold shine lines, diamond facets, netherite ember glows, emerald gem facets); tuned HSL values for gold, diamond, and netherite
+- Add a manual Modrinth listing-sync workflow so the project description can be repaired without publishing a new release
 
 ## 0.2.0+mc26.1.2 — 2026-05-16
 
