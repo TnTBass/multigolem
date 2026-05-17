@@ -129,3 +129,39 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 ## Vanilla parity preserved
 
 - [ ] Existing V1 playtest checklist (all rows) still passes — V2 adds, doesn't break.
+
+---
+
+# V3 — village natural spawns
+
+## Village variant rolls
+
+- [ ] Set `village_spawning.weights` to `{"iron":0,"copper":1,"gold":0,"emerald":0,"diamond":0,"netherite":0}`. Trigger a villager-called golem spawn. Copper variant spawns.
+- [ ] Repeat forced one-at-a-time weights for Gold, Emerald, Diamond, and Netherite. Each target variant can spawn from villagers.
+- [ ] Set `netherite: 1` and all other recognized weights to `0`. Villagers can spawn Netherite.
+- [ ] Restore default weights. Over repeated village spawns, Iron, Copper, Gold, Emerald, Diamond, and Netherite are all possible outcomes; Diamond and Netherite are rare.
+
+## V2 behavior on village-spawned variants
+
+- [ ] Village-spawned non-iron variant starts at configured full health.
+- [ ] Textures render correctly on a modded client.
+- [ ] Healing with the matching ingot works.
+- [ ] Variant-specific drops use the village-spawned variant.
+- [ ] Copper lightning heal works.
+- [ ] Gold speed and particles work.
+- [ ] Emerald villager aura works.
+- [ ] Diamond lightning behavior works.
+- [ ] Netherite fire immunity and ignite-on-hit work.
+- [ ] `ignored_target_types` applies.
+- [ ] `anger_on_hit` applies.
+
+## Scope and config negatives
+
+- [ ] Village-spawned variants are natural defenders, not player-created golems.
+- [ ] Existing golems do not change after upgrading to V3.
+- [ ] `village_spawning.enabled: false` leaves villager-called spawns as Iron.
+- [ ] Fully explicit all-zero weights leave villager-called spawns as Iron.
+- [ ] Mob spawner iron golems do not roll variants.
+- [ ] Spawn egg iron golems do not roll variants.
+- [ ] Command-spawned iron golems do not roll variants.
+- [ ] Malformed `weights` falls back to defaults and logs a warning.
