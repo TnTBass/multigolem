@@ -5,6 +5,7 @@
 - Expanded the README with a full `config/multigolem.json` reference for server admins and a shorter public roadmap.
 - Updated the Modrinth and CurseForge listing copy to match the README's clearer gameplay and config documentation.
 - Added a maintainer workflow for correcting an already-published CurseForge file changelog without publishing a new mod version.
+- Added a maintainer workflow for correcting Modrinth project descriptions and version changelogs without publishing a new mod version.
 
 ## 0.2.1+mc26.1.2 — 2026-05-17
 
