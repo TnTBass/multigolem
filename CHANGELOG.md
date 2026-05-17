@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fixed golem HP being cut to 100 on chunk reload for Gold, Emerald, Diamond, and Netherite variants — caused by MAX_HEALTH and ATTACK_DAMAGE modifiers using addTransientModifier (not saved to NBT) instead of addPermanentModifier.
 - Fixed a server watchdog crash caused by Diamond, Gold, and Emerald golem abilities scanning too many entities each tick.
 - Improved variant textures with clearer material details: copper patina, brighter gold, diamond facets, netherite ember glows, and emerald gem accents.
 - Fixed the GitHub Actions release build so generated textures can be rebuilt on clean runners.

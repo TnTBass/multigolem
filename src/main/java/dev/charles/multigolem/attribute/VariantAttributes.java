@@ -44,7 +44,7 @@ public final class VariantAttributes {
         if (existing != null && existing.amount() == delta) return;
         instance.removeModifier(id);
         if (delta != 0.0) {
-            instance.addTransientModifier(new AttributeModifier(id, delta, AttributeModifier.Operation.ADD_VALUE));
+            instance.addPermanentModifier(new AttributeModifier(id, delta, AttributeModifier.Operation.ADD_VALUE));
         }
     }
 
@@ -54,7 +54,7 @@ public final class VariantAttributes {
         if (existing != null && existing.amount() == delta) return;
         instance.removeModifier(id);
         if (delta != 0.0) {
-            instance.addTransientModifier(new AttributeModifier(id, delta, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+            instance.addPermanentModifier(new AttributeModifier(id, delta, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
         }
     }
 }
