@@ -9,7 +9,7 @@
 
 - Fixed Gold, Emerald, Diamond, and Netherite golems reverting to 100 HP after chunk unloads or server restarts.
 - Fixed a server watchdog crash that could happen on worlds with many Gold, Emerald, or Diamond golems.
-- Refined variant textures so Gold looks brighter and more golden, Emerald looks greener, Diamond no longer looks dirty, and Netherite has darker material variation with lava cracks visible from multiple sides.
+- Refined the shipped variant textures so Gold looks brighter and more golden, Emerald looks greener, Diamond no longer looks dirty, and Netherite has darker material variation with lava cracks visible from multiple sides.
 - Fixed release builds so generated textures rebuild cleanly on GitHub Actions.
 - Added a maintenance workflow for updating the Modrinth project listing without publishing a new mod version.
 - Added changelog checks so future release notes stay focused on players and server admins, and generated texture files do not cause false release-blocking failures.

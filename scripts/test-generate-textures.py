@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import tempfile
 import unittest
 from pathlib import Path
@@ -12,6 +13,13 @@ from PIL import Image
 
 REPO = Path(__file__).resolve().parent.parent
 SCRIPT = REPO / "scripts" / "generate-textures.py"
+GENERATED_TEXTURES = (
+    "copper_golem.png",
+    "gold_golem.png",
+    "emerald_golem.png",
+    "diamond_golem.png",
+    "netherite_golem.png",
+)
 
 
 def load_generator():
@@ -33,7 +41,78 @@ def count_pixels(path: Path, predicate) -> int:
     return count
 
 
+def count_pixels_in_regions(path: Path, regions, predicate) -> int:
+    image = Image.open(path).convert("RGBA")
+    count = 0
+    for x, y, w, h in regions:
+        for py in range(y, y + h):
+            for px in range(x, x + w):
+                r, g, b, a = image.getpixel((px, py))
+                if a and predicate(r, g, b):
+                    count += 1
+    return count
+
+
+def longest_vertical_run(path: Path, predicate) -> int:
+    image = Image.open(path).convert("RGBA")
+    longest = 0
+    for x in range(image.width):
+        current = 0
+        for y in range(image.height):
+            r, g, b, a = image.getpixel((x, y))
+            if a and predicate(r, g, b):
+                current += 1
+                longest = max(longest, current)
+            else:
+                current = 0
+    return longest
+
+
+def count_columns_with_vertical_run(path: Path, predicate, minimum_run: int) -> int:
+    image = Image.open(path).convert("RGBA")
+    columns = 0
+    for x in range(image.width):
+        current = 0
+        column_matches = False
+        for y in range(image.height):
+            r, g, b, a = image.getpixel((x, y))
+            if a and predicate(r, g, b):
+                current += 1
+                if current >= minimum_run:
+                    column_matches = True
+            else:
+                current = 0
+        if column_matches:
+            columns += 1
+    return columns
+
+
+def hash_file(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
 class GenerateTexturesTest(unittest.TestCase):
+    def test_texture_generation_is_deterministic(self):
+        generator = load_generator()
+        temp_root = REPO / "build" / "texture-test"
+        temp_root.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=temp_root) as first, tempfile.TemporaryDirectory(dir=temp_root) as second:
+            generator.OUT_DIR = Path(first)
+            self.assertEqual(generator.main(), 0)
+            first_hashes = {
+                name: hash_file(Path(first) / name)
+                for name in GENERATED_TEXTURES
+            }
+
+            generator.OUT_DIR = Path(second)
+            self.assertEqual(generator.main(), 0)
+            second_hashes = {
+                name: hash_file(Path(second) / name)
+                for name in GENERATED_TEXTURES
+            }
+
+            self.assertEqual(first_hashes, second_hashes)
+
     def test_material_details_are_visible_in_generated_outputs(self):
         generator = load_generator()
         temp_root = REPO / "build" / "texture-test"
@@ -69,17 +148,103 @@ class GenerateTexturesTest(unittest.TestCase):
                 diamond,
                 lambda r, g, b: 95 <= r <= 165 and 105 <= g <= 165 and b <= 80,
             )
+            gold_body_pixels = count_pixels(
+                gold,
+                lambda r, g, b: r >= 215 and g >= 145 and b <= 150,
+            )
             gold_highlight_pixels = count_pixels(
                 gold,
                 lambda r, g, b: r >= 240 and g >= 205 and 60 <= b <= 150,
             )
+            gold_bright_pixels = count_pixels(
+                gold,
+                lambda r, g, b: r >= 250 and g >= 220 and 70 <= b <= 140,
+            )
+            lava = lambda r, g, b: r >= 210 and 45 <= g <= 150 and b <= 65
+            dim_lava = lambda r, g, b: 110 <= r <= 210 and 35 <= g <= 115 and b <= 75
+            netherite_back_regions = [
+                (24, 8, 8, 10), (40, 51, 18, 12), (76, 27, 4, 30),
+                (76, 64, 4, 30), (53, 5, 6, 16), (76, 5, 6, 16),
+            ]
+            netherite_front_regions = [
+                (8, 8, 8, 10), (11, 51, 18, 12), (66, 27, 4, 30),
+                (66, 64, 4, 30), (42, 5, 6, 16), (65, 5, 6, 16),
+            ]
+            netherite_side_regions = [
+                (32, 8, 8, 10), (58, 51, 18, 12), (80, 27, 4, 30),
+                (80, 64, 4, 30), (59, 5, 6, 16), (82, 5, 6, 16),
+            ]
+            netherite_arm_regions = [
+                (66, 27, 8, 30), (76, 27, 8, 30),
+                (66, 64, 8, 30), (80, 64, 8, 30),
+            ]
+            netherite_back_lava_pixels = count_pixels_in_regions(
+                netherite,
+                netherite_back_regions,
+                lava,
+            )
+            netherite_front_lava_pixels = count_pixels_in_regions(
+                netherite,
+                netherite_front_regions,
+                lava,
+            )
+            netherite_side_lava_pixels = count_pixels_in_regions(
+                netherite,
+                netherite_side_regions,
+                lava,
+            )
+            netherite_arm_lava_pixels = count_pixels_in_regions(
+                netherite,
+                netherite_arm_regions,
+                lava,
+            )
+            netherite_eye_lava_pixels = count_pixels_in_regions(
+                netherite,
+                [(8, 13, 8, 3)],
+                lava,
+            )
+            netherite_eye_dim_lava_pixels = count_pixels_in_regions(
+                netherite,
+                [(8, 13, 8, 3)],
+                dim_lava,
+            )
+            netherite_lava_pixels = count_pixels(netherite, lava)
+            netherite_lava_crack_columns = count_columns_with_vertical_run(
+                netherite,
+                lava,
+                3,
+            )
+            netherite_dark_pixels = count_pixels(
+                netherite,
+                lambda r, g, b: 14 <= r <= 80 and 12 <= g <= 75 and 15 <= b <= 85,
+            )
+            netherite_deep_dark_pixels = count_pixels(
+                netherite,
+                lambda r, g, b: 8 <= r <= 45 and 8 <= g <= 42 and 10 <= b <= 50,
+            )
 
             self.assertGreaterEqual(copper_pixels, 350)
-            self.assertGreaterEqual(ember_pixels, 18)
-            self.assertGreaterEqual(emerald_green_pixels, 60)
+            self.assertGreaterEqual(emerald_green_pixels, 120)
             self.assertGreaterEqual(blue_green_pixels, 250)
-            self.assertGreaterEqual(olive_grime_pixels, 18)
+            self.assertLessEqual(olive_grime_pixels, 8)
+            self.assertGreaterEqual(gold_body_pixels, 1200)
             self.assertGreaterEqual(gold_highlight_pixels, 90)
+            self.assertGreaterEqual(gold_bright_pixels, 320)
+            self.assertGreaterEqual(netherite_dark_pixels, 450)
+            self.assertGreaterEqual(ember_pixels, 10)
+            self.assertGreaterEqual(netherite_deep_dark_pixels, 800)
+            self.assertGreaterEqual(netherite_back_lava_pixels, 12)
+            self.assertGreaterEqual(netherite_front_lava_pixels, 12)
+            self.assertGreaterEqual(netherite_side_lava_pixels, 12)
+            self.assertGreaterEqual(netherite_arm_lava_pixels, 24)
+            self.assertGreaterEqual(netherite_eye_lava_pixels, 2)
+            self.assertLessEqual(netherite_eye_lava_pixels, 4)
+            self.assertGreaterEqual(netherite_eye_dim_lava_pixels, 4)
+            self.assertLessEqual(netherite_eye_dim_lava_pixels, 8)
+            self.assertGreaterEqual(netherite_lava_crack_columns, 8)
+            self.assertGreaterEqual(netherite_lava_pixels, 55)
+            self.assertLessEqual(netherite_lava_pixels, 280)
+            self.assertGreaterEqual(longest_vertical_run(netherite, lava), 8)
 
 
 if __name__ == "__main__":
