@@ -3,7 +3,7 @@
 from __future__ import annotations
 import sys
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageDraw
 import colorsys
 
 REPO = Path(__file__).resolve().parent.parent
@@ -12,10 +12,10 @@ OUT_DIR = REPO / "src" / "main" / "resources" / "assets" / "multigolem" / "textu
 
 TIERS = {
     "copper":    {"hue_shift": -10, "saturation": 1.25, "lightness": 0.95},
-    "gold":      {"hue_shift": 35,  "saturation": 1.55, "lightness": 1.10},
+    "gold":      {"hue_shift": 38,  "saturation": 1.70, "lightness": 1.14},
     "emerald":   {"hue_shift": 110, "saturation": 1.45, "lightness": 0.85},
-    "diamond":   {"hue_shift": 165, "saturation": 0.75, "lightness": 1.20},
-    "netherite": {"hue_shift": 280, "saturation": 0.40, "lightness": 0.40},
+    "diamond":   {"hue_shift": 165, "saturation": 1.00, "lightness": 1.12},
+    "netherite": {"hue_shift": 280, "saturation": 0.34, "lightness": 0.36},
 }
 
 def shift_hue(img: Image.Image, hue_deg: float, sat_mul: float, lum_mul: float) -> Image.Image:
@@ -34,6 +34,105 @@ def shift_hue(img: Image.Image, hue_deg: float, sat_mul: float, lum_mul: float) 
             pixels[x, y] = (int(nr * 255), int(ng * 255), int(nb * 255), a)
     return img
 
+def blend_material(img: Image.Image, color: tuple[int, int, int], amount: float) -> Image.Image:
+    img = img.convert("RGBA")
+    pixels = img.load()
+    tr, tg, tb = color
+    for y in range(img.height):
+        for x in range(img.width):
+            r, g, b, a = pixels[x, y]
+            if a == 0:
+                continue
+            pixels[x, y] = (
+                int(r * (1.0 - amount) + tr * amount),
+                int(g * (1.0 - amount) + tg * amount),
+                int(b * (1.0 - amount) + tb * amount),
+                a,
+            )
+    return img
+
+def draw_rects(draw: ImageDraw.ImageDraw, rects: list[tuple[int, int, int, int]], fill: tuple[int, int, int, int]) -> None:
+    for x, y, w, h in rects:
+        draw.rectangle((x, y, x + w - 1, y + h - 1), fill=fill)
+
+def draw_lines(draw: ImageDraw.ImageDraw, lines: list[list[tuple[int, int]]], fill: tuple[int, int, int, int], width: int = 1) -> None:
+    for line in lines:
+        draw.line(line, fill=fill, width=width)
+
+def apply_material_details(tier: str, img: Image.Image) -> Image.Image:
+    overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+
+    if tier == "copper":
+        img = blend_material(img, (190, 96, 58), 0.24)
+        draw_lines(draw, [
+            [(19, 52), (16, 61), (18, 70)],
+            [(66, 29), (68, 41), (65, 54)],
+            [(42, 8), (44, 15), (43, 22)],
+        ], (52, 145, 104, 150))
+        draw_rects(draw, [
+            (12, 52, 17, 11), (67, 28, 5, 26), (42, 6, 6, 16),
+            (65, 6, 6, 16),
+        ], (204, 111, 61, 120))
+        draw_rects(draw, [(23, 55, 2, 2), (69, 37, 2, 3), (45, 17, 2, 2)], (79, 178, 124, 180))
+
+    elif tier == "gold":
+        img = blend_material(img, (248, 184, 31), 0.20)
+        draw_rects(draw, [
+            (12, 52, 14, 2), (16, 56, 9, 2), (67, 28, 4, 20),
+            (41, 5, 6, 2), (64, 5, 6, 2), (42, 11, 5, 8),
+            (65, 11, 5, 8),
+        ], (255, 238, 111, 210))
+        draw_rects(draw, [
+            (27, 52, 2, 11), (72, 28, 2, 25), (48, 5, 2, 17),
+            (71, 5, 2, 17),
+        ], (124, 71, 7, 130))
+
+    elif tier == "diamond":
+        img = blend_material(img, (86, 218, 212), 0.30)
+        draw_lines(draw, [
+            [(12, 59), (19, 52), (28, 59)],
+            [(66, 31), (70, 39), (66, 49)],
+            [(42, 7), (48, 14), (42, 21)],
+            [(65, 7), (70, 14), (65, 21)],
+        ], (235, 255, 247, 190))
+        draw_lines(draw, [
+            [(16, 52), (22, 63)],
+            [(69, 28), (66, 43), (70, 56)],
+            [(44, 6), (48, 20)],
+        ], (20, 137, 151, 150))
+        draw_rects(draw, [
+            (67, 40, 3, 9), (13, 56, 3, 6), (42, 15, 3, 6),
+            (20, 61, 3, 4), (24, 56, 2, 5), (45, 12, 2, 4),
+            (69, 10, 2, 5), (66, 48, 2, 8),
+        ], (126, 142, 50, 240))
+        draw_rects(draw, [(67, 46, 2, 2), (43, 20, 2, 2)], (213, 184, 43, 140))
+
+    elif tier == "netherite":
+        img = blend_material(img, (35, 31, 36), 0.38)
+        draw_lines(draw, [
+            [(15, 52), (18, 57), (16, 63)],
+            [(24, 51), (22, 57), (27, 63)],
+            [(67, 29), (70, 39), (67, 50)],
+            [(43, 6), (46, 14), (44, 21)],
+            [(66, 7), (69, 13), (66, 21)],
+        ], (255, 91, 29, 255))
+        draw_rects(draw, [(18, 57, 2, 2), (24, 58, 2, 2), (69, 38, 2, 2)], (255, 154, 45, 230))
+
+    elif tier == "emerald":
+        img = blend_material(img, (58, 148, 84), 0.24)
+        draw_rects(draw, [
+            (16, 55, 7, 5), (68, 34, 3, 10), (43, 11, 3, 8),
+            (66, 11, 3, 8),
+        ], (45, 215, 107, 215))
+        draw_lines(draw, [
+            [(12, 52), (18, 57), (28, 52)],
+            [(66, 28), (71, 38), (66, 54)],
+            [(42, 6), (48, 15), (42, 22)],
+        ], (24, 99, 58, 150))
+
+    return Image.alpha_composite(img.convert("RGBA"), overlay)
+
 def main() -> int:
     if not TEMPLATE.exists():
         print(f"ERROR: template not found at {TEMPLATE}", file=sys.stderr)
@@ -42,6 +141,7 @@ def main() -> int:
     template = Image.open(TEMPLATE)
     for tier, params in TIERS.items():
         img = shift_hue(template.copy(), params["hue_shift"], params["saturation"], params["lightness"])
+        img = apply_material_details(tier, img)
         out = OUT_DIR / f"{tier}_golem.png"
         img.save(out, "PNG")
         print(f"wrote {out.relative_to(REPO)}")

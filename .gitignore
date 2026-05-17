@@ -1,6 +1,7 @@
 # Claude Code working directory
 
 .claude/
+.superpowers/
 
 # gradle
 
@@ -42,3 +43,8 @@ hs_err_*.log
 replay_*.log
 *.hprof
 *.jfr
+
+# python
+
+__pycache__/
+*.pyc
