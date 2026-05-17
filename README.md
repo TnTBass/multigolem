@@ -5,10 +5,12 @@ A Fabric mod for Minecraft 26.1.2 that adds Copper, Gold, Emerald, Diamond, and 
 ## What it does
 
 - Five new golem tiers, built like an Iron Golem (T-pattern + carved pumpkin) but with a different body block.
+- Each tier has a unique texture on modded clients. Vanilla clients see all variants as regular iron golems.
 - Stats scale: Copper is weakest, Netherite is strongest (designed to beat a Warden 1v1).
 - Heal each golem with its matching ingot.
-- Per-tier configuration: HP, attack damage, whether the tier retaliates when hit.
-- **Server-side functional.** Vanilla clients can connect with no mod installed and see all variants as regular iron golems; stats, drops, and creation all behave correctly.
+- Per-tier special abilities (see below).
+- Per-tier `ignored_target_types` — copper/gold/emerald/diamond/netherite ignore creepers by default to prevent collateral block damage.
+- **Server-side functional.** Vanilla clients can connect with no mod installed; stats, drops, and creation all behave correctly.
 
 ## Recipes
 
@@ -23,7 +25,7 @@ Build a T-shape (1 base block, 1 center, 2 arms) out of one of:
 | Diamond Block | Diamond Golem |
 | Netherite Block | Netherite Golem |
 
-Place a carved pumpkin on top. The vanilla single-copper-block + pumpkin recipe also still spawns the vanilla Copper Golem (with its chest behavior).
+Place a carved pumpkin on top. The vanilla single-copper-block + pumpkin recipe still spawns the vanilla Copper Golem (with its chest behavior).
 
 ## Stats (defaults)
 
@@ -36,7 +38,17 @@ Place a carved pumpkin on top. The vanilla single-copper-block + pumpkin recipe 
 | Diamond | 350 | 62.5 |
 | Netherite | 600 | 85.0 |
 
-All values are configurable per-tier in `config/multigolem.json`.
+## Special Abilities
+
+| Tier | Ability |
+|---|---|
+| Copper | Lightning strikes heal instead of damage |
+| Gold | +25% movement speed; sprint-dust and sunlight-shine particles |
+| Emerald | Heals passively while any villager or wandering trader is within 8 blocks |
+| Diamond | Passive LOS lightning zap of nearby hostiles (30–60s cooldown) + on-attack lightning; self-immune to lightning damage |
+| Netherite | Fully immune to fire and lava; ignites any mob it hits for 5 seconds |
+
+All ability parameters are configurable per-tier in `config/multigolem.json`.
 
 ## Building
 
@@ -55,16 +67,14 @@ Output jar lives at `build/libs/multigolem-<version>.jar`.
 
 ## Configuration
 
-Edit `config/multigolem.json` (created on first server start). Per-tier `max_health`, `attack_damage`, `anger_on_hit`, and the global `allow_golem_healing` toggle.
+Edit `config/multigolem.json` (created on first server start). Per-tier fields include `max_health`, `attack_damage`, `anger_on_hit`, `ignored_target_types`, and ability-specific toggles and parameters. The global `allow_golem_healing` toggle disables ingot-based healing for all tiers. V1 config files migrate losslessly to V2 schema.
 
 ## Roadmap
 
-- **V1** (this release): Variants, stats, drops, healing, anger toggle, config. Server-side only.
-- **V2**: Client texture, special abilities (copper lightning heal, gold speed, emerald villager heal, diamond lightning, netherite fire immunity + ignite).
+- **V1** ✅: Variants, stats, drops, healing, anger toggle, config. Server-side only.
+- **V2** ✅: Client textures, five special abilities, `ignored_target_types`, lossless V1→V2 config migration.
 - **V3**: Village natural-spawn variant weighting.
-
-See [`docs/superpowers/specs/2026-05-15-multigolem-design.md`](docs/superpowers/specs/2026-05-15-multigolem-design.md) for the full design.
 
 ## License
 
-MIT.
+MIT — see [LICENSE](LICENSE).
