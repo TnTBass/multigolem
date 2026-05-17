@@ -2,23 +2,22 @@
 
 ## Features
 
-- 5 new Iron Golem variants: Copper, Gold, Emerald, Diamond, Netherite
-- Stats scale with material; netherite kills a Warden in ~6 hits
-- T-pattern creation: 4 body blocks + carved pumpkin (same shape as vanilla iron golem)
-- Heal each variant with its matching ingot
-- Per-tier `anger_on_hit` toggle in config
-- Server-side functional; vanilla clients welcome
-- Custom textures per variant on modded clients
+- Adds five Iron Golem variants: Copper, Gold, Emerald, Diamond, and Netherite.
+- Server-side functional: vanilla clients can connect to a server running MultiGolem with no mod installed.
+- Build variants with the vanilla iron-golem T-shape using copper, gold, emerald, diamond, or netherite body blocks.
+- Stats scale by material; Copper is the weakest and Netherite is the strongest.
+- Heal each variant with its matching ingot.
+- Custom textures per variant on modded clients; vanilla clients still see regular iron golems.
 
-## Special Abilities (V2)
+## Special Abilities
 
-- **Copper:** lightning strikes heal instead of damage
-- **Gold:** +25% movement speed + sprint/sunlight vanity particles
-- **Emerald:** heals passively near villagers or wandering traders
-- **Diamond:** passive LOS lightning zap (30–60s cooldown) + on-attack lightning; self-immune to lightning; creepers excluded by default
-- **Netherite:** fire and lava immune; ignites hit mobs for 5s (skips other netherite golems)
+- **Copper:** lightning strikes heal instead of damage.
+- **Gold:** +25% movement speed, sprint-dust particles while moving, and sunlight-shine particles while idle outdoors.
+- **Emerald:** heals passively while villagers or wandering traders are nearby.
+- **Diamond:** passive LOS lightning zap of nearby hostiles, on-attack lightning, and lightning immunity. Creepers are excluded by default.
+- **Netherite:** immune to fire and lava damage, and ignites hit mobs for 5 seconds.
 
-Cross-tier `ignored_target_types` per-tier list (default: creepers on all non-iron tiers to prevent collateral block damage).
+Cross-tier `ignored_target_types` lets server admins stop tiers from targeting categories such as creepers, players, endermen, or bosses. Copper, Gold, Emerald, Diamond, and Netherite ignore creepers by default to prevent collateral block damage.
 
 ## Creation Recipes
 
@@ -34,7 +33,14 @@ Place a carved pumpkin on top. Iron golem recipe is unchanged from vanilla.
 
 ## Configuration
 
-Edit `config/multigolem.json` (created on first server start) to tune per-tier `max_health`, `attack_damage`, and `anger_on_hit`. Set `allow_golem_healing: false` to disable ingot-based healing globally.
+Edit `config/multigolem.json`, created on first server start. Server admins can tune:
+
+- Global ingot healing with `allow_golem_healing`
+- Per-tier `max_health`, `attack_damage`, and `anger_on_hit`
+- Per-tier `ignored_target_types` values: `CREEPERS`, `ENDERMEN`, `PLAYERS`, `ALL_BOSSES`
+- Ability settings for Copper lightning healing, Gold movement/particles, Emerald healing aura, Diamond lightning targeting/cooldowns, and Netherite fire immunity/ignite duration
+
+Existing V1 config files migrate automatically to the V2 schema, and unknown fields are preserved where possible.
 
 ## Requirements
 
