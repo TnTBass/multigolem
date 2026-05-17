@@ -56,6 +56,11 @@ public final class DiamondAbility {
     private static void tickDiamond(ServerLevel world, IronGolem golem, dev.charles.multigolem.config.TierStats stats) {
         GolemAbilityState ability = GolemAbilityStateAttachment.get(golem);
         long now = world.getGameTime();
+        GolemAbilityState clamped = ability.clampDiamondCooldown(now, maxCooldownTicks(stats));
+        if (clamped != ability) {
+            GolemAbilityStateAttachment.set(golem, clamped);
+            ability = clamped;
+        }
 
         // Cooldown-ready visual: emit END_ROD every second while primed
         if (ability.diamondCooldownReady(now) && now % 20 == 0) {
@@ -97,6 +102,10 @@ public final class DiamondAbility {
         long span = Math.max(1, max - min + 1);
         long nextAt = now + min + Math.floorMod(world.getRandom().nextLong(), span);
         GolemAbilityStateAttachment.set(golem, ability.withDiamondCooldown(nextAt));
+    }
+
+    public static long maxCooldownTicks(dev.charles.multigolem.config.TierStats stats) {
+        return Math.max(0, stats.diamondCooldownMaxSeconds()) * 20L;
     }
 
     private static boolean hasLineOfSight(ServerLevel world, LivingEntity from, Entity to) {

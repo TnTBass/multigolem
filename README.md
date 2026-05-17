@@ -18,14 +18,14 @@ Build a T-shape (1 base block, 1 center, 2 arms) out of one of:
 
 | Body block | Golem |
 |---|---|
-| Copper Block | Copper Golem |
+| Copper Block, including waxed or oxidized variants | Copper Golem |
 | Iron Block | Iron Golem (vanilla, unchanged) |
 | Gold Block | Gold Golem |
 | Emerald Block | Emerald Golem |
 | Diamond Block | Diamond Golem |
 | Netherite Block | Netherite Golem |
 
-Place a carved pumpkin on top. The vanilla single-copper-block + pumpkin recipe still spawns the vanilla Copper Golem (with its chest behavior).
+Place a carved pumpkin on top. Waxed and oxidized copper blocks work for MultiGolem's iron-golem-style Copper Golem. The vanilla single-copper-block + pumpkin recipe still spawns the vanilla Copper Golem (with its chest behavior).
 
 ## Stats (defaults)
 
@@ -43,7 +43,7 @@ Place a carved pumpkin on top. The vanilla single-copper-block + pumpkin recipe 
 | Tier | Ability |
 |---|---|
 | Copper | Lightning strikes heal instead of damage |
-| Gold | +25% movement speed; sprint-dust and sunlight-shine particles |
+| Gold | +75% movement speed; sprint-dust and sunlight-shine particles |
 | Emerald | Heals passively while any villager or wandering trader is within 8 blocks |
 | Diamond | Passive LOS lightning zap of nearby hostiles (30–60s cooldown) + on-attack lightning; self-immune to lightning damage |
 | Netherite | Fully immune to fire and lava; ignites any mob it hits for 5 seconds |
@@ -79,7 +79,7 @@ Ability fields:
 |---|---|---:|---|
 | Copper | `copper_lightning_immune` | `true` | Lightning heals Copper golems instead of damaging them. |
 | Copper | `copper_lightning_heal_amount` | `null` | HP restored by lightning. `null` means heal to full. |
-| Gold | `gold_speed_multiplier` | `1.25` | Movement speed multiplier. |
+| Gold | `gold_speed_multiplier` | `1.75` | Movement speed multiplier. |
 | Gold | `gold_sprint_particles_enabled` | `true` | Enables sprint-dust particles while moving. |
 | Gold | `gold_sunlight_shine_enabled` | `true` | Enables sunlight-shine particles while idle outdoors. |
 | Emerald | `emerald_aura_range` | `8` | Block radius for finding villagers and wandering traders. |

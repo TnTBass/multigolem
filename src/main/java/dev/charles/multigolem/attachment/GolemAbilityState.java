@@ -24,6 +24,14 @@ public record GolemAbilityState(long nextDiamondAbilityGameTime, long nextDiamon
         return new GolemAbilityState(nextDiamondAbilityGameTime, nextScan);
     }
 
+    public GolemAbilityState clampDiamondCooldown(long currentGameTime, long maxCooldownTicks) {
+        long maxNextGameTime = currentGameTime + Math.max(0L, maxCooldownTicks);
+        if (nextDiamondAbilityGameTime <= maxNextGameTime) {
+            return this;
+        }
+        return withDiamondCooldown(maxNextGameTime);
+    }
+
     public boolean diamondCooldownReady(long currentGameTime) {
         return currentGameTime >= nextDiamondAbilityGameTime;
     }

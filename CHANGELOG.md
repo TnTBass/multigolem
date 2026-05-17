@@ -2,10 +2,17 @@
 
 ## Unreleased
 
-- Expanded the README with a full `config/multigolem.json` reference for server admins and a shorter public roadmap.
-- Updated the Modrinth and CurseForge listing copy to match the README's clearer gameplay and config documentation.
-- Added a maintainer workflow for correcting an already-published CurseForge file changelog without publishing a new mod version.
-- Added a maintainer workflow for correcting Modrinth project descriptions and version changelogs without publishing a new mod version.
+- Fixed disabled golem healing giving misleading visual feedback when players use matching ingots on damaged golems.
+- Villages can now naturally spawn MultiGolem variants as defenders.
+- Added server config for village spawn weights. Iron, Copper, Gold, and Emerald are common by default, while Diamond and Netherite are rare.
+- Existing golems, player-built golems, mob spawners, spawn eggs, and command-spawned iron golems are unchanged.
+
+## 0.2.2+mc26.1.2 — 2026-05-17
+
+- Fixed waxed and oxidized copper blocks not creating MultiGolem Copper golems in the iron-golem T-pattern.
+- Fixed Diamond golems getting stuck with an overlong lightning cooldown after firing once, so they can recharge again within the configured cooldown window.
+- Fixed Netherite golems showing the burning state even though fire and lava damage was blocked.
+- Increased the default Gold golem movement speed multiplier from `1.25` to `1.75`.
 
 ## 0.2.1+mc26.1.2 — 2026-05-17
 

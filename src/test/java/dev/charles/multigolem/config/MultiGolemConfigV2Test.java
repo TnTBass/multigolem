@@ -32,7 +32,7 @@ class MultiGolemConfigV2Test {
         assertEquals(List.of(), cfg.tier(GolemVariant.IRON).ignoredTargetTypes());
         // Gold
         TierStats gold = cfg.tier(GolemVariant.GOLD);
-        assertEquals(1.25, gold.goldSpeedMultiplier(), 0.0001);
+        assertEquals(1.75, gold.goldSpeedMultiplier(), 0.0001);
         assertTrue(gold.goldSprintParticlesEnabled());
         assertTrue(gold.goldSunlightShineEnabled());
         // Emerald
@@ -145,7 +145,7 @@ class MultiGolemConfigV2Test {
             }
             """);
         MultiGolemConfig cfg = MultiGolemConfig.loadOrCreate(file);
-        assertEquals(1.25, cfg.tier(GolemVariant.GOLD).goldSpeedMultiplier(), 0.0001);
+        assertEquals(1.75, cfg.tier(GolemVariant.GOLD).goldSpeedMultiplier(), 0.0001);
     }
 
     @Test
