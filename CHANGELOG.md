@@ -2,13 +2,16 @@
 
 ## Unreleased
 
-- Fixed golem HP being cut to 100 on chunk reload for Gold, Emerald, Diamond, and Netherite variants — caused by MAX_HEALTH and ATTACK_DAMAGE modifiers using addTransientModifier (not saved to NBT) instead of addPermanentModifier.
-- Fixed a server watchdog crash caused by Diamond, Gold, and Emerald golem abilities scanning too many entities each tick.
-- Improved variant textures with clearer material details: copper patina, brighter gold, diamond facets, netherite ember glows, and emerald gem accents.
-- Fixed the GitHub Actions release build so generated textures can be rebuilt on clean runners.
+- Documented roadmap items V4 (spawn eggs for Iron Golem variants) and V5 (Copper Golem variants) in README so future contributors and AI assistants can pick them up. V3 (village natural-spawn weighting) remains next.
+
+## 0.2.1+mc26.1.2 — 2026-05-17
+
+- Fixed Gold, Emerald, Diamond, and Netherite golems reverting to 100 HP after chunk unloads or server restarts.
+- Fixed a server watchdog crash that could happen on worlds with many Gold, Emerald, or Diamond golems.
+- Refined variant textures so Gold looks brighter and more golden, Emerald looks greener, Diamond no longer looks dirty, and Netherite has darker material variation with lava cracks visible from multiple sides.
+- Fixed release builds so generated textures rebuild cleanly on GitHub Actions.
 - Added a maintenance workflow for updating the Modrinth project listing without publishing a new mod version.
-- Added a release-notes style gate so future changelogs stay focused on players and server admins instead of development-task history.
-- Fixed the changelog gate so generated texture files do not cause false release-blocking failures during CI builds.
+- Added changelog checks so future release notes stay focused on players and server admins, and generated texture files do not cause false release-blocking failures.
 
 ## 0.2.0+mc26.1.2 — 2026-05-16
 
