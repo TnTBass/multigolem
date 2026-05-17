@@ -7,6 +7,7 @@
 - Fixed the GitHub Actions release build so generated textures can be rebuilt on clean runners.
 - Added a maintenance workflow for updating the Modrinth project listing without publishing a new mod version.
 - Added a release-notes style gate so future changelogs stay focused on players and server admins instead of development-task history.
+- Fixed the changelog gate so generated texture files do not cause false release-blocking failures during CI builds.
 
 ## 0.2.0+mc26.1.2 — 2026-05-16
 

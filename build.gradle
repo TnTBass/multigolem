@@ -103,15 +103,18 @@ tasks.register("checkChangelog") {
 			mergeBase = gitOutput(["rev-list", "--max-parents=0", "HEAD"]).readLines().first()
 		}
 
+		def generatedTextureOutputPattern = ~/^src\/main\/resources\/assets\/multigolem\/textures\/entity\/.*\.png$/
 		def changedFiles = new TreeSet<String>()
 		[
-			["diff", "--name-only", "${mergeBase}...HEAD"],
-			["diff", "--name-only"],
-			["diff", "--name-only", "--cached"],
-			["ls-files", "--others", "--exclude-standard"]
-		].each { args ->
+			[args: ["diff", "--name-only", "${mergeBase}...HEAD"], ignoreGeneratedOutputs: false],
+			[args: ["diff", "--name-only"], ignoreGeneratedOutputs: true],
+			[args: ["diff", "--name-only", "--cached"], ignoreGeneratedOutputs: false],
+			[args: ["ls-files", "--others", "--exclude-standard"], ignoreGeneratedOutputs: false]
+		].each { item ->
+			def args = item.args
 			gitOutput(args).readLines()
 				.findAll { it }
+				.findAll { !(item.ignoreGeneratedOutputs && it ==~ generatedTextureOutputPattern) }
 				.each { changedFiles.add(it) }
 		}
 
