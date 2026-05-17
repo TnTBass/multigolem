@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Documented roadmap items V4 (spawn eggs for Iron Golem variants) and V5 (Copper Golem variants) in README so future contributors and AI assistants can pick them up. V3 (village natural-spawn weighting) remains next.
+- Added `docs/LESSONS-LEARNED.md` capturing process, technical, and release-plumbing patterns from V1 + V2 implementation so future phases avoid repeating the same mistakes. Linked from the README "Where to pick up" section.
 
 ## 0.2.1+mc26.1.2 — 2026-05-17
 

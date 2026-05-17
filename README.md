@@ -81,6 +81,10 @@ Edit `config/multigolem.json` (created on first server start). Per-tier fields i
 
 For agentic workers (Codex, Claude, etc.) resuming work on this project:
 
+**Read [`docs/LESSONS-LEARNED.md`](docs/LESSONS-LEARNED.md) first.** Every item there cost real time the first time we learned it — read once, save a day later. Covers process patterns (spike first; three-round Codex review; subagent stall modes), technical gotchas (mixin inheritance, layered vanilla AI, config-layer edge cases), and release plumbing details.
+
+
+
 - **V3 starting point:** `docs/superpowers/specs/2026-05-15-multigolem-design.md` §3 (V3 scope) and §6.1.1 (config weights including the Charles preset). Follow the same brainstorm → spec → Codex review → plan → execute flow used by V1 and V2.
 - **V4 starting point:** no spec yet. Start with a fresh brainstorming session. The vanilla `SpawnEggItem` lives at `net.minecraft.world.item.SpawnEggItem` — see V1's source-inspection spike pattern (`docs/26.1.2-mojang-targets.md`) for how to confirm API specifics before implementation.
 - **V5 starting point:** no spec yet. Start with a fresh brainstorming session. The vanilla `CopperGolem` entity is at `net.minecraft.world.entity.animal.golem.CopperGolem` and its spawn flow is documented in `docs/26.1.2-mojang-targets.md` under the "Copper Golem already exists in vanilla 26.1.2" finding.
