@@ -10,7 +10,7 @@ import java.util.function.IntUnaryOperator;
 
 public record VillageSpawnWeights(boolean enabled, EnumMap<GolemVariant, Integer> weights) {
 
-    private static final List<GolemVariant> ROLL_ORDER = List.of(
+    static final List<GolemVariant> ROLL_ORDER = List.of(
         GolemVariant.IRON,
         GolemVariant.COPPER,
         GolemVariant.GOLD,
@@ -21,6 +21,10 @@ public record VillageSpawnWeights(boolean enabled, EnumMap<GolemVariant, Integer
 
     public VillageSpawnWeights {
         weights = sanitize(weights);
+    }
+
+    public static List<GolemVariant> rollOrder() {
+        return ROLL_ORDER;
     }
 
     @Override

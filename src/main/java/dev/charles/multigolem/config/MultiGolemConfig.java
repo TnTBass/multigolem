@@ -183,7 +183,7 @@ public final class MultiGolemConfig {
 
         JsonObject weights = village.getAsJsonObject("weights");
         boolean hasRecognizedKey = false;
-        for (GolemVariant variant : GolemVariant.values()) {
+        for (GolemVariant variant : VillageSpawnWeights.rollOrder()) {
             if (weights.has(variant.id())) {
                 hasRecognizedKey = true;
                 break;
@@ -197,7 +197,15 @@ public final class MultiGolemConfig {
         }
 
         VillageSpawnWeights defaults = VillageSpawnWeights.defaults();
-        for (GolemVariant variant : GolemVariant.values()) {
+        if (!hasRecognizedKey) {
+            MultiGolem.LOG.warn("village_spawning.weights contains no recognized variant keys; using defaults");
+            for (GolemVariant variant : VillageSpawnWeights.rollOrder()) {
+                weights.addProperty(variant.id(), defaults.weight(variant));
+            }
+            return;
+        }
+
+        for (GolemVariant variant : VillageSpawnWeights.rollOrder()) {
             String key = variant.id();
             if (!weights.has(key)) {
                 MultiGolem.LOG.warn("village_spawning.weights.{} missing; using default {}", key, defaults.weight(variant));
@@ -216,13 +224,6 @@ public final class MultiGolemConfig {
             if (raw < 0) {
                 MultiGolem.LOG.warn("village_spawning.weights.{} = {} below 0; clamped to 0", key, raw);
                 weights.addProperty(key, 0);
-            }
-        }
-
-        if (!hasRecognizedKey) {
-            MultiGolem.LOG.warn("village_spawning.weights contains no recognized variant keys; using defaults");
-            for (GolemVariant variant : GolemVariant.values()) {
-                weights.addProperty(variant.id(), defaults.weight(variant));
             }
         }
     }
@@ -374,7 +375,7 @@ public final class MultiGolemConfig {
         if (weightsJson == null) return fallback.withEnabled(enabled);
 
         EnumMap<GolemVariant, Integer> weights = new EnumMap<>(GolemVariant.class);
-        for (GolemVariant variant : GolemVariant.values()) {
+        for (GolemVariant variant : VillageSpawnWeights.rollOrder()) {
             weights.put(variant, readInt(weightsJson, variant.id(), fallback.weight(variant)));
         }
         return new VillageSpawnWeights(enabled, weights);
@@ -611,7 +612,7 @@ public final class MultiGolemConfig {
         JsonObject village = new JsonObject();
         village.addProperty("enabled", weights.enabled());
         JsonObject weightsJson = new JsonObject();
-        for (GolemVariant variant : GolemVariant.values()) {
+        for (GolemVariant variant : VillageSpawnWeights.rollOrder()) {
             weightsJson.addProperty(variant.id(), weights.weight(variant));
         }
         village.add("weights", weightsJson);
