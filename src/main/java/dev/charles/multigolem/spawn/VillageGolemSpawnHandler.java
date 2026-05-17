@@ -10,9 +10,8 @@ public final class VillageGolemSpawnHandler {
     private VillageGolemSpawnHandler() {}
 
     public static void applyVillageRoll(IronGolem golem) {
-        if (golem == null) return;
-
         try {
+            // Constructed per-spawn to pick up live config reloads.
             VillageGolemSpawnResolver resolver = new VillageGolemSpawnResolver(MultiGolem.config());
             resolver.rollVariant(bound -> golem.getRandom().nextInt(bound))
                 .ifPresent(variant -> applyVariant(golem, variant));
