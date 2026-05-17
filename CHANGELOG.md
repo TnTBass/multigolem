@@ -2,17 +2,13 @@
 
 ## Unreleased
 
-- Documented roadmap items V4 (spawn eggs for Iron Golem variants) and V5 (Copper Golem variants) in README so future contributors and AI assistants can pick them up. V3 (village natural-spawn weighting) remains next.
-- Added `docs/LESSONS-LEARNED.md` capturing process, technical, and release-plumbing patterns from V1 + V2 implementation so future phases avoid repeating the same mistakes. Linked from the README "Where to pick up" section.
+- Expanded the README with a full `config/multigolem.json` reference for server admins and a shorter public roadmap.
 
 ## 0.2.1+mc26.1.2 — 2026-05-17
 
-- Fixed Gold, Emerald, Diamond, and Netherite golems reverting to 100 HP after chunk unloads or server restarts.
-- Fixed a server watchdog crash that could happen on worlds with many Gold, Emerald, or Diamond golems.
-- Refined the shipped variant textures so Gold looks brighter and more golden, Emerald looks greener, Diamond no longer looks dirty, and Netherite has darker material variation with lava cracks visible from multiple sides.
-- Fixed release builds so generated textures rebuild cleanly on GitHub Actions.
-- Added a maintenance workflow for updating the Modrinth project listing without publishing a new mod version.
-- Added changelog checks so future release notes stay focused on players and server admins, and generated texture files do not cause false release-blocking failures.
+- Fixed Gold, Emerald, Diamond, and Netherite golems losing their extra health after chunk unloads or server restarts. High-tier golems now keep their configured max HP instead of dropping back to 100 HP.
+- Fixed a server watchdog crash that could happen in busy worlds when Gold, Emerald, or Diamond golems checked nearby entities.
+- Improved variant textures so Gold reads as brighter metal, Emerald is greener, Diamond looks clean instead of grimy, and Netherite has darker material shading with lava cracks visible from multiple sides.
 
 ## 0.2.0+mc26.1.2 — 2026-05-16
 

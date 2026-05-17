@@ -50,46 +50,57 @@ Place a carved pumpkin on top. The vanilla single-copper-block + pumpkin recipe 
 
 All ability parameters are configurable per-tier in `config/multigolem.json`.
 
-## Building
-
-```
-./gradlew build
-```
-
-Output jar lives at `build/libs/multigolem-<version>.jar`.
-
-## Running in dev
-
-```
-./gradlew runServer
-./gradlew runClient
-```
-
 ## Configuration
 
-Edit `config/multigolem.json` (created on first server start). Per-tier fields include `max_health`, `attack_damage`, `anger_on_hit`, `ignored_target_types`, and ability-specific toggles and parameters. The global `allow_golem_healing` toggle disables ingot-based healing for all tiers. V1 config files migrate losslessly to V2 schema.
+Edit `config/multigolem.json`, created on first server start. Restart the server after changing it.
+
+Existing V1 config files migrate automatically to the V2 schema. Unknown fields are preserved where possible, so server owners can keep notes or future fields in the file.
+
+Top-level fields:
+
+| Field | Default | What it does |
+|---|---:|---|
+| `allow_golem_healing` | `true` | Enables or disables ingot-based healing for all golem tiers. |
+
+Each tier lives under `tiers.<tier_id>`, where `tier_id` is one of `copper`, `iron`, `gold`, `emerald`, `diamond`, or `netherite`.
+
+Shared per-tier fields:
+
+| Field | Default range | What it does |
+|---|---:|---|
+| `max_health` | `1`-`2048` | Maximum HP for that tier. |
+| `attack_damage` | `0`-`2048` | Attack damage for that tier. |
+| `anger_on_hit` | `true` / `false` | Whether that tier gets angry when attacked. |
+| `ignored_target_types` | list | Target categories this tier will not attack. Recognized values: `CREEPERS`, `ENDERMEN`, `PLAYERS`, `ALL_BOSSES`. Copper, Gold, Emerald, Diamond, and Netherite ignore creepers by default. |
+
+Ability fields:
+
+| Tier | Field | Default | What it does |
+|---|---|---:|---|
+| Copper | `copper_lightning_immune` | `true` | Lightning heals Copper golems instead of damaging them. |
+| Copper | `copper_lightning_heal_amount` | `null` | HP restored by lightning. `null` means heal to full. |
+| Gold | `gold_speed_multiplier` | `1.25` | Movement speed multiplier. |
+| Gold | `gold_sprint_particles_enabled` | `true` | Enables sprint-dust particles while moving. |
+| Gold | `gold_sunlight_shine_enabled` | `true` | Enables sunlight-shine particles while idle outdoors. |
+| Emerald | `emerald_aura_range` | `8` | Block radius for finding villagers and wandering traders. |
+| Emerald | `emerald_heal_interval_seconds` | `2.0` | Seconds between passive healing pulses. Minimum `0.5`. |
+| Emerald | `emerald_heal_per_tick` | `1.0` | HP restored per healing pulse. |
+| Emerald | `emerald_count_wandering_traders` | `true` | Whether wandering traders count for the Emerald healing aura. |
+| Diamond | `diamond_target_mode` | `ALL_HOSTILE_MOBS` | Passive lightning targeting mode. Values: `ALL_HOSTILE_MOBS`, `ALL_HOSTILE_MOBS_AND_PLAYERS`, `BOSSES_ONLY`, `NONE`. |
+| Diamond | `diamond_cooldown_min_seconds` | `30` | Minimum passive lightning cooldown. |
+| Diamond | `diamond_cooldown_max_seconds` | `60` | Maximum passive lightning cooldown. |
+| Diamond | `diamond_aura_range` | `12` | Block radius for passive lightning target scans. |
+| Diamond | `diamond_lightning_proof` | `true` | Makes Diamond golems immune to lightning damage. |
+| Netherite | `netherite_fire_immune` | `true` | Makes Netherite golems immune to fire and lava damage. |
+| Netherite | `netherite_ignite_seconds` | `5` | Seconds of fire applied to mobs hit by Netherite golems. |
 
 ## Roadmap
 
 - **V1** ✅: Variants, stats, drops, healing, anger toggle, config. Server-side only.
 - **V2** ✅: Client textures, five special abilities, `ignored_target_types`, lossless V1→V2 config migration.
-- **V3** (next): Village natural-spawn variant weighting for Iron Golems. Configurable weights per tier; default `Iron 50% / Copper 20% / Gold 10% / Emerald 14% / Diamond 5% / Netherite 1%`, plus a documented "Charles preset" of all tiers at 19% except Netherite at 5%. Sketched in the V1 design spec (`docs/superpowers/specs/2026-05-15-multigolem-design.md` §3 and §6.1.1). Server-side only; no new items or textures.
-- **V4**: Spawn eggs for the 5 Iron Golem variants (Copper, Gold, Emerald, Diamond, Netherite). New items extending the vanilla `SpawnEggItem` pattern; each item's `useOn` spawns a vanilla `IronGolem` and attaches the matching `GolemVariant`. Requires 5 new spawn-egg sprite textures (16×16 PNG, two-color, recolored from the vanilla iron-golem spawn egg) and a creative-tab placement decision (vanilla Spawn Eggs tab vs. custom MultiGolem tab). No new entities or attachments — just items that reuse all V1+V2 golem machinery.
-- **V5**: Copper Golem variants — extend the V1+V2 variant pattern to the vanilla `CopperGolem` entity (a separate vanilla entity introduced in MC 26.1.2 with chest-bearing and weathering behavior). Five alternative tiers: Iron, Gold, Emerald, Diamond, Netherite, each spawned by a non-copper body block in the vanilla 1-tall pillar pattern (single block + carved pumpkin). New attachment (`CopperGolemVariant`), parallel mixin into `CarvedPumpkinBlock.trySpawnGolem` for non-copper materials, per-variant stats/textures/abilities. **Open design questions for V5 brainstorming:** do variants inherit the chest-bearing behavior? Do abilities mirror Iron Golem variants or get distinct copper-golem-flavored powers? How do weathering states interact with non-copper materials?
-
-### Where to pick up
-
-For agentic workers (Codex, Claude, etc.) resuming work on this project:
-
-**Read [`docs/LESSONS-LEARNED.md`](docs/LESSONS-LEARNED.md) first.** Every item there cost real time the first time we learned it — read once, save a day later. Covers process patterns (spike first; three-round Codex review; subagent stall modes), technical gotchas (mixin inheritance, layered vanilla AI, config-layer edge cases), and release plumbing details.
-
-
-
-- **V3 starting point:** `docs/superpowers/specs/2026-05-15-multigolem-design.md` §3 (V3 scope) and §6.1.1 (config weights including the Charles preset). Follow the same brainstorm → spec → Codex review → plan → execute flow used by V1 and V2.
-- **V4 starting point:** no spec yet. Start with a fresh brainstorming session. The vanilla `SpawnEggItem` lives at `net.minecraft.world.item.SpawnEggItem` — see V1's source-inspection spike pattern (`docs/26.1.2-mojang-targets.md`) for how to confirm API specifics before implementation.
-- **V5 starting point:** no spec yet. Start with a fresh brainstorming session. The vanilla `CopperGolem` entity is at `net.minecraft.world.entity.animal.golem.CopperGolem` and its spawn flow is documented in `docs/26.1.2-mojang-targets.md` under the "Copper Golem already exists in vanilla 26.1.2" finding.
-
-V3, V4, V5 are independent of each other after V3's natural-spawn ships — they can be released in any order, or interleaved with other work. The recommended order above (V3 → V4 → V5) honors the original V1 roadmap promise first.
+- **V3** (next): Village natural-spawn variant weighting for Iron Golems.
+- **V4**: Spawn eggs for the 5 Iron Golem variants.
+- **V5**: Copper Golem variants.
 
 ## License
 

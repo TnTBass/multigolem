@@ -231,4 +231,16 @@ General pattern: if N things are broken and 1 is not, the working one is your co
 - `docs/superpowers/specs/2026-05-16-multigolem-v2-design.md` — V2 design (and the canonical example of three-round Codex review structure)
 - `docs/superpowers/plans/2026-05-16-multigolem-v2.md` — V2 plan (canonical example of TDD-task plan style)
 - `docs/playtest-checklist.md` — manual regression checklist; extend each phase
-- `README.md` — public roadmap + "Where to pick up" pointers
+- `README.md` — public player/server-admin overview, gameplay docs, and config reference
+
+## Where to pick up
+
+For agentic workers (Codex, Claude, etc.) resuming work on this project:
+
+Read this file first. Every item here cost real time the first time we learned it. Covers process patterns, technical gotchas, config-layer edge cases, and release plumbing details.
+
+- **V3 starting point:** `docs/superpowers/specs/2026-05-15-multigolem-design.md` §3 (V3 scope) and §6.1.1 (config weights including the Charles preset). Follow the same brainstorm -> spec -> Codex review -> plan -> execute flow used by V1 and V2.
+- **V4 starting point:** no spec yet. Start with a fresh brainstorming session. The vanilla `SpawnEggItem` lives at `net.minecraft.world.item.SpawnEggItem`; see V1's source-inspection spike pattern in `docs/26.1.2-mojang-targets.md` for how to confirm API specifics before implementation.
+- **V5 starting point:** no spec yet. Start with a fresh brainstorming session. The vanilla `CopperGolem` entity is at `net.minecraft.world.entity.animal.golem.CopperGolem` and its spawn flow is documented in `docs/26.1.2-mojang-targets.md` under the "Copper Golem already exists in vanilla 26.1.2" finding.
+
+V3, V4, V5 are independent of each other after V3's natural-spawn ships. They can be released in any order, or interleaved with other work. The recommended order above (V3 -> V4 -> V5) honors the original V1 roadmap promise first.
