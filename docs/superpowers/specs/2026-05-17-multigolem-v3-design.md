@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-17
 **Authors:** Tyler & Charles
-**Status:** Draft, awaiting external Claude review
+**Status:** Draft, external Claude review incorporated, awaiting human approval
 **Predecessors:**
 
 - V1 design: `docs/superpowers/specs/2026-05-15-multigolem-design.md`
@@ -40,7 +40,9 @@ V3 is server-side gameplay work only. It adds no items, blocks, textures, entity
 
 ## 3. Scope
 
-V3 affects only iron golems created by the vanilla villager help-call mechanic. In Minecraft 26.1.2 source inspection, the expected path is `Villager#spawnGolemIfNeeded(...)`, which calls:
+V3 affects only iron golems created by the vanilla villager help-call mechanic.
+
+Pre-spike assumption: in Minecraft 26.1.2 this path is `Villager#spawnGolemIfNeeded(...)`, and that method calls:
 
 ```java
 SpawnUtil.trySpawnMob(
@@ -56,7 +58,11 @@ SpawnUtil.trySpawnMob(
 )
 ```
 
-The implementation plan must still start with a source spike to prove the exact hook and the safest way to capture the newly spawned golem. If the spike cannot safely identify the created entity from the villager call path, implementation pauses for design review instead of widening the hook silently.
+This is not yet a design fact. `EntitySpawnReason.MOB_SUMMONED` is also a pre-spike assumption. The V1 target notes already corrected one golem spawn-reason assumption, so V3 must verify the spawn reason before planning implementation.
+
+The highest-risk spike question is whether the villager help-call logic is still a named method on `Villager.class` itself. Some Minecraft versions have moved villager behavior into brain tasks, utility classes, or lambdas. If the logic is not on `Villager.class`, the mixin target and capture strategy change significantly.
+
+The implementation plan must start with a source spike to prove the exact hook and the safest way to capture the newly spawned golem. If the spike cannot safely identify the created entity from the villager call path, implementation pauses for design review instead of widening the hook silently.
 
 ## 4. Architecture
 
@@ -116,10 +122,14 @@ Weights are integer tickets in a hat. They do not need to total 100.
 
 ### 5.2 Validation Rules
 
-- `enabled: false` disables village variant rolling completely.
-- If all recognized variant weights are intentionally `0`, village variant rolling is disabled and the golem stays Iron.
+- `enabled: false` disables village variant rolling completely, regardless of weights.
 - Missing `village_spawning` is filled from defaults during the existing lossless config merge.
+- If `village_spawning` is an object but `enabled` is absent, merge fills `enabled: true`.
+- Malformed `enabled` values, such as `"yes"` or `1`, fall back to `true` and log a warning, following V2's universal malformed-field rule.
 - Missing, non-object, or malformed `weights` falls back to V3 defaults and logs a warning.
+- If `weights` is a valid object, missing individual variant keys are filled from that variant's default weight and log a warning.
+- If `weights` contains only unknown keys and none of the six canonical variant keys, treat it as malformed/missing: fall back to V3 defaults and log a warning.
+- Intentional all-zero disablement requires all six recognized variant keys to be present and resolve to `0` after validation. A fully explicit all-zero table disables village variant rolling and leaves the golem Iron.
 - Negative weights are clamped to `0` and log a warning.
 - Non-numeric weights fall back to that variant's default and log a warning.
 - Unknown keys under `weights` are preserved on disk where possible, ignored by the resolver, and log a warning.
@@ -129,11 +139,11 @@ Weights are integer tickets in a hat. They do not need to total 100.
 
 1. Villagers run the vanilla golem-spawn decision.
 2. Vanilla confirms enough nearby villagers want a golem.
-3. Vanilla calls its normal `SpawnUtil.trySpawnMob(EntityType.IRON_GOLEM, EntitySpawnReason.MOB_SUMMONED, ...)` path.
+3. Vanilla calls its normal `SpawnUtil.trySpawnMob(EntityType.IRON_GOLEM, <spike-confirmed spawn reason>, ...)` path.
 4. If vanilla fails to spawn a golem, MultiGolem does nothing.
 5. If vanilla succeeds, MultiGolem identifies the newly spawned `IronGolem`.
 6. If `village_spawning.enabled` is false, MultiGolem leaves it Iron.
-7. If all recognized weights are zero, MultiGolem leaves it Iron.
+7. If weights intentionally disable rolling, MultiGolem leaves it Iron.
 8. Otherwise, MultiGolem rolls `VillageSpawnWeights`.
 9. If the roll picks Iron, MultiGolem leaves the golem as normal Iron.
 10. If the roll picks a non-iron variant, MultiGolem calls `GolemVariantAttachment.set(golem, variant)`.
@@ -182,12 +192,17 @@ The V3 implementation plan starts with a source spike and updates `docs/26.1.2-m
 The spike must prove:
 
 - Exact class and method for villager-called golem spawning in Minecraft 26.1.2.
+- Whether the spawn logic is a named method on `Villager.class` itself, or has moved into a `BehaviorControl`, villager AI utility, lambda, or other brain-task location. This is the highest-risk spike question.
 - Exact signature and descriptor for the chosen mixin target.
 - How the hook identifies the newly spawned `IronGolem`.
 - Whether the hook can remain inside the villager help-call path.
 - Whether any Fabric event can safely express this without catching mob spawners or commands.
-- Spawn reason observed for villager-called golems.
+- Spawn reason observed for villager-called golems. `MOB_SUMMONED` is only a pre-spike assumption.
+- Exact return type of `SpawnUtil.trySpawnMob` in 26.1.2, such as `Optional<T>`, nullable `T`, or another shape.
+- Which spawned-golem capture strategy is selected from the §13 candidates, and why the others were rejected.
+- Whether the chosen capture strategy requires Mixin Extras. If yes, the target notes must call out the new `build.gradle` dependency because V1/V2 did not use it.
 - Whether `playerCreated` remains false.
+- Whether variant-specific loot still reads the attachment at entity death time via the dead entity in the loot context. V2 uses `LootContextParams.THIS_ENTITY`; V3 sets the attachment at spawn, and the spike should verify those compose correctly.
 
 If the only viable hook is broad enough to catch spawners, commands, spawn eggs, or unrelated mod-created golems, pause for review before implementing.
 
@@ -195,7 +210,7 @@ If the only viable hook is broad enough to catch spawners, commands, spawn eggs,
 
 - Config load errors follow V2's pattern: warn, repair known bad V3 fields where safe, and keep the server running.
 - Malformed `weights` falls back to defaults with a warning.
-- All-zero weights are treated as intentional disablement, not a warning.
+- A fully explicit all-zero canonical table is treated as intentional disablement, not a warning.
 - A failed variant application logs an error and leaves the spawned golem as Iron rather than crashing the server.
 - A mixin target failure should fail fast at startup with a clear Mixin error, matching the existing required-mixin posture.
 
@@ -209,8 +224,10 @@ Pure Java gets failing tests first:
   - Default weights are `19/19/19/19/5/2`.
   - Deterministic random can roll each expected variant.
   - Each successful call rolls independently.
-  - All-zero recognized weights reports disabled/no result.
+  - Explicit all-zero recognized weights reports disabled/no result.
   - Negative weights clamp to zero.
+  - Enabled false returns "leave Iron" regardless of weights.
+  - Partial malformed weights are handled together: some valid keys are kept, some non-numeric keys fall back to individual defaults and warn, some negative keys clamp to zero and warn, and some absent keys fill from defaults and warn.
   - Malformed/missing weights falls back to defaults through config parsing.
 
 - `MultiGolemConfigV3Test`
@@ -218,13 +235,18 @@ Pure Java gets failing tests first:
   - Existing V2 fields are preserved.
   - Unknown user fields are preserved.
   - `enabled: false` parses correctly.
-  - All-zero weights parse as intentional disablement.
+  - Missing `enabled` fills `true`.
+  - Malformed `enabled` falls back to `true` and warns.
+  - Explicit all-zero weights parse as intentional disablement.
   - Missing/non-object/malformed weights fall back to defaults and warn.
+  - Valid weights object with missing individual keys fills those keys from defaults and warns.
+  - Weights object containing only unknown keys falls back to defaults and warns.
   - Unknown variant weight keys are preserved but ignored.
 
 - Resolver/helper tests
   - The code path used by the mixin can ask whether village spawning is enabled.
   - The code path can roll a variant or report "leave Iron" without touching Minecraft runtime classes.
+  - When `enabled` is false, the resolver/helper returns "leave Iron" regardless of the configured weights.
 
 ### 10.2 Build And Smoke
 
@@ -246,16 +268,17 @@ Extend both:
 
 V3 rows:
 
-- Villagers can spawn Copper, Gold, Emerald, Diamond, and Netherite when each weight is forced to `1` and all others are `0`.
+- Villagers can spawn Copper, Gold, Emerald, Diamond, and Netherite when each target variant's weight is forced to `1` and all others are `0`.
+- Villagers can spawn Netherite when `netherite: 1` and all other recognized weights are `0`.
 - Default weights allow Iron, Copper, Gold, Emerald, Diamond, and Netherite outcomes over repeated village spawns.
 - Diamond appears rarely under defaults.
-- Netherite appears rarer than Diamond under defaults.
-- Village-spawned variants have full V2 behavior: texture, stats, abilities, healing, drops, `ignored_target_types`, and `anger_on_hit`.
+- Run the existing V2 playtest rows using village-spawned golems as the subjects, covering textures, stats, all five abilities, healing, drops, `ignored_target_types`, and `anger_on_hit`.
 - Village-spawned variants are natural defenders, not player-created golems.
 - Existing golems do not change after upgrading to V3.
 - `village_spawning.enabled: false` leaves villager-called spawns as Iron.
 - All-zero weights leave villager-called spawns as Iron.
 - Mob spawner iron golems do not roll variants.
+- Spawn egg iron golems do not roll variants.
 - Command-spawned iron golems do not roll variants.
 - Malformed `weights` falls back to defaults and logs a warning.
 
@@ -285,11 +308,23 @@ Expected player/admin-facing summary:
 - Village-spawned variants get full current V2 behavior.
 - Existing `anger_on_hit` still applies.
 - Spawner and command-created iron golems should get explicit negative playtest rows.
+- Spawn egg iron golems should get an explicit negative playtest row.
 - The HTML checklist at `docs/playtest.html` should be updated along with the Markdown checklist.
 
 ### 12.2 External Claude Review
 
 V1 and V2 both benefited from external review before implementation planning. V3 should do the same before writing the implementation plan.
+
+External Claude review has been incorporated into this draft. Its blocking findings were:
+
+- Treat spawned-golem capture as the central mixin design question.
+- Confirm whether villager golem logic still lives on `Villager.class`.
+- Mark `MOB_SUMMONED` as an assumption until the spike proves it.
+- Tighten config semantics for missing, malformed, partial, all-zero, and unknown-key weights.
+- Replace statistical manual playtest rows with deterministic weight-forced rows.
+- Add negative playtest coverage for spawn eggs.
+- Require the spike to record `SpawnUtil.trySpawnMob` return type and any Mixin Extras dependency.
+- Verify V2 loot still reads the V3-set attachment at death time.
 
 The review should focus on:
 
@@ -301,8 +336,11 @@ The review should focus on:
 
 ## 13. Open Items For Implementation Planning
 
-- Exact mixin target and capture strategy for the newly spawned `IronGolem`.
-- Whether a tiny accessor/wrapper is needed around `SpawnUtil.trySpawnMob` return value.
+- Exact mixin target and capture strategy for the newly spawned `IronGolem`. This is the central V3 mixin design question, not a minor implementation detail. The spike must choose one of the candidate strategies below, record the selected strategy in `docs/26.1.2-mojang-targets.md`, and document why the alternatives were rejected. The implementation plan cannot be written until this choice is made.
+- Candidate A: `@Local` capture on the returned `Optional<IronGolem>` or equivalent value inside a `TAIL` `@Inject` on `spawnGolemIfNeeded`. This is small and keeps the hook inside the villager method, but only works if the result exists as a capturable local variable and is not fully inlined.
+- Candidate B: `@WrapOperation` or `@Redirect` on the `SpawnUtil.trySpawnMob` call site. This is likely the cleanest way to receive the returned golem immediately, but the spike must check whether Mixin Extras is already available. If `@WrapOperation` is chosen and Mixin Extras is not currently a dependency, the spike must call out the required `build.gradle` change.
+- Candidate C: Thread-local flag around the villager call plus `ServerEntityEvents.ENTITY_LOAD` or a similar global entity event. This is fragile because it relies on ordering and global state, and risks catching non-village golems if the flag leaks. Treat this as a last resort that needs explicit review before implementation.
+- Whether a tiny accessor/wrapper is needed around `SpawnUtil.trySpawnMob` return value depends on the selected capture strategy.
 - Exact shape of the V3 config record/helper.
 - Whether to leave Iron rolls with no attachment or explicitly attach `GolemVariant.IRON`. Preferred default: leave no attachment unless implementation simplicity argues otherwise, because no attachment already means Iron.
 
