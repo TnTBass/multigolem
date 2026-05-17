@@ -66,7 +66,7 @@ public final class MultiGolemConfig {
             null, null));
         m.put(GolemVariant.GOLD, new TierStats(130, 22.5, true, List.of("CREEPERS"),
             null, null,
-            1.25, true, true,
+            1.75, true, true,
             null, null, null, null,
             null, null, null, null, null,
             null, null));

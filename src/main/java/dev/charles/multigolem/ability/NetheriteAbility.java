@@ -11,6 +11,10 @@ public final class NetheriteAbility {
 
     private NetheriteAbility() {}
 
+    public static boolean isFireImmuneVariant(GolemVariant variant, boolean enabled) {
+        return enabled && variant == GolemVariant.NETHERITE;
+    }
+
     public static void register() {
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
             if (!(entity instanceof IronGolem golem)) return true;

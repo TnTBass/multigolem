@@ -73,4 +73,25 @@ class GolemAbilityStateTest {
         GolemAbilityState decoded = GolemAbilityState.CODEC.parse(JsonOps.INSTANCE, encoded).result().orElseThrow();
         assertEquals(s.nextDiamondScanGameTime(), decoded.nextDiamondScanGameTime());
     }
+
+    @Test
+    void clampDiamondCooldown_capsFarFutureCooldownsToCurrentConfigWindow() {
+        long now = 1000L;
+        GolemAbilityState s = GolemAbilityState.fresh()
+            .withDiamondCooldown(now + 100_000L)
+            .withDiamondScanBackoff(now + 40L);
+
+        GolemAbilityState clamped = s.clampDiamondCooldown(now, 1200L);
+
+        assertEquals(now + 1200L, clamped.nextDiamondAbilityGameTime());
+        assertEquals(now + 40L, clamped.nextDiamondScanGameTime());
+    }
+
+    @Test
+    void clampDiamondCooldown_preservesNormalCooldowns() {
+        long now = 1000L;
+        GolemAbilityState s = GolemAbilityState.fresh().withDiamondCooldown(now + 600L);
+
+        assertEquals(s, s.clampDiamondCooldown(now, 1200L));
+    }
 }

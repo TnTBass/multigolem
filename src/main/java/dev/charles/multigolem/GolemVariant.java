@@ -4,10 +4,14 @@ import com.mojang.serialization.Codec;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.HoneycombItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.WeatheringCopper;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -59,8 +63,26 @@ public enum GolemVariant {
     public Item healIngot() { return healIngot; }
     public Item dropItem() { return dropItem; }
 
+    public boolean matchesBodyBlock(BlockState state) {
+        if (this == COPPER) {
+            return state.is(BlockTags.COPPER) || isCopperFamilyBlock(state.getBlock());
+        }
+        return state.is(bodyBlock);
+    }
+
     public static Optional<GolemVariant> fromBodyBlock(Block block) {
+        if (block.defaultBlockState().is(BlockTags.COPPER) || isCopperFamilyBlock(block)) {
+            return Optional.of(COPPER);
+        }
         return Optional.ofNullable(BY_BODY_BLOCK.get(block));
+    }
+
+    private static boolean isCopperFamilyBlock(Block block) {
+        if (block instanceof WeatheringCopper) {
+            return true;
+        }
+        Block unwaxed = HoneycombItem.WAX_OFF_BY_BLOCK.get().get(block);
+        return unwaxed instanceof WeatheringCopper;
     }
 
     public static Optional<GolemVariant> fromIngot(Item item) {

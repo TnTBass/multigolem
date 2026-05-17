@@ -17,7 +17,6 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.pattern.BlockInWorld;
 import net.minecraft.world.level.block.state.pattern.BlockPattern;
 import net.minecraft.world.level.block.state.pattern.BlockPatternBuilder;
-import net.minecraft.world.level.block.state.predicate.BlockStatePredicate;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -32,7 +31,7 @@ public final class GolemCreationHandler {
         return PATTERNS.computeIfAbsent(variant, v -> BlockPatternBuilder.start()
             .aisle("~^~", "###", "~#~")
             .where('^', BlockInWorld.hasState(s -> s.is(Blocks.CARVED_PUMPKIN) || s.is(Blocks.JACK_O_LANTERN)))
-            .where('#', BlockInWorld.hasState(BlockStatePredicate.forBlock(v.bodyBlock())))
+            .where('#', BlockInWorld.hasState(v::matchesBodyBlock))
             .where('~', BlockInWorld.hasState(BlockBehaviour.BlockStateBase::isAir))
             .build());
     }
