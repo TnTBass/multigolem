@@ -176,6 +176,43 @@ The release workflow succeeds (HTTP 200, file ID issued) but the file isn't publ
 
 When you extract a new vanilla asset for any V3+ work, do the same.
 
+### `addPermanentModifier`, not `addTransientModifier`, for stat overrides
+
+Transient attribute modifiers are **not written to entity NBT**. When a chunk unloads and reloads, transient modifiers on `MAX_HEALTH` and `ATTACK_DAMAGE` silently disappear. Minecraft then clamps current health to the (now-vanilla) max, permanently damaging every golem whose configured HP exceeds the vanilla iron golem base of 100.
+
+Copper was immune to this bug because its configured max health (60) is *below* vanilla base (100) — the clamp never fired.
+
+Rule: any `AttributeModifier` that must survive entity save/load (which is all of them for stat overrides) must use `addPermanentModifier`. Only use `addTransientModifier` for effects that should intentionally reset on reload (e.g., a temporary potion effect you're managing manually).
+
+### World-wide AABB entity scans hang the server
+
+`world.getEntitiesOfClass(IronGolem.class, new AABB(-30_000_000, -64, -30_000_000, 30_000_000, 320, 30_000_000))` looks harmless but causes the entity section storage's `LongAVLTreeSet.subSet` to enumerate every section key across the entire world coordinate range. On a world with many loaded chunks this takes tens of seconds, triggering the server watchdog.
+
+The stack trace signature to recognize it:
+
+```
+at it.unimi.dsi.fastutil.longs.LongAVLTreeSet.subSet(...)
+at net.minecraft.world.level.entity.EntitySectionStorage.forEachAccessibleNonEmptySection(...)
+at net.minecraft.world.level.entity.EntitySectionStorage.getEntities(...)
+at dev.charles.multigolem.ability.SomeAbility.onTick(...)
+```
+
+The correct replacement for "give me all loaded entities of type X" with no spatial filter:
+
+```java
+world.getEntities(EntityTypeTest.forClass(IronGolem.class), e -> true)
+```
+
+`ServerLevel.getEntities(EntityTypeTest, Predicate)` is a no-AABB overload that walks only the loaded entity list. Note: `Level.getEntities()` (no args) is `protected abstract` and inaccessible outside the class hierarchy — use the `ServerLevel` overload.
+
+### Asymmetric bug behavior is the fastest path to root cause
+
+When a bug affects *some* variants but not others, the exempted variant is telling you exactly what's different. Don't start with the broken cases — start by asking "what is unique about the working case?"
+
+In the HP-loss bug: copper was fine, all others were damaged. Copper is the only variant with configured HP below vanilla base. That one observation immediately ruled out every damage-source hypothesis and pointed directly to attribute modifier loss + health clamping — without reading a single line of ability code.
+
+General pattern: if N things are broken and 1 is not, the working one is your control. Read its properties and find the one dimension where it differs from the broken set. The root cause lives on that dimension.
+
 ---
 
 ## What I'd do differently next time
