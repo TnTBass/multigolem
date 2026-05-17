@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MultiGolem Playtest Checklist</title>
+<style>
+  body { font-family: sans-serif; max-width: 860px; margin: 40px auto; padding: 0 20px; background: #1a1a1a; color: #e0e0e0; }
+  h1 { color: #fff; border-bottom: 2px solid #444; padding-bottom: 10px; }
+  h2 { color: #aaa; font-size: 1em; text-transform: uppercase; letter-spacing: 1px; margin-top: 2em; border-bottom: 1px solid #333; padding-bottom: 4px; }
+  h3 { color: #ccc; margin-top: 1.5em; margin-bottom: 0.5em; }
+  .version { font-size: 1.3em; font-weight: bold; color: #7ec8e3; margin-top: 2.5em; border-top: 2px solid #7ec8e3; padding-top: 12px; }
+  label { display: flex; align-items: flex-start; gap: 10px; margin: 8px 0; cursor: pointer; line-height: 1.5; }
+  label:hover { color: #fff; }
+  input[type=checkbox] { margin-top: 3px; flex-shrink: 0; width: 16px; height: 16px; accent-color: #4caf50; cursor: pointer; }
+  label.done { color: #666; text-decoration: line-through; }
+  code { background: #2a2a2a; padding: 1px 5px; border-radius: 3px; font-size: 0.9em; color: #f0a050; }
+  .progress { position: sticky; top: 0; background: #1a1a1a; padding: 10px 0; border-bottom: 1px solid #333; margin-bottom: 1em; display: flex; align-items: center; gap: 16px; z-index: 10; }
+  .progress-bar-wrap { flex: 1; background: #333; border-radius: 4px; height: 10px; }
+  .progress-bar { height: 10px; border-radius: 4px; background: #4caf50; transition: width 0.2s; }
+  .progress-text { color: #aaa; font-size: 0.9em; white-space: nowrap; }
+  .reset { margin-left: auto; background: #333; color: #aaa; border: 1px solid #555; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85em; }
+  .reset:hover { background: #444; color: #fff; }
+  em { color: #888; font-style: italic; }
+  strong { color: #e0e0e0; }
+</style>
+</head>
+<body>
+
+<h1>MultiGolem Playtest Checklist</h1>
+<p>Run a Fabric server with this mod installed. Work through each row. A failed row blocks release.</p>
+
+<div class="progress">
+  <div class="progress-bar-wrap"><div class="progress-bar" id="bar"></div></div>
+  <div class="progress-text" id="counter">0 / 0</div>
+  <button class="reset" onclick="resetAll()">Reset all</button>
+</div>
+
+<div class="version">V1 — v0.1.0</div>
+
+<h3>Creation</h3>
+<label><input type="checkbox"> T-pattern of copper blocks + carved pumpkin → copper golem spawns, 60 HP.</label>
+<label><input type="checkbox"> Gold blocks → gold golem, 130 HP.</label>
+<label><input type="checkbox"> Emerald → emerald golem, 200 HP.</label>
+<label><input type="checkbox"> Diamond → diamond golem, 350 HP.</label>
+<label><input type="checkbox"> Netherite → netherite golem, 600 HP.</label>
+<label><input type="checkbox"> Iron blocks (vanilla) → iron golem, 100 HP. Vanilla behavior unchanged.</label>
+<label><input type="checkbox"> Single copper block + pumpkin → vanilla copper golem (chest-bearer). MultiGolem does not interfere.</label>
+<label><input type="checkbox"> Pumpkin on a single block (not T-shape) → nothing happens.</label>
+
+<h3>Combat baselines</h3>
+<label><input type="checkbox"> Copper golem vs zombie on Hard: copper survives ~10 zombie hits and kills zombie in 2–4 swings.</label>
+<label><input type="checkbox"> Netherite golem vs Warden: netherite wins 1v1 with HP to spare; kills warden in ~6 swings.</label>
+
+<h3>Drops</h3>
+<label><input type="checkbox"> Kill each variant in creative; matching ingot drops (3–5; 2–3 netherite scrap for netherite) plus 0–2 poppies.</label>
+<label><input type="checkbox"> Kill a vanilla iron golem; vanilla 3–5 iron ingots + poppies.</label>
+
+<h3>Healing</h3>
+<label><input type="checkbox"> Damage copper golem; right-click with copper ingot → heals 25 HP, consumes 1 ingot.</label>
+<label><input type="checkbox"> Right-click copper golem with iron ingot → no heal.</label>
+<label><input type="checkbox"> Right-click iron golem with copper ingot → no heal.</label>
+<label><input type="checkbox"> Right-click iron golem with iron ingot → vanilla heal works.</label>
+<label><input type="checkbox"> Set <code>allow_golem_healing: false</code>, restart. No variant accepts heals; iron also rejects.</label>
+
+<h3>Anger toggle</h3>
+<label><input type="checkbox"> Set <code>copper.anger_on_hit: false</code>, restart. Attack copper golem: takes damage but does not retaliate.</label>
+<label><input type="checkbox"> Set back to <code>true</code>. Attack copper golem: retaliates normally.</label>
+
+<h3>Save / load &amp; mod removal</h3>
+<label><input type="checkbox"> Save world with one of each variant. Quit and rejoin. Each retains its variant and stats.</label>
+<label><input type="checkbox"> Uninstall mod. Load world. Server boots; all variants appear as plain iron golems at 100 HP. No crashes.</label>
+<label><input type="checkbox"> Reinstall mod. Load world. Variants restored, stats recompute, drops work again.</label>
+
+<h3>Config robustness</h3>
+<label><input type="checkbox"> Delete <code>config/multigolem.json</code>. Start server. Verify it's recreated with defaults.</label>
+<label><input type="checkbox"> Corrupt config (<code>{not json</code>). Start server. Server starts, defaults used, file NOT overwritten.</label>
+<label><input type="checkbox"> Set <code>netherite.max_health: 100000</code>. Warning logged, value clamped to 2048.</label>
+
+<h3>Vanilla client compatibility</h3>
+<label><input type="checkbox"> Connect with a vanilla MC 26.1.2 client. Not kicked at login.</label>
+<label><input type="checkbox"> Modded player creates a copper variant; vanilla client sees it as iron golem but stats/drops are correct.</label>
+
+<div class="version">V2 — v0.2.0 / v0.2.1</div>
+
+<h3>Textures (modded client)</h3>
+<label><input type="checkbox"> Copper golem displays with copper-tinted skin.</label>
+<label><input type="checkbox"> Gold golem displays with gold skin.</label>
+<label><input type="checkbox"> Emerald golem displays with emerald skin.</label>
+<label><input type="checkbox"> Diamond golem displays with diamond skin.</label>
+<label><input type="checkbox"> Netherite golem displays with netherite skin.</label>
+<label><input type="checkbox"> Iron golem displays as vanilla (no change).</label>
+
+<h3>Textures (vanilla client)</h3>
+<label><input type="checkbox"> Vanilla client connects to V2 server; sees all variants as iron golems.</label>
+<label><input type="checkbox"> Modded sees colors, vanilla sees iron — no desync.</label>
+
+<h3>HP survives chunk reload (v0.2.1 fix)</h3>
+<label><input type="checkbox"> Note current HP of a full-health Netherite golem (600). Log out. Wait a few minutes or use <code>/forceload remove</code>. Log back in. Golem still at 600 HP.</label>
+
+<h3>Copper — lightning heal</h3>
+<label><input type="checkbox"> Strike copper golem with channeling trident (or in thunderstorm) → no damage AND heals.</label>
+<label><input type="checkbox"> Set <code>copper_lightning_heal_amount: 0</code> → lightning doesn't damage, but no heal either.</label>
+<label><input type="checkbox"> Set <code>copper_lightning_immune: false</code> → lightning damages normally.</label>
+
+<h3>Gold — speed + vanity</h3>
+<label><input type="checkbox"> Gold golem moves visibly faster than iron.</label>
+<label><input type="checkbox"> Sprint-dust particles emit when gold golem walks.</label>
+<label><input type="checkbox"> Sunlight-shine particle appears when gold golem is stationary outdoors during day.</label>
+<label><input type="checkbox"> No shine particle indoors or at night.</label>
+
+<h3>Emerald — villager aura</h3>
+<label><input type="checkbox"> Damage emerald golem; stand near a villager; verify heal every ~2s.</label>
+<label><input type="checkbox"> Move villager out of 8-block range; heal stops.</label>
+<label><input type="checkbox"> Wandering trader nearby with <code>emerald_count_wandering_traders: true</code> → heal proceeds.</label>
+<label><input type="checkbox"> Zombie villager nearby → no heal triggered.</label>
+<label><input type="checkbox"> Particle emits with each heal tick.</label>
+
+<h3>Diamond — lightning</h3>
+<label><input type="checkbox"> Creeper at 12 blocks → no zap (in <code>ignored_target_types</code>).</label>
+<label><input type="checkbox"> Skeleton at 12 blocks → zap; cooldown 30–60s before next.</label>
+<label><input type="checkbox"> Hit something when cooldown ready → swing summons lightning.</label>
+<label><input type="checkbox"> Block LOS with a wall → passive zap doesn't fire through it.</label>
+<label><input type="checkbox"> <code>/summon lightning_bolt ~ ~ ~</code> on diamond golem → no damage, cooldown unchanged.</label>
+<label><input type="checkbox"> Two diamond golems + skeleton: A zaps skeleton. B takes no AoE lightning damage; B's cooldown unchanged; no chain reaction.</label>
+<label><input type="checkbox"> Kill a mob with one swing (HP &lt; golem damage): on-attack lightning does NOT fire, cooldown NOT consumed.</label>
+<label><input type="checkbox"> Golem swings at creeper (filtered): cooldown NOT consumed.</label>
+<label><input type="checkbox"> Set <code>diamond_target_mode: BOSSES_ONLY</code>; restart; normal hostiles not zapped.</label>
+
+<h3>Netherite — fire immunity + ignite</h3>
+<label><input type="checkbox"> Netherite golem stands in lava → no damage.</label>
+<label><input type="checkbox"> Hit by ghast fireball → no damage.</label>
+<label><input type="checkbox"> Standing on magma block → no damage.</label>
+<label><input type="checkbox"> Hit a mob → mob catches fire for 5 seconds.</label>
+<label><input type="checkbox"> Hit a blaze → no fire effect (vanilla immunity), no error.</label>
+<label><input type="checkbox"> Hit another netherite golem → no fire effect on target.</label>
+
+<h3>ignored_target_types</h3>
+<label><input type="checkbox"> Default: copper/gold/emerald/diamond/netherite ignore creepers in melee.</label>
+<label><input type="checkbox"> Default: iron attacks creepers (vanilla preserved).</label>
+<label><input type="checkbox"> Set <code>iron.ignored_target_types: ["CREEPERS"]</code> → iron now ignores creepers.</label>
+<label><input type="checkbox"> Unknown value (<code>"DRAGONS_AND_CASTLES"</code>) → warning logged, dropped, other entries preserved.</label>
+
+<h3>Save / load + migration</h3>
+<label><input type="checkbox"> V1 config (no V2 fields) loads into V2 server; defaults appear in file after first run.</label>
+<label><input type="checkbox"> World with active diamond cooldown saved, server restarted → cooldown still active.</label>
+<label><input type="checkbox"> V2 client connects to V1 server → textures don't appear, no crash, no errors.</label>
+
+<h3>Vanilla parity</h3>
+<label><input type="checkbox"> All V1 checklist rows still pass.</label>
+
+<script>
+  const STORAGE_KEY = 'multigolem-playtest-v2';
+
+  function allBoxes() {
+    return Array.from(document.querySelectorAll('input[type=checkbox]'));
+  }
+
+  function save() {
+    const state = allBoxes().map(b => b.checked);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    updateProgress();
+  }
+
+  function load() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const state = JSON.parse(raw);
+    allBoxes().forEach((b, i) => {
+      if (state[i]) b.checked = true;
+      updateLabel(b);
+    });
+    updateProgress();
+  }
+
+  function updateLabel(checkbox) {
+    const label = checkbox.closest('label');
+    if (label) label.classList.toggle('done', checkbox.checked);
+  }
+
+  function updateProgress() {
+    const boxes = allBoxes();
+    const done = boxes.filter(b => b.checked).length;
+    const total = boxes.length;
+    document.getElementById('counter').textContent = `${done} / ${total}`;
+    document.getElementById('bar').style.width = `${total ? (done / total * 100) : 0}%`;
+  }
+
+  function resetAll() {
+    if (!confirm('Reset all checkboxes?')) return;
+    allBoxes().forEach(b => { b.checked = false; updateLabel(b); });
+    localStorage.removeItem(STORAGE_KEY);
+    updateProgress();
+  }
+
+  document.addEventListener('change', e => {
+    if (e.target.type === 'checkbox') {
+      updateLabel(e.target);
+      save();
+    }
+  });
+
+  load();
+</script>
+</body>
+</html>
