@@ -3,6 +3,7 @@ package dev.charles.multigolem.mixin;
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
+import dev.charles.multigolem.permissions.MultiGolemPermissions;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -35,12 +36,22 @@ public abstract class IronGolemMixin {
 
         IronGolem self = (IronGolem) (Object) this;
         GolemVariant variant = GolemVariantAttachment.get(self);
-        if (variant == GolemVariant.IRON) return; // vanilla handles iron→iron heal
-
         ItemStack stack = player.getItemInHand(hand);
         if (stack.isEmpty()) return;
+
         Optional<GolemVariant> held = GolemVariant.fromIngot(stack.getItem());
         if (held.isEmpty() || held.get() != variant) return;
+
+        if (!MultiGolemPermissions.canHeal(player, variant)) {
+            MultiGolemPermissions.sendHealDenied(player, variant);
+            cir.setReturnValue(InteractionResult.FAIL);
+            return;
+        }
+
+        if (variant == GolemVariant.IRON) {
+            // Permission allowed; vanilla handles iron→iron heal.
+            return;
+        }
 
         float before = self.getHealth();
         self.heal(25.0F);
