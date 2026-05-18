@@ -42,6 +42,8 @@ public abstract class IronGolemMixin {
         Optional<GolemVariant> held = GolemVariant.fromIngot(stack.getItem());
         if (held.isEmpty() || held.get() != variant) return;
 
+        if (self.getHealth() >= self.getMaxHealth()) return;
+
         if (!MultiGolemPermissions.canHeal(player, variant)) {
             MultiGolemPermissions.sendHealDenied(player, variant);
             cir.setReturnValue(InteractionResult.FAIL);
