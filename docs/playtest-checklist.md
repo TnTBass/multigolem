@@ -165,3 +165,36 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 - [ ] Spawn egg iron golems do not roll variants.
 - [ ] Command-spawned iron golems do not roll variants.
 - [ ] Malformed `weights` falls back to defaults and logs a warning.
+
+---
+
+# V3.1 - permissions
+
+## Creation permissions
+
+- [ ] With no LuckPerms or permissions provider installed, player-built Diamond and Netherite MultiGolem T-patterns still spawn normally.
+- [ ] Denying `multigolem.create.diamond` prevents a player-built Diamond MultiGolem T-pattern from spawning.
+- [ ] Denied Diamond creation leaves all T-pattern blocks intact.
+- [ ] Denied Diamond creation shows `You do not have permission to create a Diamond golem.`
+- [ ] Granting `multigolem.create.diamond` allows Diamond T-pattern creation.
+- [ ] `multigolem.admin.bypass` allows Diamond creation even when `multigolem.create.diamond` is denied.
+- [ ] Vanilla Iron golem T-pattern creation is unchanged and has no MultiGolem creation permission node.
+
+## Healing permissions
+
+- [ ] With no LuckPerms or permissions provider installed, ingot-based healing still works normally.
+- [ ] Denying `multigolem.heal.netherite` prevents Netherite golem healing.
+- [ ] Denied Netherite healing does not consume the netherite ingot.
+- [ ] Denied Netherite healing does not play vanilla repair feedback.
+- [ ] Denied Netherite healing shows `You do not have permission to heal a Netherite golem.`
+- [ ] Granting `multigolem.heal.netherite` allows Netherite healing.
+- [ ] Denying `multigolem.heal.iron` prevents vanilla Iron golem iron-ingot healing.
+- [ ] `multigolem.admin.bypass` allows healing even when the tier-specific heal node is denied.
+
+## Scope negatives
+
+- [ ] Village natural spawns are not permission-gated.
+- [ ] Command-spawned golems are not permission-gated.
+- [ ] Spawn egg golems are not permission-gated.
+- [ ] Mob spawner golems are not permission-gated.
+- [ ] Existing golems, drops, stats, abilities, targeting, and anger behavior are unchanged.

@@ -179,6 +179,34 @@
 <label><input type="checkbox"> Command-spawned iron golems do not roll variants.</label>
 <label><input type="checkbox"> Malformed <code>weights</code> falls back to defaults and logs a warning.</label>
 
+<div class="version">V3.1 — permissions</div>
+
+<h3>Creation permissions</h3>
+<label><input type="checkbox"> With no LuckPerms or permissions provider installed, player-built Diamond and Netherite MultiGolem T-patterns still spawn normally.</label>
+<label><input type="checkbox"> Denying <code>multigolem.create.diamond</code> prevents a player-built Diamond MultiGolem T-pattern from spawning.</label>
+<label><input type="checkbox"> Denied Diamond creation leaves all T-pattern blocks intact.</label>
+<label><input type="checkbox"> Denied Diamond creation shows <code>You do not have permission to create a Diamond golem.</code></label>
+<label><input type="checkbox"> Granting <code>multigolem.create.diamond</code> allows Diamond T-pattern creation.</label>
+<label><input type="checkbox"> <code>multigolem.admin.bypass</code> allows Diamond creation even when <code>multigolem.create.diamond</code> is denied.</label>
+<label><input type="checkbox"> Vanilla Iron golem T-pattern creation is unchanged and has no MultiGolem creation permission node.</label>
+
+<h3>Healing permissions</h3>
+<label><input type="checkbox"> With no LuckPerms or permissions provider installed, ingot-based healing still works normally.</label>
+<label><input type="checkbox"> Denying <code>multigolem.heal.netherite</code> prevents Netherite golem healing.</label>
+<label><input type="checkbox"> Denied Netherite healing does not consume the netherite ingot.</label>
+<label><input type="checkbox"> Denied Netherite healing does not play vanilla repair feedback.</label>
+<label><input type="checkbox"> Denied Netherite healing shows <code>You do not have permission to heal a Netherite golem.</code></label>
+<label><input type="checkbox"> Granting <code>multigolem.heal.netherite</code> allows Netherite healing.</label>
+<label><input type="checkbox"> Denying <code>multigolem.heal.iron</code> prevents vanilla Iron golem iron-ingot healing.</label>
+<label><input type="checkbox"> <code>multigolem.admin.bypass</code> allows healing even when the tier-specific heal node is denied.</label>
+
+<h3>Scope negatives</h3>
+<label><input type="checkbox"> Village natural spawns are not permission-gated.</label>
+<label><input type="checkbox"> Command-spawned golems are not permission-gated.</label>
+<label><input type="checkbox"> Spawn egg golems are not permission-gated.</label>
+<label><input type="checkbox"> Mob spawner golems are not permission-gated.</label>
+<label><input type="checkbox"> Existing golems, drops, stats, abilities, targeting, and anger behavior are unchanged.</label>
+
 <script>
   const STORAGE_KEY = 'multigolem-playtest-v3';
 
