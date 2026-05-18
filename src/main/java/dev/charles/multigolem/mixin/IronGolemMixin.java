@@ -40,7 +40,11 @@ public abstract class IronGolemMixin {
         if (stack.isEmpty()) return;
 
         Optional<GolemVariant> held = GolemVariant.fromIngot(stack.getItem());
-        if (held.isEmpty() || held.get() != variant) return;
+        if (held.isEmpty()) return;
+        if (held.get() != variant) {
+            cir.setReturnValue(InteractionResult.PASS);
+            return;
+        }
 
         if (self.getHealth() >= self.getMaxHealth()) return;
 
