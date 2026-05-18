@@ -51,6 +51,16 @@ Patterns that helped:
 
 **Inline execution is often faster than fighting subagents on complex tasks.** If a task has investigation, novel API surface, or a long-running command, just do it directly.
 
+### Reviews catch behavior edges better than syntax
+
+V3.1 permissions compiled and built cleanly, but review still caught the real bugs:
+
+- Full-health golems should no-op before permission checks. A denial message on an action that cannot actually heal is noisy and changes vanilla-feeling behavior.
+- Recognized but mismatched ingots must not fall through to vanilla `IronGolem#mobInteract`. Because every MultiGolem variant is still an `IronGolem`, letting an iron ingot fall through on a damaged non-iron variant can heal and consume the item through vanilla, bypassing the tier permission entirely.
+- `ThreadLocal` context helpers should save and restore prior state, not only remove in `finally`. Nesting is not expected in the vanilla placement path, but modded/mixin surfaces are safer when reentrant calls restore the outer context.
+
+Builds catch descriptors and compilation. Focused review catches "this compiles but changes player behavior."
+
 ### Honest scope checks > running out of context
 
 V1 spanned multiple sessions deliberately. V2 paused at Task 2 with a clean handoff doc rather than failing mid-task. Each pushed commit is a resumable checkpoint.
@@ -144,6 +154,38 @@ V2's spike turned up that vanilla Copper Golem exists in 26.1.2 — a feature th
 
 Before writing the design for any phase, **grep for the feature in vanilla source first.** Saves a brainstorming round.
 
+### Permission gates must distinguish denial from no-op
+
+V3.1 added permissive-by-default permission gates for player-built creation and ingot healing. The subtle part was not node strings; it was preserving vanilla/no-op behavior around the denied action:
+
+- Check permissions only when the action would actually do something.
+- Full-health golem + matching ingot should return before permission checks: no denial, no `FAIL`, no consume, no sound.
+- Unrecognized items should fall through normally.
+- Recognized but mismatched healing ingots should cancel with `InteractionResult.PASS`, not `FAIL`, to prevent vanilla iron healing while avoiding a denial message for the wrong item.
+- Actual permission denial should use `InteractionResult.FAIL` before heal, sound, or item consumption.
+
+Rule: for permission work, first classify the interaction as "not our action," "our action but no-op," or "our action and would mutate state." Only the last category should ask the permissions provider.
+
+### Document intentional ungated paths next to the branch
+
+Some ungated paths are not omissions. In V3.1:
+
+- Iron T-pattern creation is vanilla-owned and must not get a `multigolem.create.iron` gate.
+- Missing player context during creation is ungated by design. Dispenser, piston, command-block, or unsupported placement paths should keep current behavior instead of guessing a responsible player.
+- Village natural spawns, commands, spawn eggs, mob spawners, existing golems, drops, stats, abilities, targeting, and anger behavior stay outside V3.1 permission scope.
+
+Put short comments beside the branch that enforces the exception. Future contributors are less likely to "fix" an intentional hole if the reason is in the code.
+
+### Modern 26.1 Loom uses plain `implementation`
+
+The V3.1 permissions plan initially said `modImplementation include("me.lucko:fabric-permissions-api:0.7.0")`, but this repo's 26.1 Loom setup uses plain `implementation` for Fabric Loader and Fabric API. Gradle rejected `modImplementation`; the working shape is:
+
+```groovy
+implementation include("me.lucko:fabric-permissions-api:0.7.0")
+```
+
+This still nests the permissions API in the jar. When adding future Fabric-side dependencies, match the repo's existing dependency style first, then verify with `compileJava`, `build`, and a startup smoke if mixins/runtime loading are involved.
+
 ---
 
 ## Release plumbing lessons
@@ -165,6 +207,19 @@ Now documented in `docs/modrinth-listing.md` shape. New listings copy that patte
 ### First CurseForge upload pends moderator approval
 
 The release workflow succeeds (HTTP 200, file ID issued) but the file isn't publicly visible until a human approves the project. Don't panic-redeploy when the file doesn't appear on the project page within minutes — wait a few hours.
+
+### Public docs drift every phase
+
+V3.1 updated README and marketplace docs for permissions, but review caught stale public copy that still said village natural-spawn weighting was "arriving in V3" even after V3 had shipped.
+
+Phase-close docs checks should include:
+
+- README roadmap: completed phases marked done and the "next" marker advanced.
+- Modrinth and CurseForge "Known Limitations": remove shipped limitations or replace them with current ones.
+- CHANGELOG: user/admin-facing behavior, not implementation steps.
+- Playtest checklist: new behavior plus negative-scope rows.
+
+If a file is touched for a new phase, scan the surrounding public copy for stale phase language. Grep helps, but read the nearby section by eye.
 
 ### Vanilla asset templates need a provenance sidecar
 
