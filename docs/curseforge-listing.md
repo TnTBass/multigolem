@@ -52,4 +52,4 @@ Existing V1 config files migrate automatically to the V2 schema, and unknown fie
 
 ## Known Limitations
 
-- No village natural-spawn variant weighting yet — arriving in V3.
+- No spawn egg support yet — planned for V4.

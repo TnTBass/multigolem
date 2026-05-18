@@ -125,8 +125,9 @@ These nodes only affect player-built MultiGolem T-pattern creation and ingot-bas
 
 - **V1** ✅: Variants, stats, drops, healing, anger toggle, config. Server-side only.
 - **V2** ✅: Client textures, five special abilities, `ignored_target_types`, lossless V1→V2 config migration.
-- **V3** (next): Village natural-spawn variant weighting for Iron Golems.
-- **V4**: Spawn eggs for the 5 Iron Golem variants.
+- **V3** ✅: Village natural-spawn variant weighting.
+- **V3.1** ✅: LuckPerms-compatible permission nodes for creation and healing.
+- **V4** (next): Spawn eggs for the 5 Iron Golem variants.
 - **V5**: Copper Golem variants.
 
 ## License

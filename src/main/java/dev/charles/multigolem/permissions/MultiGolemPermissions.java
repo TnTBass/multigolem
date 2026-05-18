@@ -9,6 +9,7 @@ import net.minecraft.world.entity.player.Player;
 public final class MultiGolemPermissions {
     public static final String ADMIN_BYPASS_NODE = "multigolem.admin.bypass";
 
+    // Package-private for unit testing; production callers use the public static methods.
     @FunctionalInterface
     interface PermissionLookup {
         boolean check(String node, boolean defaultValue);

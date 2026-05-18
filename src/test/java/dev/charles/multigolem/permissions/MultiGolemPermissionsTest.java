@@ -79,6 +79,10 @@ class MultiGolemPermissionsTest {
         assertEquals("Emerald", GolemVariant.EMERALD.displayName());
         assertEquals("Diamond", GolemVariant.DIAMOND.displayName());
         assertEquals("Netherite", GolemVariant.NETHERITE.displayName());
+        assertEquals("You do not have permission to create a Copper golem.",
+            MultiGolemPermissions.createDeniedMessage(GolemVariant.COPPER));
+        assertEquals("You do not have permission to heal a Gold golem.",
+            MultiGolemPermissions.healDeniedMessage(GolemVariant.GOLD));
         assertEquals("You do not have permission to heal an Iron golem.",
             MultiGolemPermissions.healDeniedMessage(GolemVariant.IRON));
         assertEquals("You do not have permission to heal an Emerald golem.",

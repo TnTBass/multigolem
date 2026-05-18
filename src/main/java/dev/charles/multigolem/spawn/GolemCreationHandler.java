@@ -47,12 +47,13 @@ public final class GolemCreationHandler {
         if (!(level instanceof ServerLevel server)) return false;
 
         for (GolemVariant variant : GolemVariant.values()) {
-            // Skip IRON - vanilla iron T-pattern is handled by vanilla's own check.
+            // IRON T-patterns are vanilla-owned and must never be permission-gated here.
             if (variant == GolemVariant.IRON) continue;
 
             BlockPattern.BlockPatternMatch match = patternFor(variant).find(server, topPos);
             if (match == null) continue;
 
+            // No player context means non-player or unsupported placement; ungated by design.
             Optional<ServerPlayer> responsiblePlayer = PumpkinPlacementTracker.currentServerPlayerFor(topPos);
             if (responsiblePlayer.isPresent()) {
                 ServerPlayer player = responsiblePlayer.get();
