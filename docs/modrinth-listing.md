@@ -43,6 +43,8 @@ Edit `config/multigolem.json`, created on first server start. Server admins can 
 - Per-tier `ignored_target_types` values: `CREEPERS`, `ENDERMEN`, `PLAYERS`, `ALL_BOSSES`
 - Ability settings for Copper lightning healing, Gold movement/particles, Emerald healing aura, Diamond lightning targeting/cooldowns, and Netherite fire immunity/ignite duration
 
+Server owners can optionally control who may create or heal each MultiGolem tier with LuckPerms-compatible permission nodes. Permissions are permissive by default, so existing servers keep their current behavior unless a permissions plugin denies a node.
+
 Existing V1 config files migrate automatically to the V2 schema, and unknown fields are preserved where possible.
 
 ## Requirements

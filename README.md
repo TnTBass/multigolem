@@ -94,6 +94,33 @@ Ability fields:
 | Netherite | `netherite_fire_immune` | `true` | Makes Netherite golems immune to fire and lava damage. |
 | Netherite | `netherite_ignite_seconds` | `5` | Seconds of fire applied to mobs hit by Netherite golems. |
 
+### Permissions
+
+MultiGolem supports LuckPerms-compatible permissions through Fabric Permissions API. Permissions are permissive by default: existing servers keep working unless a permissions provider explicitly denies a node.
+
+Creation permissions:
+
+- `multigolem.create.copper`
+- `multigolem.create.gold`
+- `multigolem.create.emerald`
+- `multigolem.create.diamond`
+- `multigolem.create.netherite`
+
+Healing permissions:
+
+- `multigolem.heal.copper`
+- `multigolem.heal.iron`
+- `multigolem.heal.gold`
+- `multigolem.heal.emerald`
+- `multigolem.heal.diamond`
+- `multigolem.heal.netherite`
+
+Bypass:
+
+- `multigolem.admin.bypass`
+
+These nodes only affect player-built MultiGolem T-pattern creation and ingot-based golem healing. Village spawns, commands, spawn eggs, mob spawners, existing golems, drops, stats, abilities, targeting, and anger behavior are unchanged.
+
 ## Roadmap
 
 - **V1** ✅: Variants, stats, drops, healing, anger toggle, config. Server-side only.
