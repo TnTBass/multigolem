@@ -15,11 +15,16 @@ public final class PumpkinPlacementTracker {
     }
 
     static void withCurrentPlacement(Object player, BlockPos pos, Runnable action) {
+        Placement previous = CURRENT.get();
         CURRENT.set(new Placement(player, pos.immutable()));
         try {
             action.run();
         } finally {
-            CURRENT.remove();
+            if (previous == null) {
+                CURRENT.remove();
+            } else {
+                CURRENT.set(previous);
+            }
         }
     }
 

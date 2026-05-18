@@ -63,6 +63,29 @@ class PumpkinPlacementTrackerTest {
     }
 
     @Test
+    void nestedPlacements_restoreOuterPlacementAfterInnerCompletes() {
+        Object outerPlayer = new Object();
+        Object innerPlayer = new Object();
+        BlockPos outerPos = new BlockPos(10, 70, 10);
+        BlockPos innerPos = new BlockPos(11, 71, 11);
+
+        PumpkinPlacementTracker.withCurrentPlacement(outerPlayer, outerPos, () -> {
+            assertEquals(Optional.of(outerPlayer), PumpkinPlacementTracker.currentPlayerFor(outerPos));
+
+            PumpkinPlacementTracker.withCurrentPlacement(innerPlayer, innerPos, () -> {
+                assertEquals(Optional.of(innerPlayer), PumpkinPlacementTracker.currentPlayerFor(innerPos));
+                assertTrue(PumpkinPlacementTracker.currentPlayerFor(outerPos).isEmpty());
+            });
+
+            assertEquals(Optional.of(outerPlayer), PumpkinPlacementTracker.currentPlayerFor(outerPos));
+            assertTrue(PumpkinPlacementTracker.currentPlayerFor(innerPos).isEmpty());
+        });
+
+        assertTrue(PumpkinPlacementTracker.currentPlayerFor(outerPos).isEmpty());
+        assertTrue(PumpkinPlacementTracker.currentPlayerFor(innerPos).isEmpty());
+    }
+
+    @Test
     void publicCurrentServerPlayerFor_doesNotExposeNonServerObjects() {
         Object player = new Object();
         BlockPos pumpkinPos = new BlockPos(-3, 80, 12);
