@@ -6,6 +6,7 @@
     "EntityMixin",
     "IronGolemMixin",
     "CarvedPumpkinBlockMixin",
+    "BlockItemMixin",
     "LivingEntityMixin",
     "GolemTargetingMixin",
     "IronGolemAttackMixin",
