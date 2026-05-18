@@ -3,6 +3,8 @@ package dev.charles.multigolem.spawn;
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
+import dev.charles.multigolem.permissions.MultiGolemPermissions;
+import dev.charles.multigolem.permissions.PumpkinPlacementTracker;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -20,6 +22,7 @@ import net.minecraft.world.level.block.state.pattern.BlockPatternBuilder;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Optional;
 
 public final class GolemCreationHandler {
 
@@ -49,6 +52,15 @@ public final class GolemCreationHandler {
 
             BlockPattern.BlockPatternMatch match = patternFor(variant).find(server, topPos);
             if (match == null) continue;
+
+            Optional<ServerPlayer> responsiblePlayer = PumpkinPlacementTracker.currentServerPlayerFor(topPos);
+            if (responsiblePlayer.isPresent()) {
+                ServerPlayer player = responsiblePlayer.get();
+                if (!MultiGolemPermissions.canCreate(player, variant)) {
+                    MultiGolemPermissions.sendCreateDenied(player, variant);
+                    return true;
+                }
+            }
 
             IronGolem golem = EntityType.IRON_GOLEM.create(server, EntitySpawnReason.TRIGGERED);
             if (golem == null) {
