@@ -4,6 +4,7 @@ import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
 import dev.charles.multigolem.attribute.VariantAttributes;
 import dev.charles.multigolem.spawn.SpawnerVariantMarker;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
@@ -15,7 +16,9 @@ import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.ValueInput;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Optional;
 
@@ -29,7 +32,8 @@ public abstract class BaseSpawnerMixin {
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/world/level/storage/TagValueInput;create(Lnet/minecraft/util/ProblemReporter;Lnet/minecraft/core/HolderLookup$Provider;Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/world/level/storage/ValueInput;"
-        )
+        ),
+        require = 1
     )
     private ValueInput multigolem$stashVariantForSpawnerEntity(ProblemReporter reporter, HolderLookup.Provider registries, CompoundTag entityTag) {
         MULTIGOLEM_SPAWNER_VARIANT.set(SpawnerVariantMarker.read(entityTag));
@@ -41,7 +45,8 @@ public abstract class BaseSpawnerMixin {
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/server/level/ServerLevel;tryAddFreshEntityWithPassengers(Lnet/minecraft/world/entity/Entity;)Z"
-        )
+        ),
+        require = 1
     )
     private boolean multigolem$applyVariantBeforeSpawnerAdd(ServerLevel level, Entity entity) {
         try {
@@ -54,5 +59,13 @@ public abstract class BaseSpawnerMixin {
         } finally {
             MULTIGOLEM_SPAWNER_VARIANT.remove();
         }
+    }
+
+    @Inject(
+        method = "serverTick(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;)V",
+        at = @At("RETURN")
+    )
+    private void multigolem$clearSpawnerVariantOnExit(ServerLevel level, BlockPos pos, CallbackInfo ci) {
+        MULTIGOLEM_SPAWNER_VARIANT.remove();
     }
 }

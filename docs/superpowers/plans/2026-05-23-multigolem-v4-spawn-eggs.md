@@ -891,6 +891,8 @@ private boolean multigolem$applyVariantBeforeSpawnerAdd(ServerLevel level, Entit
 }
 ```
 
+Add `require = 1` to both `BaseSpawner.serverTick` redirects so mapping drift fails at startup instead of silently dropping variant support. Also add a `RETURN` cleanup inject that removes the thread-local at method exit; the `tryAddFreshEntityWithPassengers` redirect still clears in `finally`, but the return cleanup covers vanilla early-return paths before entity add.
+
 Do not call `setPlayerCreated(true)`. Spawner-spawned golems remain non-player-created.
 
 - [ ] **Step 6.8: Register spawner mixins**
