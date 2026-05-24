@@ -275,7 +275,7 @@ public final class SpawnEggStacks {
         if (data == null) return Optional.empty();
         CompoundTag root = data.copyTag();
         CompoundTag multigolem = root.getCompoundOrEmpty(ROOT_KEY);
-        return GolemVariant.fromId(multigolem.getStringOrEmpty(VARIANT_KEY))
+        return GolemVariant.fromId(multigolem.getStringOr(VARIANT_KEY, ""))
             .filter(variant -> variant != GolemVariant.IRON);
     }
 
@@ -294,7 +294,7 @@ public final class SpawnEggStacks {
 }
 ```
 
-Adjust only method names like `getCompoundOrEmpty` or `getStringOrEmpty` if Task 1 shows the 26.1.2 source uses different names.
+Adjust only method names like `getCompoundOrEmpty` if Task 1 shows the 26.1.2 source uses different names. In 26.1.2, string reads use `getStringOr(key, "")`.
 
 - [ ] **Step 2.4: Run marker tests**
 
@@ -725,7 +725,7 @@ void writesMarkerIntoSpawnerEntityTagWithoutChangingEntityId() {
     CompoundTag entity = new CompoundTag();
     entity.putString("id", "minecraft:iron_golem");
     SpawnerVariantMarker.write(entity, GolemVariant.DIAMOND);
-    assertEquals("minecraft:iron_golem", entity.getStringOrEmpty("id"));
+    assertEquals("minecraft:iron_golem", entity.getStringOr("id", ""));
     assertEquals(GolemVariant.DIAMOND, SpawnerVariantMarker.read(entity).orElseThrow());
 }
 
@@ -743,7 +743,7 @@ void clearRemovesOnlyMultiGolemMarker() {
     entity.putString("CustomName", "\"Bob\"");
     SpawnerVariantMarker.write(entity, GolemVariant.GOLD);
     SpawnerVariantMarker.clear(entity);
-    assertEquals("\"Bob\"", entity.getStringOrEmpty("CustomName"));
+    assertEquals("\"Bob\"", entity.getStringOr("CustomName", ""));
     assertTrue(SpawnerVariantMarker.read(entity).isEmpty());
 }
 ```
@@ -761,7 +761,7 @@ public static void write(CompoundTag entityTag, GolemVariant variant) {
 
 public static Optional<GolemVariant> read(CompoundTag entityTag) {
     CompoundTag multigolem = entityTag.getCompoundOrEmpty("multigolem");
-    return GolemVariant.fromId(multigolem.getStringOrEmpty("variant"))
+    return GolemVariant.fromId(multigolem.getStringOr("variant", ""))
         .filter(variant -> variant != GolemVariant.IRON);
 }
 ```
@@ -796,11 +796,13 @@ private void multigolem$denyMarkedSpawnerUse(UseOnContext context, CallbackInfoR
     if (variant.isEmpty()) return;
     if (context.getPlayer() == null) {
         cir.setReturnValue(InteractionResult.FAIL);
+        cir.cancel();
         return;
     }
     if (context.getPlayer() instanceof ServerPlayer player && !MultiGolemPermissions.canCreate(player, variant.get())) {
         MultiGolemPermissions.sendCreateDenied(player, variant.get());
         cir.setReturnValue(InteractionResult.FAIL);
+        cir.cancel();
     }
 }
 ```
@@ -835,12 +837,17 @@ Add a second inject after the same invoke:
     )
 )
 private void multigolem$markSpawnerSpawnData(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
-    Optional<GolemVariant> variant = SpawnEggStacks.variantFrom(context.getItemInHand());
-    if (variant.isEmpty()) return;
     if (!(context.getLevel().getBlockEntity(context.getClickedPos()) instanceof SpawnerBlockEntity blockEntity)) return;
     BaseSpawner spawner = blockEntity.getSpawner();
     SpawnData data = ((BaseSpawnerAccessor) spawner).multigolem$getNextSpawnData();
     if (data == null) return;
+    Optional<GolemVariant> variant = SpawnEggStacks.variantFrom(context.getItemInHand());
+    if (variant.isEmpty()) {
+        if (SpawnEggItem.getType(context.getItemInHand()) == EntityType.IRON_GOLEM) {
+            SpawnerVariantMarker.clear(data.getEntityToSpawn());
+        }
+        return;
+    }
     SpawnerVariantMarker.write(data.getEntityToSpawn(), variant.get());
 }
 ```

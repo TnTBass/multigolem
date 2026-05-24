@@ -195,7 +195,7 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 
 - [ ] Village natural spawns are not permission-gated.
 - [ ] Command-spawned golems are not permission-gated.
-- [ ] Spawn egg golems are not permission-gated.
+- [ ] Unmarked vanilla spawn egg golems are not permission-gated.
 - [ ] Mob spawner golems are not permission-gated.
 - [ ] Existing golems, drops, stats, abilities, targeting, and anger behavior are unchanged.
 

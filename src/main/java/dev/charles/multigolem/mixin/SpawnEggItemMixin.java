@@ -45,12 +45,14 @@ public abstract class SpawnEggItemMixin {
 
         if (!(context.getPlayer() instanceof ServerPlayer player)) {
             cir.setReturnValue(InteractionResult.FAIL);
+            cir.cancel();
             return;
         }
 
         if (!MultiGolemPermissions.canCreate(player, variant.get())) {
             MultiGolemPermissions.sendCreateDenied(player, variant.get());
             cir.setReturnValue(InteractionResult.FAIL);
+            cir.cancel();
         }
     }
 
