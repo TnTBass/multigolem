@@ -4,10 +4,14 @@ import com.mojang.serialization.Codec;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.HoneycombItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.WeatheringCopper;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -16,12 +20,12 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public enum GolemVariant {
-    COPPER   ("copper",    Blocks.COPPER_BLOCK,    Items.COPPER_INGOT,    Items.COPPER_INGOT),
-    IRON     ("iron",      Blocks.IRON_BLOCK,      Items.IRON_INGOT,      Items.IRON_INGOT),
-    GOLD     ("gold",      Blocks.GOLD_BLOCK,      Items.GOLD_INGOT,      Items.GOLD_INGOT),
-    EMERALD  ("emerald",   Blocks.EMERALD_BLOCK,   Items.EMERALD,         Items.EMERALD),
-    DIAMOND  ("diamond",   Blocks.DIAMOND_BLOCK,   Items.DIAMOND,         Items.DIAMOND),
-    NETHERITE("netherite", Blocks.NETHERITE_BLOCK, Items.NETHERITE_INGOT, Items.NETHERITE_SCRAP);
+    COPPER   ("copper",    "Copper",    Blocks.COPPER_BLOCK,    Items.COPPER_INGOT,    Items.COPPER_INGOT),
+    IRON     ("iron",      "Iron",      Blocks.IRON_BLOCK,      Items.IRON_INGOT,      Items.IRON_INGOT),
+    GOLD     ("gold",      "Gold",      Blocks.GOLD_BLOCK,      Items.GOLD_INGOT,      Items.GOLD_INGOT),
+    EMERALD  ("emerald",   "Emerald",   Blocks.EMERALD_BLOCK,   Items.EMERALD,         Items.EMERALD),
+    DIAMOND  ("diamond",   "Diamond",   Blocks.DIAMOND_BLOCK,   Items.DIAMOND,         Items.DIAMOND),
+    NETHERITE("netherite", "Netherite", Blocks.NETHERITE_BLOCK, Items.NETHERITE_INGOT, Items.NETHERITE_SCRAP);
 
     public static final StreamCodec<ByteBuf, GolemVariant> STREAM_CODEC =
         ByteBufCodecs.STRING_UTF8.map(
@@ -43,24 +47,45 @@ public enum GolemVariant {
         .collect(Collectors.toUnmodifiableMap(v -> v.id, Function.identity()));
 
     private final String id;
+    private final String displayName;
     private final Block bodyBlock;
     private final Item healIngot;
     private final Item dropItem;
 
-    GolemVariant(String id, Block bodyBlock, Item healIngot, Item dropItem) {
+    GolemVariant(String id, String displayName, Block bodyBlock, Item healIngot, Item dropItem) {
         this.id = id;
+        this.displayName = displayName;
         this.bodyBlock = bodyBlock;
         this.healIngot = healIngot;
         this.dropItem = dropItem;
     }
 
     public String id() { return id; }
+    public String displayName() { return displayName; }
     public Block bodyBlock() { return bodyBlock; }
     public Item healIngot() { return healIngot; }
     public Item dropItem() { return dropItem; }
 
+    public boolean matchesBodyBlock(BlockState state) {
+        if (this == COPPER) {
+            return state.is(BlockTags.COPPER) || isCopperFamilyBlock(state.getBlock());
+        }
+        return state.is(bodyBlock);
+    }
+
     public static Optional<GolemVariant> fromBodyBlock(Block block) {
+        if (block.defaultBlockState().is(BlockTags.COPPER) || isCopperFamilyBlock(block)) {
+            return Optional.of(COPPER);
+        }
         return Optional.ofNullable(BY_BODY_BLOCK.get(block));
+    }
+
+    private static boolean isCopperFamilyBlock(Block block) {
+        if (block instanceof WeatheringCopper) {
+            return true;
+        }
+        Block unwaxed = HoneycombItem.WAX_OFF_BY_BLOCK.get().get(block);
+        return unwaxed instanceof WeatheringCopper;
     }
 
     public static Optional<GolemVariant> fromIngot(Item item) {

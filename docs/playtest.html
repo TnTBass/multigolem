@@ -131,6 +131,7 @@
 <label><input type="checkbox"> Hit by ghast fireball → no damage.</label>
 <label><input type="checkbox"> Standing on magma block → no damage.</label>
 <label><input type="checkbox"> Hit a mob → mob catches fire for 5 seconds.</label>
+<label><input type="checkbox"> Set <code>netherite_ignite_seconds: 0</code>; hit a mob; no fire is applied.</label>
 <label><input type="checkbox"> Hit a blaze → no fire effect (vanilla immunity), no error.</label>
 <label><input type="checkbox"> Hit another netherite golem → no fire effect on target.</label>
 
@@ -148,8 +149,95 @@
 <h3>Vanilla parity</h3>
 <label><input type="checkbox"> All V1 checklist rows still pass.</label>
 
+<div class="version">V3 — village natural spawns</div>
+
+<h3>Village variant rolls</h3>
+<label><input type="checkbox"> Set <code>village_spawning.weights</code> to <code>{"iron":0,"copper":1,"gold":0,"emerald":0,"diamond":0,"netherite":0}</code>. Trigger a villager-called golem spawn. Copper variant spawns.</label>
+<label><input type="checkbox"> Repeat forced one-at-a-time weights for Gold, Emerald, Diamond, and Netherite. Each target variant can spawn from villagers.</label>
+<label><input type="checkbox"> Set <code>netherite: 1</code> and all other recognized weights to <code>0</code>. Villagers can spawn Netherite.</label>
+<label><input type="checkbox"> Restore default weights. Over repeated village spawns, Iron, Copper, Gold, Emerald, and Diamond are possible outcomes; Diamond is rare and Netherite does not spawn unless configured.</label>
+
+<h3>V2 behavior on village-spawned variants</h3>
+<label><input type="checkbox"> Village-spawned non-iron variant starts at configured full health.</label>
+<label><input type="checkbox"> Textures render correctly on a modded client.</label>
+<label><input type="checkbox"> Healing with the matching ingot works.</label>
+<label><input type="checkbox"> Variant-specific drops use the village-spawned variant.</label>
+<label><input type="checkbox"> Copper lightning heal works.</label>
+<label><input type="checkbox"> Gold speed and particles work.</label>
+<label><input type="checkbox"> Emerald villager aura works.</label>
+<label><input type="checkbox"> Diamond lightning behavior works.</label>
+<label><input type="checkbox"> Netherite fire immunity and ignite-on-hit work.</label>
+<label><input type="checkbox"> <code>ignored_target_types</code> applies.</label>
+<label><input type="checkbox"> <code>anger_on_hit</code> applies.</label>
+
+<h3>Scope and config negatives</h3>
+<label><input type="checkbox"> Village-spawned variants are natural defenders, not player-created golems.</label>
+<label><input type="checkbox"> Existing golems do not change after upgrading to V3.</label>
+<label><input type="checkbox"> <code>village_spawning.enabled: false</code> leaves villager-called spawns as Iron.</label>
+<label><input type="checkbox"> Fully explicit all-zero weights leave villager-called spawns as Iron.</label>
+<label><input type="checkbox"> Unmarked vanilla mob spawner iron golems do not roll variants.</label>
+<label><input type="checkbox"> Unmarked vanilla spawn egg iron golems do not roll variants.</label>
+<label><input type="checkbox"> Command-spawned iron golems do not roll variants.</label>
+<label><input type="checkbox"> Malformed <code>weights</code> falls back to defaults and logs a warning.</label>
+
+<div class="version">V3.1 — permissions</div>
+
+<h3>Creation permissions</h3>
+<label><input type="checkbox"> With no LuckPerms or permissions provider installed, player-built Diamond and Netherite MultiGolem T-patterns still spawn normally.</label>
+<label><input type="checkbox"> Denying <code>multigolem.create.diamond</code> prevents a player-built Diamond MultiGolem T-pattern from spawning.</label>
+<label><input type="checkbox"> Denied Diamond creation leaves all T-pattern blocks intact.</label>
+<label><input type="checkbox"> Denied Diamond creation shows <code>You do not have permission to create a Diamond golem.</code></label>
+<label><input type="checkbox"> Granting <code>multigolem.create.diamond</code> allows Diamond T-pattern creation.</label>
+<label><input type="checkbox"> <code>multigolem.admin.bypass</code> allows Diamond creation even when <code>multigolem.create.diamond</code> is denied.</label>
+<label><input type="checkbox"> Vanilla Iron golem T-pattern creation is unchanged and has no MultiGolem creation permission node.</label>
+
+<h3>Healing permissions</h3>
+<label><input type="checkbox"> With no LuckPerms or permissions provider installed, ingot-based healing still works normally.</label>
+<label><input type="checkbox"> Denying <code>multigolem.heal.netherite</code> prevents Netherite golem healing.</label>
+<label><input type="checkbox"> Denied Netherite healing does not consume the netherite ingot.</label>
+<label><input type="checkbox"> Denied Netherite healing does not play vanilla repair feedback.</label>
+<label><input type="checkbox"> Denied Netherite healing shows <code>You do not have permission to heal a Netherite golem.</code></label>
+<label><input type="checkbox"> Granting <code>multigolem.heal.netherite</code> allows Netherite healing.</label>
+<label><input type="checkbox"> Denying <code>multigolem.heal.iron</code> prevents vanilla Iron golem iron-ingot healing.</label>
+<label><input type="checkbox"> <code>multigolem.admin.bypass</code> allows healing even when the tier-specific heal node is denied.</label>
+
+<h3>Scope negatives</h3>
+<label><input type="checkbox"> Village natural spawns are not permission-gated.</label>
+<label><input type="checkbox"> Command-spawned golems are not permission-gated.</label>
+<label><input type="checkbox"> Unmarked vanilla spawn egg golems are not permission-gated.</label>
+<label><input type="checkbox"> Unmarked vanilla mob spawner golems are not permission-gated.</label>
+<label><input type="checkbox"> Existing golems, drops, stats, abilities, targeting, and anger behavior are unchanged.</label>
+
+<div class="version">V4 — marked spawn eggs</div>
+
+<h3>Spawn egg behavior</h3>
+<label><input type="checkbox"> Unmarked vanilla iron golem spawn egg still spawns a vanilla-owned iron golem.</label>
+<label><input type="checkbox"> Copper Golem Spawn Egg spawns a copper MultiGolem <code>IronGolem</code>.</label>
+<label><input type="checkbox"> Gold Golem Spawn Egg spawns a gold MultiGolem <code>IronGolem</code>.</label>
+<label><input type="checkbox"> Emerald Golem Spawn Egg spawns an emerald MultiGolem <code>IronGolem</code>.</label>
+<label><input type="checkbox"> Diamond Golem Spawn Egg spawns a diamond MultiGolem <code>IronGolem</code>.</label>
+<label><input type="checkbox"> Netherite Golem Spawn Egg spawns a netherite MultiGolem <code>IronGolem</code>.</label>
+<label><input type="checkbox"> Denied normal marked egg use does not consume the egg.</label>
+<label><input type="checkbox"> Denied normal marked egg use may arm-swing; overlay denial feedback appears and no golem spawns.</label>
+<label><input type="checkbox"> Egg-spawned MultiGolem variants are not player-created.</label>
+
+<h3>Creative tab and client fallback</h3>
+<label><input type="checkbox"> Creative tab entries appear in an integrated modded client.</label>
+<label><input type="checkbox"> Creative tab entries appear for a modded client connected to a modded dedicated server.</label>
+<label><input type="checkbox"> Vanilla client fallback behavior is acceptable and no registry-sync-breaking entries are introduced.</label>
+<label><input type="checkbox"> Vanilla client shows the vanilla iron golem spawn egg icon for marked stacks with no missing-texture error.</label>
+<label><input type="checkbox"> Exact <code>minecraft:custom_data</code> model selection works for every variant.</label>
+<label><input type="checkbox"> The stack factory is the sole writer to spawn egg <code>minecraft:custom_data</code>.</label>
+
+<h3>Spawners</h3>
+<label><input type="checkbox"> Denied spawner configuration leaves the spawner unchanged and does not consume the egg.</label>
+<label><input type="checkbox"> Allowed marked egg use on a spawner configures the matching MultiGolem variant.</label>
+<label><input type="checkbox"> Unmarked vanilla iron golem spawn egg clears any previous MultiGolem spawner marker and remains vanilla-owned.</label>
+<label><input type="checkbox"> Spawner-spawned variants get attachment/stats and are not player-created.</label>
+<label><input type="checkbox"> Spawner thread-local cleanup cannot leak across spawn attempts.</label>
+
 <script>
-  const STORAGE_KEY = 'multigolem-playtest-v2';
+  const STORAGE_KEY = 'multigolem-playtest-v4';
 
   function allBoxes() {
     return Array.from(document.querySelectorAll('input[type=checkbox]'));

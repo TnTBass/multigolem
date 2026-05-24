@@ -26,6 +26,15 @@ class GolemVariantTest {
     }
 
     @Test
+    void fromBodyBlock_recognizesCopperFamilyAsCopperTier() {
+        assertEquals(GolemVariant.COPPER, GolemVariant.fromBodyBlock(Blocks.WAXED_COPPER_BLOCK).orElseThrow());
+        assertEquals(GolemVariant.COPPER, GolemVariant.fromBodyBlock(Blocks.EXPOSED_COPPER).orElseThrow());
+        assertEquals(GolemVariant.COPPER, GolemVariant.fromBodyBlock(Blocks.WEATHERED_COPPER).orElseThrow());
+        assertEquals(GolemVariant.COPPER, GolemVariant.fromBodyBlock(Blocks.OXIDIZED_COPPER).orElseThrow());
+        assertEquals(GolemVariant.COPPER, GolemVariant.fromBodyBlock(Blocks.WAXED_OXIDIZED_COPPER).orElseThrow());
+    }
+
+    @Test
     void fromBodyBlock_returnsEmptyForUnsupportedBlock() {
         assertTrue(GolemVariant.fromBodyBlock(Blocks.DIRT).isEmpty());
     }

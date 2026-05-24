@@ -2,10 +2,25 @@
 
 ## Unreleased
 
-- Expanded the README with a full `config/multigolem.json` reference for server admins and a shorter public roadmap.
-- Updated the Modrinth and CurseForge listing copy to match the README's clearer gameplay and config documentation.
-- Added a maintainer workflow for correcting an already-published CurseForge file changelog without publishing a new mod version.
-- Added a maintainer workflow for correcting Modrinth project descriptions and version changelogs without publishing a new mod version.
+## 0.3.0+mc26.1.2 — 2026-05-24
+
+- Disabled golem healing no longer plays the normal heal feedback when players use matching materials on damaged golems.
+- Villages can now naturally spawn MultiGolem variants as defenders.
+- Added server config for village spawn weights. Iron, Copper, Gold, and Emerald are common by default, Diamond is rare, and Netherite has a default weight of `0` so villages do not naturally spawn fire-starting Netherite defenders unless a server owner opts in.
+- Server owners can now control who may create or heal each MultiGolem tier using Fabric Permissions API-compatible permission providers.
+- Permissions are permissive by default, so existing servers keep their current creation and healing behavior unless a permissions plugin denies a node.
+- Permission checks apply to player-built MultiGolem creation, ingot-based healing, marked spawn egg use, and marked spawn egg spawner configuration.
+- Added Copper, Gold, Emerald, Diamond, and Netherite Golem Spawn Egg variants as marked vanilla iron golem spawn eggs.
+- The MultiGolem Copper Golem Spawn Egg uses a different icon from the vanilla Copper Golem Spawn Egg, but both spawn eggs have the same name.
+- Marked MultiGolem spawn eggs can configure monster spawners to spawn the matching MultiGolem variant.
+- Added a MultiGolem icon and project links for ModMenu and mod list screens.
+
+## 0.2.2+mc26.1.2 — 2026-05-17
+
+- Fixed waxed and oxidized copper blocks not creating MultiGolem Copper golems in the iron-golem T-pattern.
+- Fixed Diamond golems getting stuck with an overlong lightning cooldown after firing once, so they can recharge again within the configured cooldown window.
+- Fixed Netherite golems showing the burning state even though fire and lava damage was blocked.
+- Increased the default Gold golem movement speed multiplier from `1.25` to `1.75`.
 
 ## 0.2.1+mc26.1.2 — 2026-05-17
 

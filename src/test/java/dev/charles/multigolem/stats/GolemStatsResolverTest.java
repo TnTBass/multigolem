@@ -47,7 +47,7 @@ class GolemStatsResolverTest {
     @Test
     void resolvesV2_goldFields() {
         GolemStatsResolver r = new GolemStatsResolver(MultiGolemConfig.defaults());
-        assertEquals(1.25, r.goldSpeedMultiplier(), 0.0001);
+        assertEquals(1.75, r.goldSpeedMultiplier(), 0.0001);
         assertTrue(r.goldSprintParticlesEnabled());
         assertTrue(r.goldSunlightShineEnabled());
     }

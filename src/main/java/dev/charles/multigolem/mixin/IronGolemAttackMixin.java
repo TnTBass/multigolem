@@ -2,6 +2,7 @@ package dev.charles.multigolem.mixin;
 
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
+import dev.charles.multigolem.ability.DiamondAbility;
 import dev.charles.multigolem.ability.TargetFilter;
 import dev.charles.multigolem.attachment.GolemAbilityState;
 import dev.charles.multigolem.attachment.GolemAbilityStateAttachment;
@@ -45,7 +46,13 @@ public abstract class IronGolemAttackMixin {
         if (variant == GolemVariant.DIAMOND) {
             var stats = MultiGolem.config().tier(GolemVariant.DIAMOND);
             GolemAbilityState ability = GolemAbilityStateAttachment.get(self);
-            if (!ability.diamondCooldownReady(level.getGameTime())) return;
+            long now = level.getGameTime();
+            GolemAbilityState clamped = ability.clampDiamondCooldown(now, DiamondAbility.maxCooldownTicks(stats));
+            if (clamped != ability) {
+                GolemAbilityStateAttachment.set(self, clamped);
+                ability = clamped;
+            }
+            if (!ability.diamondCooldownReady(now)) return;
             var modePredicate = TargetFilter.DiamondTargetPredicate.of(stats.diamondTargetMode());
             if (!modePredicate.matches(target)) return;
             var excludeFilter = TargetFilter.fromIgnoredList(stats.ignoredTargetTypes());
@@ -59,7 +66,7 @@ public abstract class IronGolemAttackMixin {
             long min = Math.max(0, stats.diamondCooldownMinSeconds()) * 20L;
             long max = Math.max(min, stats.diamondCooldownMaxSeconds()) * 20L;
             long span = Math.max(1, max - min + 1);
-            long nextAt = level.getGameTime() + min + Math.floorMod(level.getRandom().nextLong(), span);
+            long nextAt = now + min + Math.floorMod(level.getRandom().nextLong(), span);
             GolemAbilityStateAttachment.set(self, ability.withDiamondCooldown(nextAt));
             return;
         }

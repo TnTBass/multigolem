@@ -109,6 +109,7 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 - [ ] Hit by ghast fireball — no damage.
 - [ ] Magma block — no damage.
 - [ ] Hit a mob — mob catches fire for 5 seconds.
+- [ ] Set `netherite_ignite_seconds: 0`; hit a mob; no fire is applied.
 - [ ] Hit a vanilla fire-immune mob (blaze) — no fire effect, no error.
 - [ ] **Hit another netherite-variant golem** — no fire effect on target (netherite ignite skips netherite-variant targets).
 - *Lava-walking is not in V2 — no row for this release.*
@@ -129,3 +130,105 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 ## Vanilla parity preserved
 
 - [ ] Existing V1 playtest checklist (all rows) still passes — V2 adds, doesn't break.
+
+---
+
+# V3 — village natural spawns
+
+## Village variant rolls
+
+- [ ] Set `village_spawning.weights` to `{"iron":0,"copper":1,"gold":0,"emerald":0,"diamond":0,"netherite":0}`. Trigger a villager-called golem spawn. Copper variant spawns.
+- [ ] Repeat forced one-at-a-time weights for Gold, Emerald, Diamond, and Netherite. Each target variant can spawn from villagers.
+- [ ] Set `netherite: 1` and all other recognized weights to `0`. Villagers can spawn Netherite.
+- [ ] Restore default weights. Over repeated village spawns, Iron, Copper, Gold, Emerald, and Diamond are possible outcomes; Diamond is rare and Netherite does not spawn unless configured.
+
+## V2 behavior on village-spawned variants
+
+- [ ] Village-spawned non-iron variant starts at configured full health.
+- [ ] Textures render correctly on a modded client.
+- [ ] Healing with the matching ingot works.
+- [ ] Variant-specific drops use the village-spawned variant.
+- [ ] Copper lightning heal works.
+- [ ] Gold speed and particles work.
+- [ ] Emerald villager aura works.
+- [ ] Diamond lightning behavior works.
+- [ ] Netherite fire immunity and ignite-on-hit work.
+- [ ] `ignored_target_types` applies.
+- [ ] `anger_on_hit` applies.
+
+## Scope and config negatives
+
+- [ ] Village-spawned variants are natural defenders, not player-created golems.
+- [ ] Existing golems do not change after upgrading to V3.
+- [ ] `village_spawning.enabled: false` leaves villager-called spawns as Iron.
+- [ ] Fully explicit all-zero weights leave villager-called spawns as Iron.
+- [ ] Unmarked vanilla mob spawner iron golems do not roll variants.
+- [ ] Unmarked vanilla spawn egg iron golems do not roll variants.
+- [ ] Command-spawned iron golems do not roll variants.
+- [ ] Malformed `weights` falls back to defaults and logs a warning.
+
+---
+
+# V3.1 - permissions
+
+## Creation permissions
+
+- [ ] With no LuckPerms or permissions provider installed, player-built Diamond and Netherite MultiGolem T-patterns still spawn normally.
+- [ ] Denying `multigolem.create.diamond` prevents a player-built Diamond MultiGolem T-pattern from spawning.
+- [ ] Denied Diamond creation leaves all T-pattern blocks intact.
+- [ ] Denied Diamond creation shows `You do not have permission to create a Diamond golem.`
+- [ ] Granting `multigolem.create.diamond` allows Diamond T-pattern creation.
+- [ ] `multigolem.admin.bypass` allows Diamond creation even when `multigolem.create.diamond` is denied.
+- [ ] Vanilla Iron golem T-pattern creation is unchanged and has no MultiGolem creation permission node.
+
+## Healing permissions
+
+- [ ] With no LuckPerms or permissions provider installed, ingot-based healing still works normally.
+- [ ] Denying `multigolem.heal.netherite` prevents Netherite golem healing.
+- [ ] Denied Netherite healing does not consume the netherite ingot.
+- [ ] Denied Netherite healing does not play vanilla repair feedback.
+- [ ] Denied Netherite healing shows `You do not have permission to heal a Netherite golem.`
+- [ ] Granting `multigolem.heal.netherite` allows Netherite healing.
+- [ ] Denying `multigolem.heal.iron` prevents vanilla Iron golem iron-ingot healing.
+- [ ] `multigolem.admin.bypass` allows healing even when the tier-specific heal node is denied.
+
+## Scope negatives
+
+- [ ] Village natural spawns are not permission-gated.
+- [ ] Command-spawned golems are not permission-gated.
+- [ ] Unmarked vanilla spawn egg golems are not permission-gated.
+- [ ] Unmarked vanilla mob spawner golems are not permission-gated.
+- [ ] Existing golems, drops, stats, abilities, targeting, and anger behavior are unchanged.
+
+---
+
+# V4 - marked spawn eggs
+
+## Spawn egg behavior
+
+- [ ] Unmarked vanilla iron golem spawn egg still spawns a vanilla-owned iron golem.
+- [ ] Copper Golem Spawn Egg spawns a copper MultiGolem `IronGolem`.
+- [ ] Gold Golem Spawn Egg spawns a gold MultiGolem `IronGolem`.
+- [ ] Emerald Golem Spawn Egg spawns an emerald MultiGolem `IronGolem`.
+- [ ] Diamond Golem Spawn Egg spawns a diamond MultiGolem `IronGolem`.
+- [ ] Netherite Golem Spawn Egg spawns a netherite MultiGolem `IronGolem`.
+- [ ] Denied normal marked egg use does not consume the egg.
+- [ ] Denied normal marked egg use may arm-swing; overlay denial feedback appears and no golem spawns.
+- [ ] Egg-spawned MultiGolem variants are not player-created.
+
+## Creative tab and client fallback
+
+- [ ] Creative tab entries appear in an integrated modded client.
+- [ ] Creative tab entries appear for a modded client connected to a modded dedicated server.
+- [ ] Vanilla client fallback behavior is acceptable and no registry-sync-breaking entries are introduced.
+- [ ] Vanilla client shows the vanilla iron golem spawn egg icon for marked stacks with no missing-texture error.
+- [ ] Exact `minecraft:custom_data` model selection works for every variant.
+- [ ] The stack factory is the sole writer to spawn egg `minecraft:custom_data`.
+
+## Spawners
+
+- [ ] Denied spawner configuration leaves the spawner unchanged and does not consume the egg.
+- [ ] Allowed marked egg use on a spawner configures the matching MultiGolem variant.
+- [ ] Unmarked vanilla iron golem spawn egg clears any previous MultiGolem spawner marker and remains vanilla-owned.
+- [ ] Spawner-spawned variants get attachment/stats and are not player-created.
+- [ ] Spawner thread-local cleanup cannot leak across spawn attempts.

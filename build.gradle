@@ -12,6 +12,7 @@ repositories {
 	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
 	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
 	// for more information about repositories.
+	mavenCentral()
 }
 
 loom {
@@ -34,6 +35,7 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	implementation include("me.lucko:fabric-permissions-api:0.7.0")
 
 	testImplementation "org.junit.jupiter:junit-jupiter:6.0.3"
 	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
@@ -137,35 +139,43 @@ tasks.register("checkChangelog") {
 			return
 		}
 
-		if (!changedFiles.contains("CHANGELOG.md")) {
-			throw new GradleException("Releasable changes require a CHANGELOG.md update under Unreleased.\n\nReleasable files:\n${releasableFiles.join("\n")}")
+		def changelogFiles = ["CHANGELOG.md", "INTERNAL_CHANGELOG.md"]
+		def changedChangelogFiles = changelogFiles.findAll { changedFiles.contains(it) }
+		if (changedChangelogFiles.isEmpty()) {
+			throw new GradleException("Releasable or release-process changes require a CHANGELOG.md or INTERNAL_CHANGELOG.md update under Unreleased.\n\nReleasable files:\n${releasableFiles.join("\n")}")
 		}
 
-		def changelog = file("CHANGELOG.md").text.readLines()
-		def inUnreleased = false
-		def hasBullet = false
-		def hasReleaseSection = false
-		for (line in changelog) {
-			if (line ==~ /^##\s+\d+\.\d+\.\d+.*$/) {
-				hasReleaseSection = true
-			}
+		def publicFacingPattern = ~/^(src\/main\/|README\.md$)/
+		def publicFacingFiles = releasableFiles.findAll { it ==~ publicFacingPattern || it.find(publicFacingPattern) }
+		if (!publicFacingFiles.isEmpty() && !changedFiles.contains("CHANGELOG.md")) {
+			throw new GradleException("Player/server-admin-facing changes require a CHANGELOG.md update, not only INTERNAL_CHANGELOG.md.\n\nPublic-facing files:\n${publicFacingFiles.join("\n")}")
+		}
 
-			if (line ==~ /^##\s+Unreleased\s*$/) {
-				inUnreleased = true
-				continue
-			}
+		def hasBullet = changedChangelogFiles.any { changelogFile ->
+			def changelog = file(changelogFile).text.readLines()
+			def inUnreleased = false
+			for (line in changelog) {
+				if (line ==~ /^##\s+Unreleased\s*$/) {
+					inUnreleased = true
+					continue
+				}
 
-			if (inUnreleased && line ==~ /^##\s+.*/) {
-				break
-			}
+				if (inUnreleased && line ==~ /^##\s+.*/) {
+					break
+				}
 
-			if (inUnreleased && line ==~ /^-\s+.*/) {
-				hasBullet = true
+				if (inUnreleased && line ==~ /^-\s+.*/) {
+					return true
+				}
 			}
+			return false
+		}
+		def hasReleaseSection = changedChangelogFiles.any { changelogFile ->
+			file(changelogFile).text.readLines().any { it ==~ /^##\s+\d+\.\d+\.\d+.*$/ }
 		}
 
 		if (!hasBullet && !hasReleaseSection) {
-			throw new GradleException("CHANGELOG.md must contain at least one bullet under '## Unreleased' or a versioned release section.")
+			throw new GradleException("Changed changelog file must contain at least one bullet under '## Unreleased' or a versioned release section.")
 		}
 
 		logger.lifecycle("Changelog gate passed.")
@@ -211,6 +221,71 @@ tasks.register("checkReleaseNotesStyle") {
 		}
 		if (result.result.get().exitValue != 0) {
 			throw new GradleException("Release notes style gate failed for CHANGELOG.md section '${section}'.")
+		}
+	}
+}
+
+tasks.register("checkV4PlanningHandoff") {
+	group = "verification"
+	description = "Requires V4 spawn egg planning guardrails before implementation handoff."
+
+	inputs.file("scripts/check-v4-planning-handoff.py")
+	inputs.file(".gitignore")
+	inputs.dir("docs")
+	inputs.files(fileTree("docs/superpowers/plans") {
+		include "*v4*spawn*egg*.md"
+	})
+
+	doLast {
+		def python = providers.environmentVariable("PYTHON").getOrElse("python")
+		def result = providers.exec {
+			commandLine(python, "scripts/check-v4-planning-handoff.py")
+			ignoreExitValue = true
+		}
+		def stdout = result.standardOutput.asText.get()
+		def stderr = result.standardError.asText.get()
+		if (!stdout.isBlank()) {
+			logger.lifecycle(stdout)
+		}
+		if (!stderr.isBlank()) {
+			logger.error(stderr)
+		}
+		if (result.result.get().exitValue != 0) {
+			throw new GradleException("V4 planning handoff gate failed.")
+		}
+	}
+}
+
+tasks.register("checkReleaseDocs") {
+	group = "verification"
+	description = "Requires release docs, ModMenu metadata, and icon assets to stay current."
+
+	inputs.file("scripts/check-release-docs.py")
+	inputs.file("README.md")
+	inputs.file("docs/modrinth-listing.md")
+	inputs.file("docs/curseforge-listing.md")
+	inputs.file("docs/playtest-checklist.md")
+	inputs.file("docs/playtest.html")
+	inputs.file("src/main/resources/fabric.mod.json")
+	inputs.file("src/main/resources/assets/multigolem/lang/en_us.json")
+	inputs.file("src/main/resources/assets/multigolem/icon.png")
+
+	doLast {
+		def python = providers.environmentVariable("PYTHON").getOrElse("python")
+		def result = providers.exec {
+			commandLine(python, "scripts/check-release-docs.py")
+			ignoreExitValue = true
+		}
+		def stdout = result.standardOutput.asText.get()
+		def stderr = result.standardError.asText.get()
+		if (!stdout.isBlank()) {
+			logger.lifecycle(stdout)
+		}
+		if (!stderr.isBlank()) {
+			logger.error(stderr)
+		}
+		if (result.result.get().exitValue != 0) {
+			throw new GradleException("Release docs gate failed.")
 		}
 	}
 }
@@ -277,7 +352,8 @@ tasks.register("releaseReminder") {
 }
 
 tasks.named("check") {
-	dependsOn("checkChangelog", "checkWrapperChecksum", "checkReleaseNotesStyle", "checkUnitTestCompanions")
+	// V4-specific guard: keep reviewed handoff artifacts intact through the V4 branch lifecycle.
+	dependsOn("checkChangelog", "checkWrapperChecksum", "checkReleaseNotesStyle", "checkV4PlanningHandoff", "checkReleaseDocs", "checkUnitTestCompanions")
 }
 
 tasks.named("build") {

@@ -51,6 +51,16 @@ Patterns that helped:
 
 **Inline execution is often faster than fighting subagents on complex tasks.** If a task has investigation, novel API surface, or a long-running command, just do it directly.
 
+### Reviews catch behavior edges better than syntax
+
+V3.1 permissions compiled and built cleanly, but review still caught the real bugs:
+
+- Full-health golems should no-op before permission checks. A denial message on an action that cannot actually heal is noisy and changes vanilla-feeling behavior.
+- Recognized but mismatched ingots must not fall through to vanilla `IronGolem#mobInteract`. Because every MultiGolem variant is still an `IronGolem`, letting an iron ingot fall through on a damaged non-iron variant can heal and consume the item through vanilla, bypassing the tier permission entirely.
+- `ThreadLocal` context helpers should save and restore prior state, not only remove in `finally`. Nesting is not expected in the vanilla placement path, but modded/mixin surfaces are safer when reentrant calls restore the outer context.
+
+Builds catch descriptors and compilation. Focused review catches "this compiles but changes player behavior."
+
 ### Honest scope checks > running out of context
 
 V1 spanned multiple sessions deliberately. V2 paused at Task 2 with a clean handoff doc rather than failing mid-task. Each pushed commit is a resumable checkpoint.
@@ -144,6 +154,92 @@ V2's spike turned up that vanilla Copper Golem exists in 26.1.2 — a feature th
 
 Before writing the design for any phase, **grep for the feature in vanilla source first.** Saves a brainstorming round.
 
+### Permission gates must distinguish denial from no-op
+
+V3.1 added permissive-by-default permission gates for player-built creation and ingot healing. The subtle part was not node strings; it was preserving vanilla/no-op behavior around the denied action:
+
+- Check permissions only when the action would actually do something.
+- Full-health golem + matching ingot should return before permission checks: no denial, no `FAIL`, no consume, no sound.
+- Unrecognized items should fall through normally.
+- Recognized but mismatched healing ingots should cancel with `InteractionResult.PASS`, not `FAIL`, to prevent vanilla iron healing while avoiding a denial message for the wrong item.
+- Actual permission denial should use `InteractionResult.FAIL` before heal, sound, or item consumption.
+
+Rule: for permission work, first classify the interaction as "not our action," "our action but no-op," or "our action and would mutate state." Only the last category should ask the permissions provider.
+
+### Document intentional ungated paths next to the branch
+
+Some ungated paths are not omissions. In V3.1:
+
+- Iron T-pattern creation is vanilla-owned and must not get a `multigolem.create.iron` gate.
+- Missing player context during creation is ungated by design. Dispenser, piston, command-block, or unsupported placement paths should keep current behavior instead of guessing a responsible player.
+- Village natural spawns, commands, spawn eggs, mob spawners, existing golems, drops, stats, abilities, targeting, and anger behavior stay outside V3.1 permission scope.
+
+Put short comments beside the branch that enforces the exception. Future contributors are less likely to "fix" an intentional hole if the reason is in the code.
+
+### Modern 26.1 Loom uses plain `implementation`
+
+The V3.1 permissions plan initially said `modImplementation include("me.lucko:fabric-permissions-api:0.7.0")`, but this repo's 26.1 Loom setup uses plain `implementation` for Fabric Loader and Fabric API. Gradle rejected `modImplementation`; the working shape is:
+
+```groovy
+implementation include("me.lucko:fabric-permissions-api:0.7.0")
+```
+
+This still nests the permissions API in the jar. When adding future Fabric-side dependencies, match the repo's existing dependency style first, then verify with `compileJava`, `build`, and a startup smoke if mixins/runtime loading are involved.
+
+### Revue review bridge replaced agent-review-bridge
+
+The local review bridge is now Revue:
+
+- Skill: `revue-bridge`
+- Review gate wrapper: `superpowers-review-gates`
+- Worker CLI: `revue-worker`
+- MCP server/tools: `revue-ledger`
+- Claude reviewer adapter name: `claude-code`
+
+Do not create new review requests with the old reviewer name `claude`; Revue's worker will not claim them. If that happens, cancel the request as an audited attempt and create a new request with `reviewer="claude-code"`.
+
+Before spending Claude budget, run:
+
+```powershell
+revue-worker doctor --cwd "<repo-or-worktree>" --trusted-roots "<trusted-root>"
+```
+
+Then show the operator surface before `revue-worker once`, including the dashboard link plus status/tail/cancel commands. If Revue packetizes a review, run the child packet review ID explicitly; the parent may stop at `packetized` with a pending packet. After actioning findings, update the Revue finding statuses so `revue-worker status` shows `0 unresolved`.
+
+### Revue local ledger state must stay local
+
+Revue writes request, result, prompt, transcript, dashboard, and lock files under `.agent-review/`. That directory is local process state, not project source. Keep `.agent-review/` ignored in `.gitignore`; never commit review ledger contents.
+
+For V4 spawn egg planning, run the explicit guard before handing the plan to implementation:
+
+```powershell
+python scripts/check-v4-planning-handoff.py
+```
+
+The guard verifies `.agent-review/` is ignored, the V4 Revue follow-up notes exist in `docs/26.1.2-mojang-targets.md`, and, once a V4 spawn egg plan exists, that it includes the Revue planning guardrails.
+
+### Revue findings should become plan constraints, not vague memory
+
+The V4 design-intent review found several issues that were not implementation bugs yet, but would become bugs if the plan omitted them. Record these as explicit plan requirements:
+
+- Verify creative tab registration against integrated client, modded dedicated server, and vanilla client behavior. Do not assume client-only registration is enough.
+- If item visuals select on exact `minecraft:custom_data`, the marked spawn egg stack factory must be the sole writer to that component.
+- Permission-denied spawn egg use may still arm-swing because vanilla `spawnMob` returns `InteractionResult.SUCCESS`; use overlay denial as feedback and do not add brittle extra hooks just to suppress the swing.
+- Marked spawn eggs must not call `setPlayerCreated(true)`; only T-pattern player-built golems get that ownership flag.
+- Any spawner thread-local must be cleared with a guaranteed cleanup path.
+- Spawner `setEntityId` and the marker write happen synchronously in one `useOn` call; document that there is no async save window between those injects.
+- `BaseSpawner.setEntityId` mutates the existing `SpawnData.entity` compound. If a marked egg configures a spawner and a later unmarked vanilla iron golem egg reconfigures the same spawner, clear the `multigolem` marker or the stale variant will leak into future spawns.
+
+### V4 planning guardrails should be mechanical
+
+The V4 spawn egg planning session produced several process failures that should be caught by scripts, not remembered:
+
+- Use absolute paths for new files in assigned worktrees, or immediately verify both the assigned worktree and parent checkout with `git status --short`. A relative patch can land in the parent checkout even after `git rev-parse --show-toplevel` was verified in the shell.
+- Do not parallelize dependent file moves, especially copy-then-delete cleanup. Run those steps sequentially so the delete cannot win before the copy reads the source.
+- If Revue MCP `review_create` times out but `revue-worker doctor` is healthy, check `revue-worker status` before retrying so duplicate requests are not created. If a temporary helper is needed, keep it under ignored `.agent-review/tmp/`, call the canonical `review_create`, and show `operator-links` before `revue-worker once`.
+- Revue `review_unit` uses `"scope_basis": "explicit-files"` plus `recommended`, `user_choice`, and `reason`. Do not use the older ad hoc `type/files/notes` shape.
+- For V4 spawn egg planning, `scripts/check-v4-planning-handoff.py` is the mechanical gate. It must keep checking the plan-only review fixes: exact `custom_data` selector verification, null-player spawner denial, existing `BaseSpawner.nextSpawnData` mutation, one entity per tick for the spawner thread-local, and vanilla-client icon fallback. The authoritative marker list lives in the script.
+
 ---
 
 ## Release plumbing lessons
@@ -165,6 +261,19 @@ Now documented in `docs/modrinth-listing.md` shape. New listings copy that patte
 ### First CurseForge upload pends moderator approval
 
 The release workflow succeeds (HTTP 200, file ID issued) but the file isn't publicly visible until a human approves the project. Don't panic-redeploy when the file doesn't appear on the project page within minutes — wait a few hours.
+
+### Public docs drift every phase
+
+V3.1 updated README and marketplace docs for permissions, but review caught stale public copy that still said village natural-spawn weighting was "arriving in V3" even after V3 had shipped.
+
+Phase-close docs checks should include:
+
+- README roadmap: completed phases marked done and the "next" marker advanced.
+- Modrinth and CurseForge "Known Limitations": remove shipped limitations or replace them with current ones.
+- CHANGELOG: user/admin-facing behavior, not implementation steps.
+- Playtest checklist: new behavior plus negative-scope rows.
+
+If a file is touched for a new phase, scan the surrounding public copy for stale phase language. Grep helps, but read the nearby section by eye.
 
 ### Vanilla asset templates need a provenance sidecar
 
@@ -240,7 +349,7 @@ For agentic workers (Codex, Claude, etc.) resuming work on this project:
 Read this file first. Every item here cost real time the first time we learned it. Covers process patterns, technical gotchas, config-layer edge cases, and release plumbing details.
 
 - **V3 starting point:** `docs/superpowers/specs/2026-05-15-multigolem-design.md` §3 (V3 scope) and §6.1.1 (config weights including the Charles preset). Follow the same brainstorm -> spec -> Codex review -> plan -> execute flow used by V1 and V2.
-- **V4 starting point:** no spec yet. Start with a fresh brainstorming session. The vanilla `SpawnEggItem` lives at `net.minecraft.world.item.SpawnEggItem`; see V1's source-inspection spike pattern in `docs/26.1.2-mojang-targets.md` for how to confirm API specifics before implementation.
+- **V4 starting point:** use the V4 spawn egg spike sections in `docs/26.1.2-mojang-targets.md`, especially the Revue follow-up section, then write the formal implementation plan before coding. The vanilla `SpawnEggItem` lives at `net.minecraft.world.item.SpawnEggItem`; the current V4 branch already source-spiked the normal egg path, item-model path, and spawner path.
 - **V5 starting point:** no spec yet. Start with a fresh brainstorming session. The vanilla `CopperGolem` entity is at `net.minecraft.world.entity.animal.golem.CopperGolem` and its spawn flow is documented in `docs/26.1.2-mojang-targets.md` under the "Copper Golem already exists in vanilla 26.1.2" finding.
 
 V3, V4, V5 are independent of each other after V3's natural-spawn ships. They can be released in any order, or interleaved with other work. The recommended order above (V3 -> V4 -> V5) honors the original V1 roadmap promise first.

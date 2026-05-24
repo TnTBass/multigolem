@@ -10,6 +10,7 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSyntaxException;
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
+import dev.charles.multigolem.spawn.VillageSpawnWeights;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -38,17 +39,22 @@ public final class MultiGolemConfig {
         Set.of("CREEPERS", "ENDERMEN", "PLAYERS", "ALL_BOSSES");
     static final Set<String> RECOGNIZED_DIAMOND_TARGET_MODES =
         Set.of("ALL_HOSTILE_MOBS", "ALL_HOSTILE_MOBS_AND_PLAYERS", "BOSSES_ONLY", "NONE");
+    private static final String VILLAGE_SPAWNING_NOTE =
+        "Keep in mind, villages are made of wood and netherite golems start fires.";
 
     private final boolean allowGolemHealing;
     private final Map<GolemVariant, TierStats> tiers;
+    private final VillageSpawnWeights villageSpawnWeights;
 
-    private MultiGolemConfig(boolean allowGolemHealing, Map<GolemVariant, TierStats> tiers) {
+    private MultiGolemConfig(boolean allowGolemHealing, Map<GolemVariant, TierStats> tiers, VillageSpawnWeights villageSpawnWeights) {
         this.allowGolemHealing = allowGolemHealing;
         this.tiers = new EnumMap<>(tiers);
+        this.villageSpawnWeights = villageSpawnWeights;
     }
 
     public boolean allowGolemHealing() { return allowGolemHealing; }
     public TierStats tier(GolemVariant variant) { return tiers.get(variant); }
+    public VillageSpawnWeights villageSpawnWeights() { return villageSpawnWeights; }
 
     public static MultiGolemConfig defaults() {
         EnumMap<GolemVariant, TierStats> m = new EnumMap<>(GolemVariant.class);
@@ -66,7 +72,7 @@ public final class MultiGolemConfig {
             null, null));
         m.put(GolemVariant.GOLD, new TierStats(130, 22.5, true, List.of("CREEPERS"),
             null, null,
-            1.25, true, true,
+            1.75, true, true,
             null, null, null, null,
             null, null, null, null, null,
             null, null));
@@ -88,7 +94,7 @@ public final class MultiGolemConfig {
             null, null, null, null,
             null, null, null, null, null,
             true, 5));
-        return new MultiGolemConfig(true, m);
+        return new MultiGolemConfig(true, m, VillageSpawnWeights.defaults());
     }
 
     public static MultiGolemConfig loadOrCreate(Path path) {
@@ -144,12 +150,83 @@ public final class MultiGolemConfig {
     }
 
     private static void canonicalizeAndValidateInPlace(JsonObject root) {
+        canonicalizeVillageSpawningInPlace(root);
+
         JsonObject tiers = root.has("tiers") && root.get("tiers").isJsonObject()
             ? root.getAsJsonObject("tiers") : null;
         if (tiers == null) return;
         for (GolemVariant v : GolemVariant.values()) {
             if (!tiers.has(v.id()) || !tiers.get(v.id()).isJsonObject()) continue;
             canonicalizeTierInPlace(v, tiers.getAsJsonObject(v.id()));
+        }
+    }
+
+    private static void canonicalizeVillageSpawningInPlace(JsonObject root) {
+        if (!root.has("village_spawning") || !root.get("village_spawning").isJsonObject()) {
+            MultiGolem.LOG.warn("village_spawning is missing or malformed; using defaults");
+            root.add("village_spawning", villageSpawnWeightsToJson(VillageSpawnWeights.defaults()));
+            return;
+        }
+
+        JsonObject village = root.getAsJsonObject("village_spawning");
+        if (!village.has("enabled") || !village.get("enabled").isJsonPrimitive()
+                || !village.get("enabled").getAsJsonPrimitive().isBoolean()) {
+            if (village.has("enabled")) {
+                MultiGolem.LOG.warn("village_spawning.enabled is not a boolean; using true");
+            }
+            village.addProperty("enabled", true);
+        }
+
+        if (!village.has("weights") || !village.get("weights").isJsonObject()) {
+            MultiGolem.LOG.warn("village_spawning.weights is missing or malformed; using defaults");
+            village.add("weights", villageWeightDefaultsJson());
+            return;
+        }
+
+        JsonObject weights = village.getAsJsonObject("weights");
+        boolean hasRecognizedKey = false;
+        for (GolemVariant variant : VillageSpawnWeights.rollOrder()) {
+            if (weights.has(variant.id())) {
+                hasRecognizedKey = true;
+                break;
+            }
+        }
+
+        for (Map.Entry<String, JsonElement> entry : weights.entrySet()) {
+            if (GolemVariant.fromId(entry.getKey()).isEmpty()) {
+                MultiGolem.LOG.warn("unknown village_spawning weight key '{}'; preserved but ignored", entry.getKey());
+            }
+        }
+
+        VillageSpawnWeights defaults = VillageSpawnWeights.defaults();
+        if (!hasRecognizedKey) {
+            MultiGolem.LOG.warn("village_spawning.weights contains no recognized variant keys; using defaults");
+            for (GolemVariant variant : VillageSpawnWeights.rollOrder()) {
+                weights.addProperty(variant.id(), defaults.weight(variant));
+            }
+            return;
+        }
+
+        for (GolemVariant variant : VillageSpawnWeights.rollOrder()) {
+            String key = variant.id();
+            if (!weights.has(key)) {
+                MultiGolem.LOG.warn("village_spawning.weights.{} missing; using default {}", key, defaults.weight(variant));
+                weights.addProperty(key, defaults.weight(variant));
+                continue;
+            }
+
+            JsonElement value = weights.get(key);
+            if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isNumber()) {
+                MultiGolem.LOG.warn("village_spawning.weights.{} is not a number; using default {}", key, defaults.weight(variant));
+                weights.addProperty(key, defaults.weight(variant));
+                continue;
+            }
+
+            int raw = value.getAsInt();
+            if (raw < 0) {
+                MultiGolem.LOG.warn("village_spawning.weights.{} = {} below 0; clamped to 0", key, raw);
+                weights.addProperty(key, 0);
+            }
         }
     }
 
@@ -271,6 +348,7 @@ public final class MultiGolemConfig {
     static MultiGolemConfig parse(JsonObject root) {
         MultiGolemConfig defaults = defaults();
         boolean healing = readBoolean(root, "allow_golem_healing", defaults.allowGolemHealing);
+        VillageSpawnWeights villageSpawnWeights = parseVillageSpawnWeights(root, defaults.villageSpawnWeights);
 
         EnumMap<GolemVariant, TierStats> tiers = new EnumMap<>(GolemVariant.class);
         JsonObject tiersJson = root.has("tiers") && root.get("tiers").isJsonObject()
@@ -283,7 +361,26 @@ public final class MultiGolemConfig {
             }
             tiers.put(v, parseTier(v, tiersJson.getAsJsonObject(v.id()), def));
         }
-        return new MultiGolemConfig(healing, tiers);
+        return new MultiGolemConfig(healing, tiers, villageSpawnWeights);
+    }
+
+    private static VillageSpawnWeights parseVillageSpawnWeights(JsonObject root, VillageSpawnWeights fallback) {
+        if (!root.has("village_spawning") || !root.get("village_spawning").isJsonObject()) {
+            return fallback;
+        }
+
+        JsonObject village = root.getAsJsonObject("village_spawning");
+        boolean enabled = readBoolean(village, "enabled", fallback.enabled());
+        JsonObject weightsJson = village.has("weights") && village.get("weights").isJsonObject()
+            ? village.getAsJsonObject("weights")
+            : null;
+        if (weightsJson == null) return fallback.withEnabled(enabled);
+
+        EnumMap<GolemVariant, Integer> weights = new EnumMap<>(GolemVariant.class);
+        for (GolemVariant variant : VillageSpawnWeights.rollOrder()) {
+            weights.put(variant, readInt(weightsJson, variant.id(), fallback.weight(variant)));
+        }
+        return new VillageSpawnWeights(enabled, weights);
     }
 
     private static TierStats parseTier(GolemVariant variant, JsonObject t, TierStats def) {
@@ -472,6 +569,7 @@ public final class MultiGolemConfig {
     static JsonObject toJson(MultiGolemConfig cfg) {
         JsonObject root = new JsonObject();
         root.addProperty("allow_golem_healing", cfg.allowGolemHealing);
+        root.add("village_spawning", villageSpawnWeightsToJson(cfg.villageSpawnWeights));
         JsonObject tiers = new JsonObject();
         for (GolemVariant v : GolemVariant.values()) {
             TierStats s = cfg.tier(v);
@@ -512,15 +610,33 @@ public final class MultiGolemConfig {
         return root;
     }
 
+    private static JsonObject villageSpawnWeightsToJson(VillageSpawnWeights weights) {
+        JsonObject village = new JsonObject();
+        village.addProperty("_note", VILLAGE_SPAWNING_NOTE);
+        village.addProperty("enabled", weights.enabled());
+        JsonObject weightsJson = new JsonObject();
+        for (GolemVariant variant : VillageSpawnWeights.rollOrder()) {
+            weightsJson.addProperty(variant.id(), weights.weight(variant));
+        }
+        village.add("weights", weightsJson);
+        return village;
+    }
+
+    private static JsonObject villageWeightDefaultsJson() {
+        return villageSpawnWeightsToJson(VillageSpawnWeights.defaults()).getAsJsonObject("weights");
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof MultiGolemConfig that)) return false;
-        return allowGolemHealing == that.allowGolemHealing && tiers.equals(that.tiers);
+        return allowGolemHealing == that.allowGolemHealing
+            && tiers.equals(that.tiers)
+            && villageSpawnWeights.equals(that.villageSpawnWeights);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(allowGolemHealing, tiers);
+        return Objects.hash(allowGolemHealing, tiers, villageSpawnWeights);
     }
 }

@@ -3,6 +3,8 @@ package dev.charles.multigolem.spawn;
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
+import dev.charles.multigolem.permissions.MultiGolemPermissions;
+import dev.charles.multigolem.permissions.PumpkinPlacementTracker;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -17,10 +19,10 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.pattern.BlockInWorld;
 import net.minecraft.world.level.block.state.pattern.BlockPattern;
 import net.minecraft.world.level.block.state.pattern.BlockPatternBuilder;
-import net.minecraft.world.level.block.state.predicate.BlockStatePredicate;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Optional;
 
 public final class GolemCreationHandler {
 
@@ -32,7 +34,7 @@ public final class GolemCreationHandler {
         return PATTERNS.computeIfAbsent(variant, v -> BlockPatternBuilder.start()
             .aisle("~^~", "###", "~#~")
             .where('^', BlockInWorld.hasState(s -> s.is(Blocks.CARVED_PUMPKIN) || s.is(Blocks.JACK_O_LANTERN)))
-            .where('#', BlockInWorld.hasState(BlockStatePredicate.forBlock(v.bodyBlock())))
+            .where('#', BlockInWorld.hasState(v::matchesBodyBlock))
             .where('~', BlockInWorld.hasState(BlockBehaviour.BlockStateBase::isAir))
             .build());
     }
@@ -45,11 +47,21 @@ public final class GolemCreationHandler {
         if (!(level instanceof ServerLevel server)) return false;
 
         for (GolemVariant variant : GolemVariant.values()) {
-            // Skip IRON - vanilla iron T-pattern is handled by vanilla's own check.
+            // IRON T-patterns are vanilla-owned and must never be permission-gated here.
             if (variant == GolemVariant.IRON) continue;
 
             BlockPattern.BlockPatternMatch match = patternFor(variant).find(server, topPos);
             if (match == null) continue;
+
+            // No player context means non-player or unsupported placement; ungated by design.
+            Optional<ServerPlayer> responsiblePlayer = PumpkinPlacementTracker.currentServerPlayerFor(topPos);
+            if (responsiblePlayer.isPresent()) {
+                ServerPlayer player = responsiblePlayer.get();
+                if (!MultiGolemPermissions.canCreate(player, variant)) {
+                    MultiGolemPermissions.sendCreateDenied(player, variant);
+                    return true;
+                }
+            }
 
             IronGolem golem = EntityType.IRON_GOLEM.create(server, EntitySpawnReason.TRIGGERED);
             if (golem == null) {

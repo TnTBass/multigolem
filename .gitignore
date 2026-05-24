@@ -2,6 +2,7 @@
 
 .claude/
 .superpowers/
+.worktrees/
 
 # gradle
 
@@ -49,3 +50,4 @@ replay_*.log
 
 __pycache__/
 *.pyc
+.agent-review/

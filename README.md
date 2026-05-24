@@ -10,6 +10,7 @@ A Fabric mod for Minecraft 26.1.2 that adds Copper, Gold, Emerald, Diamond, and 
 - Heal each golem with its matching ingot.
 - Per-tier special abilities (see below).
 - Per-tier `ignored_target_types` — copper/gold/emerald/diamond/netherite ignore creepers by default to prevent collateral block damage.
+- Marked vanilla iron golem spawn eggs for Copper, Gold, Emerald, Diamond, and Netherite variants.
 - **Server-side functional.** Vanilla clients can connect with no mod installed; stats, drops, and creation all behave correctly.
 
 ## Recipes
@@ -18,14 +19,14 @@ Build a T-shape (1 base block, 1 center, 2 arms) out of one of:
 
 | Body block | Golem |
 |---|---|
-| Copper Block | Copper Golem |
+| Copper Block, including waxed or oxidized variants | Copper Golem |
 | Iron Block | Iron Golem (vanilla, unchanged) |
 | Gold Block | Gold Golem |
 | Emerald Block | Emerald Golem |
 | Diamond Block | Diamond Golem |
 | Netherite Block | Netherite Golem |
 
-Place a carved pumpkin on top. The vanilla single-copper-block + pumpkin recipe still spawns the vanilla Copper Golem (with its chest behavior).
+Place a carved pumpkin on top. Waxed and oxidized copper blocks work for MultiGolem's iron-golem-style Copper Golem. The vanilla single-copper-block + pumpkin recipe still spawns the vanilla Copper Golem (with its chest behavior).
 
 ## Stats (defaults)
 
@@ -43,7 +44,7 @@ Place a carved pumpkin on top. The vanilla single-copper-block + pumpkin recipe 
 | Tier | Ability |
 |---|---|
 | Copper | Lightning strikes heal instead of damage |
-| Gold | +25% movement speed; sprint-dust and sunlight-shine particles |
+| Gold | +75% movement speed; sprint-dust and sunlight-shine particles |
 | Emerald | Heals passively while any villager or wandering trader is within 8 blocks |
 | Diamond | Passive LOS lightning zap of nearby hostiles (30–60s cooldown) + on-attack lightning; self-immune to lightning damage |
 | Netherite | Fully immune to fire and lava; ignites any mob it hits for 5 seconds |
@@ -79,7 +80,7 @@ Ability fields:
 |---|---|---:|---|
 | Copper | `copper_lightning_immune` | `true` | Lightning heals Copper golems instead of damaging them. |
 | Copper | `copper_lightning_heal_amount` | `null` | HP restored by lightning. `null` means heal to full. |
-| Gold | `gold_speed_multiplier` | `1.25` | Movement speed multiplier. |
+| Gold | `gold_speed_multiplier` | `1.75` | Movement speed multiplier. |
 | Gold | `gold_sprint_particles_enabled` | `true` | Enables sprint-dust particles while moving. |
 | Gold | `gold_sunlight_shine_enabled` | `true` | Enables sunlight-shine particles while idle outdoors. |
 | Emerald | `emerald_aura_range` | `8` | Block radius for finding villagers and wandering traders. |
@@ -92,14 +93,42 @@ Ability fields:
 | Diamond | `diamond_aura_range` | `12` | Block radius for passive lightning target scans. |
 | Diamond | `diamond_lightning_proof` | `true` | Makes Diamond golems immune to lightning damage. |
 | Netherite | `netherite_fire_immune` | `true` | Makes Netherite golems immune to fire and lava damage. |
-| Netherite | `netherite_ignite_seconds` | `5` | Seconds of fire applied to mobs hit by Netherite golems. |
+| Netherite | `netherite_ignite_seconds` | `5` | Seconds of fire applied to mobs hit by Netherite golems. Set to `0` to disable ignite-on-hit. |
+
+### Permissions
+
+MultiGolem supports LuckPerms-compatible permissions through Fabric Permissions API. Permissions are permissive by default: existing servers keep working unless a permissions provider explicitly denies a node.
+
+Creation permissions:
+
+- `multigolem.create.copper`
+- `multigolem.create.gold`
+- `multigolem.create.emerald`
+- `multigolem.create.diamond`
+- `multigolem.create.netherite`
+
+Healing permissions:
+
+- `multigolem.heal.copper`
+- `multigolem.heal.iron`
+- `multigolem.heal.gold`
+- `multigolem.heal.emerald`
+- `multigolem.heal.diamond`
+- `multigolem.heal.netherite`
+
+Bypass:
+
+- `multigolem.admin.bypass`
+
+These nodes affect player-built MultiGolem T-pattern creation, ingot-based golem healing, marked spawn egg use, and marked spawn egg spawner configuration. Village spawns, commands, unmarked vanilla spawn eggs, unmarked vanilla mob spawners, existing golems, drops, stats, abilities, targeting, and anger behavior are unchanged.
 
 ## Roadmap
 
 - **V1** ✅: Variants, stats, drops, healing, anger toggle, config. Server-side only.
 - **V2** ✅: Client textures, five special abilities, `ignored_target_types`, lossless V1→V2 config migration.
-- **V3** (next): Village natural-spawn variant weighting for Iron Golems.
-- **V4**: Spawn eggs for the 5 Iron Golem variants.
+- **V3** ✅: Village natural-spawn variant weighting.
+- **V3.1** ✅: LuckPerms-compatible permission nodes for creation and healing.
+- **V4** ✅: Spawn eggs for the 5 Iron Golem variants.
 - **V5**: Copper Golem variants.
 
 ## License
