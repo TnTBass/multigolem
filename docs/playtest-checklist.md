@@ -198,3 +198,36 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 - [ ] Spawn egg golems are not permission-gated.
 - [ ] Mob spawner golems are not permission-gated.
 - [ ] Existing golems, drops, stats, abilities, targeting, and anger behavior are unchanged.
+
+---
+
+# V4 - marked spawn eggs
+
+## Spawn egg behavior
+
+- [ ] Unmarked vanilla iron golem spawn egg still spawns a vanilla-owned iron golem.
+- [ ] Copper Golem Spawn Egg spawns a copper MultiGolem `IronGolem`.
+- [ ] Gold Golem Spawn Egg spawns a gold MultiGolem `IronGolem`.
+- [ ] Emerald Golem Spawn Egg spawns an emerald MultiGolem `IronGolem`.
+- [ ] Diamond Golem Spawn Egg spawns a diamond MultiGolem `IronGolem`.
+- [ ] Netherite Golem Spawn Egg spawns a netherite MultiGolem `IronGolem`.
+- [ ] Denied normal marked egg use does not consume the egg.
+- [ ] Denied normal marked egg use may arm-swing; overlay denial feedback appears and no golem spawns.
+- [ ] Egg-spawned MultiGolem variants are not player-created.
+
+## Creative tab and client fallback
+
+- [ ] Creative tab entries appear in an integrated modded client.
+- [ ] Creative tab entries appear for a modded client connected to a modded dedicated server.
+- [ ] Vanilla client fallback behavior is acceptable and no registry-sync-breaking entries are introduced.
+- [ ] Vanilla client shows the vanilla iron golem spawn egg icon for marked stacks with no missing-texture error.
+- [ ] Exact `minecraft:custom_data` model selection works for every variant.
+- [ ] The stack factory is the sole writer to spawn egg `minecraft:custom_data`.
+
+## Spawners
+
+- [ ] Denied spawner configuration leaves the spawner unchanged and does not consume the egg.
+- [ ] Allowed marked egg use on a spawner configures the matching MultiGolem variant.
+- [ ] Unmarked vanilla iron golem spawn egg clears any previous MultiGolem spawner marker and remains vanilla-owned.
+- [ ] Spawner-spawned variants get attachment/stats and are not player-created.
+- [ ] Spawner thread-local cleanup cannot leak across spawn attempts.

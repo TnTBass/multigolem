@@ -5,10 +5,14 @@
 - Fixed disabled golem healing giving misleading visual feedback when players use matching ingots on damaged golems.
 - Villages can now naturally spawn MultiGolem variants as defenders.
 - Added server config for village spawn weights. Iron, Copper, Gold, and Emerald are common by default, while Diamond and Netherite are rare.
-- Existing golems, player-built golems, mob spawners, spawn eggs, and command-spawned iron golems are unchanged.
+- Existing golems, player-built golems, and command-spawned iron golems are unchanged.
 - Server owners can now control who may create or heal each MultiGolem tier using LuckPerms-compatible permission nodes.
 - Permissions are permissive by default, so existing servers keep their current creation and healing behavior unless a permissions plugin denies a node.
-- Permission checks only apply to player-built MultiGolem creation and ingot-based healing; village spawns, commands, spawn eggs, mob spawners, and existing golems are unchanged.
+- Permission checks apply to player-built MultiGolem creation, ingot-based healing, marked spawn egg use, and marked spawn egg spawner configuration; village spawns, commands, unmarked vanilla spawn eggs, and existing golems are unchanged.
+- Added Copper, Gold, Emerald, Diamond, and Netherite Golem Spawn Egg variants as marked vanilla iron golem spawn eggs.
+- Server permissions for creating each MultiGolem tier now also apply to marked spawn egg use.
+- Vanilla iron golem spawn eggs remain unchanged when they are not marked as a MultiGolem variant.
+- Marked MultiGolem spawn eggs can configure monster spawners to spawn the matching MultiGolem variant.
 
 ## 0.2.2+mc26.1.2 — 2026-05-17
 

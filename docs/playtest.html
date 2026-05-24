@@ -207,8 +207,36 @@
 <label><input type="checkbox"> Mob spawner golems are not permission-gated.</label>
 <label><input type="checkbox"> Existing golems, drops, stats, abilities, targeting, and anger behavior are unchanged.</label>
 
+<div class="version">V4 — marked spawn eggs</div>
+
+<h3>Spawn egg behavior</h3>
+<label><input type="checkbox"> Unmarked vanilla iron golem spawn egg still spawns a vanilla-owned iron golem.</label>
+<label><input type="checkbox"> Copper Golem Spawn Egg spawns a copper MultiGolem <code>IronGolem</code>.</label>
+<label><input type="checkbox"> Gold Golem Spawn Egg spawns a gold MultiGolem <code>IronGolem</code>.</label>
+<label><input type="checkbox"> Emerald Golem Spawn Egg spawns an emerald MultiGolem <code>IronGolem</code>.</label>
+<label><input type="checkbox"> Diamond Golem Spawn Egg spawns a diamond MultiGolem <code>IronGolem</code>.</label>
+<label><input type="checkbox"> Netherite Golem Spawn Egg spawns a netherite MultiGolem <code>IronGolem</code>.</label>
+<label><input type="checkbox"> Denied normal marked egg use does not consume the egg.</label>
+<label><input type="checkbox"> Denied normal marked egg use may arm-swing; overlay denial feedback appears and no golem spawns.</label>
+<label><input type="checkbox"> Egg-spawned MultiGolem variants are not player-created.</label>
+
+<h3>Creative tab and client fallback</h3>
+<label><input type="checkbox"> Creative tab entries appear in an integrated modded client.</label>
+<label><input type="checkbox"> Creative tab entries appear for a modded client connected to a modded dedicated server.</label>
+<label><input type="checkbox"> Vanilla client fallback behavior is acceptable and no registry-sync-breaking entries are introduced.</label>
+<label><input type="checkbox"> Vanilla client shows the vanilla iron golem spawn egg icon for marked stacks with no missing-texture error.</label>
+<label><input type="checkbox"> Exact <code>minecraft:custom_data</code> model selection works for every variant.</label>
+<label><input type="checkbox"> The stack factory is the sole writer to spawn egg <code>minecraft:custom_data</code>.</label>
+
+<h3>Spawners</h3>
+<label><input type="checkbox"> Denied spawner configuration leaves the spawner unchanged and does not consume the egg.</label>
+<label><input type="checkbox"> Allowed marked egg use on a spawner configures the matching MultiGolem variant.</label>
+<label><input type="checkbox"> Unmarked vanilla iron golem spawn egg clears any previous MultiGolem spawner marker and remains vanilla-owned.</label>
+<label><input type="checkbox"> Spawner-spawned variants get attachment/stats and are not player-created.</label>
+<label><input type="checkbox"> Spawner thread-local cleanup cannot leak across spawn attempts.</label>
+
 <script>
-  const STORAGE_KEY = 'multigolem-playtest-v3';
+  const STORAGE_KEY = 'multigolem-playtest-v4';
 
   function allBoxes() {
     return Array.from(document.querySelectorAll('input[type=checkbox]'));
