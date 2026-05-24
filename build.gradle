@@ -105,7 +105,7 @@ tasks.register("checkChangelog") {
 			mergeBase = gitOutput(["rev-list", "--max-parents=0", "HEAD"]).readLines().first()
 		}
 
-		def generatedTextureOutputPattern = ~/^src\/main\/resources\/assets\/multigolem\/textures\/entity\/.*\.png$/
+		def generatedTextureOutputPattern = ~/^src\/main\/resources\/assets\/multigolem\/textures\/(entity|item)\/.*\.png$/
 		def changedFiles = new TreeSet<String>()
 		[
 			[args: ["diff", "--name-only", "${mergeBase}...HEAD"], ignoreGeneratedOutputs: false],
