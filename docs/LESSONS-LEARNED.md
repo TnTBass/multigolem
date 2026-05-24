@@ -186,6 +186,49 @@ implementation include("me.lucko:fabric-permissions-api:0.7.0")
 
 This still nests the permissions API in the jar. When adding future Fabric-side dependencies, match the repo's existing dependency style first, then verify with `compileJava`, `build`, and a startup smoke if mixins/runtime loading are involved.
 
+### Revue review bridge replaced agent-review-bridge
+
+The local review bridge is now Revue:
+
+- Skill: `revue-bridge`
+- Review gate wrapper: `superpowers-review-gates`
+- Worker CLI: `revue-worker`
+- MCP server/tools: `revue-ledger`
+- Claude reviewer adapter name: `claude-code`
+
+Do not create new review requests with the old reviewer name `claude`; Revue's worker will not claim them. If that happens, cancel the request as an audited attempt and create a new request with `reviewer="claude-code"`.
+
+Before spending Claude budget, run:
+
+```powershell
+revue-worker doctor --cwd "<repo-or-worktree>" --trusted-roots "<trusted-root>"
+```
+
+Then show the operator surface before `revue-worker once`, including the dashboard link plus status/tail/cancel commands. If Revue packetizes a review, run the child packet review ID explicitly; the parent may stop at `packetized` with a pending packet. After actioning findings, update the Revue finding statuses so `revue-worker status` shows `0 unresolved`.
+
+### Revue local ledger state must stay local
+
+Revue writes request, result, prompt, transcript, dashboard, and lock files under `.agent-review/`. That directory is local process state, not project source. Keep `.agent-review/` ignored in `.gitignore`; never commit review ledger contents.
+
+For V4 spawn egg planning, run the explicit guard before handing the plan to implementation:
+
+```powershell
+python scripts/check-v4-planning-handoff.py
+```
+
+The guard verifies `.agent-review/` is ignored, the V4 Revue follow-up notes exist in `docs/26.1.2-mojang-targets.md`, and, once a V4 spawn egg plan exists, that it includes the Revue planning guardrails.
+
+### Revue findings should become plan constraints, not vague memory
+
+The V4 design-intent review found several issues that were not implementation bugs yet, but would become bugs if the plan omitted them. Record these as explicit plan requirements:
+
+- Verify creative tab registration against integrated client, modded dedicated server, and vanilla client behavior. Do not assume client-only registration is enough.
+- If item visuals select on exact `minecraft:custom_data`, the marked spawn egg stack factory must be the sole writer to that component.
+- Permission-denied spawn egg use may still arm-swing because vanilla `spawnMob` returns `InteractionResult.SUCCESS`; use overlay denial as feedback and do not add brittle extra hooks just to suppress the swing.
+- Marked spawn eggs must not call `setPlayerCreated(true)`; only T-pattern player-built golems get that ownership flag.
+- Any spawner thread-local must be cleared with a guaranteed cleanup path.
+- Spawner `setEntityId` and the marker write happen synchronously in one `useOn` call; document that there is no async save window between those injects.
+
 ---
 
 ## Release plumbing lessons
@@ -295,7 +338,7 @@ For agentic workers (Codex, Claude, etc.) resuming work on this project:
 Read this file first. Every item here cost real time the first time we learned it. Covers process patterns, technical gotchas, config-layer edge cases, and release plumbing details.
 
 - **V3 starting point:** `docs/superpowers/specs/2026-05-15-multigolem-design.md` §3 (V3 scope) and §6.1.1 (config weights including the Charles preset). Follow the same brainstorm -> spec -> Codex review -> plan -> execute flow used by V1 and V2.
-- **V4 starting point:** no spec yet. Start with a fresh brainstorming session. The vanilla `SpawnEggItem` lives at `net.minecraft.world.item.SpawnEggItem`; see V1's source-inspection spike pattern in `docs/26.1.2-mojang-targets.md` for how to confirm API specifics before implementation.
+- **V4 starting point:** use the V4 spawn egg spike sections in `docs/26.1.2-mojang-targets.md`, especially the Revue follow-up section, then write the formal implementation plan before coding. The vanilla `SpawnEggItem` lives at `net.minecraft.world.item.SpawnEggItem`; the current V4 branch already source-spiked the normal egg path, item-model path, and spawner path.
 - **V5 starting point:** no spec yet. Start with a fresh brainstorming session. The vanilla `CopperGolem` entity is at `net.minecraft.world.entity.animal.golem.CopperGolem` and its spawn flow is documented in `docs/26.1.2-mojang-targets.md` under the "Copper Golem already exists in vanilla 26.1.2" finding.
 
 V3, V4, V5 are independent of each other after V3's natural-spawn ships. They can be released in any order, or interleaved with other work. The recommended order above (V3 -> V4 -> V5) honors the original V1 roadmap promise first.
