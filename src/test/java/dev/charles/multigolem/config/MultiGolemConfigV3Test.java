@@ -29,7 +29,7 @@ class MultiGolemConfigV3Test {
         assertEquals(19, weights.weight(GolemVariant.GOLD));
         assertEquals(19, weights.weight(GolemVariant.EMERALD));
         assertEquals(5, weights.weight(GolemVariant.DIAMOND));
-        assertEquals(2, weights.weight(GolemVariant.NETHERITE));
+        assertEquals(0, weights.weight(GolemVariant.NETHERITE));
     }
 
     @Test
@@ -58,8 +58,13 @@ class MultiGolemConfigV3Test {
 
         String after = Files.readString(file);
         assertTrue(after.contains("\"village_spawning\""));
+        assertTrue(after.contains("villages are made of wood"));
         assertTrue(after.contains("_user_note"));
         assertTrue(after.contains("_tier_note"));
+
+        MultiGolemConfig reloaded = MultiGolemConfig.loadOrCreate(file);
+        assertTrue(reloaded.villageSpawnWeights().enabled());
+        assertEquals(81, reloaded.villageSpawnWeights().totalWeight());
     }
 
     @Test
@@ -128,13 +133,13 @@ class MultiGolemConfigV3Test {
         Files.writeString(missing, """
             { "village_spawning": { "enabled": true } }
             """);
-        assertEquals(83, MultiGolemConfig.loadOrCreate(missing).villageSpawnWeights().totalWeight());
+        assertEquals(81, MultiGolemConfig.loadOrCreate(missing).villageSpawnWeights().totalWeight());
 
         Path malformed = tmp.resolve("malformed.json");
         Files.writeString(malformed, """
             { "village_spawning": { "enabled": true, "weights": "heavy" } }
             """);
-        assertEquals(83, MultiGolemConfig.loadOrCreate(malformed).villageSpawnWeights().totalWeight());
+        assertEquals(81, MultiGolemConfig.loadOrCreate(malformed).villageSpawnWeights().totalWeight());
     }
 
     @Test
@@ -154,7 +159,7 @@ class MultiGolemConfigV3Test {
         assertEquals(19, weights.weight(GolemVariant.GOLD));
         assertEquals(19, weights.weight(GolemVariant.EMERALD));
         assertEquals(5, weights.weight(GolemVariant.DIAMOND));
-        assertEquals(2, weights.weight(GolemVariant.NETHERITE));
+        assertEquals(0, weights.weight(GolemVariant.NETHERITE));
     }
 
     @Test
@@ -169,7 +174,7 @@ class MultiGolemConfigV3Test {
             """);
 
         VillageSpawnWeights weights = MultiGolemConfig.loadOrCreate(file).villageSpawnWeights();
-        assertEquals(83, weights.totalWeight());
+        assertEquals(81, weights.totalWeight());
         String after = Files.readString(file);
         assertTrue(after.contains("\"obsidian\""));
         assertTrue(after.contains("\"lapis\""));

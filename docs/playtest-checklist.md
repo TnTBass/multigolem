@@ -109,6 +109,7 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 - [ ] Hit by ghast fireball — no damage.
 - [ ] Magma block — no damage.
 - [ ] Hit a mob — mob catches fire for 5 seconds.
+- [ ] Set `netherite_ignite_seconds: 0`; hit a mob; no fire is applied.
 - [ ] Hit a vanilla fire-immune mob (blaze) — no fire effect, no error.
 - [ ] **Hit another netherite-variant golem** — no fire effect on target (netherite ignite skips netherite-variant targets).
 - *Lava-walking is not in V2 — no row for this release.*
@@ -139,7 +140,7 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 - [ ] Set `village_spawning.weights` to `{"iron":0,"copper":1,"gold":0,"emerald":0,"diamond":0,"netherite":0}`. Trigger a villager-called golem spawn. Copper variant spawns.
 - [ ] Repeat forced one-at-a-time weights for Gold, Emerald, Diamond, and Netherite. Each target variant can spawn from villagers.
 - [ ] Set `netherite: 1` and all other recognized weights to `0`. Villagers can spawn Netherite.
-- [ ] Restore default weights. Over repeated village spawns, Iron, Copper, Gold, Emerald, Diamond, and Netherite are all possible outcomes; Diamond and Netherite are rare.
+- [ ] Restore default weights. Over repeated village spawns, Iron, Copper, Gold, Emerald, and Diamond are possible outcomes; Diamond is rare and Netherite does not spawn unless configured.
 
 ## V2 behavior on village-spawned variants
 
@@ -161,8 +162,8 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 - [ ] Existing golems do not change after upgrading to V3.
 - [ ] `village_spawning.enabled: false` leaves villager-called spawns as Iron.
 - [ ] Fully explicit all-zero weights leave villager-called spawns as Iron.
-- [ ] Mob spawner iron golems do not roll variants.
-- [ ] Spawn egg iron golems do not roll variants.
+- [ ] Unmarked vanilla mob spawner iron golems do not roll variants.
+- [ ] Unmarked vanilla spawn egg iron golems do not roll variants.
 - [ ] Command-spawned iron golems do not roll variants.
 - [ ] Malformed `weights` falls back to defaults and logs a warning.
 
@@ -196,7 +197,7 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 - [ ] Village natural spawns are not permission-gated.
 - [ ] Command-spawned golems are not permission-gated.
 - [ ] Unmarked vanilla spawn egg golems are not permission-gated.
-- [ ] Mob spawner golems are not permission-gated.
+- [ ] Unmarked vanilla mob spawner golems are not permission-gated.
 - [ ] Existing golems, drops, stats, abilities, targeting, and anger behavior are unchanged.
 
 ---

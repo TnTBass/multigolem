@@ -131,6 +131,7 @@
 <label><input type="checkbox"> Hit by ghast fireball → no damage.</label>
 <label><input type="checkbox"> Standing on magma block → no damage.</label>
 <label><input type="checkbox"> Hit a mob → mob catches fire for 5 seconds.</label>
+<label><input type="checkbox"> Set <code>netherite_ignite_seconds: 0</code>; hit a mob; no fire is applied.</label>
 <label><input type="checkbox"> Hit a blaze → no fire effect (vanilla immunity), no error.</label>
 <label><input type="checkbox"> Hit another netherite golem → no fire effect on target.</label>
 
@@ -154,7 +155,7 @@
 <label><input type="checkbox"> Set <code>village_spawning.weights</code> to <code>{"iron":0,"copper":1,"gold":0,"emerald":0,"diamond":0,"netherite":0}</code>. Trigger a villager-called golem spawn. Copper variant spawns.</label>
 <label><input type="checkbox"> Repeat forced one-at-a-time weights for Gold, Emerald, Diamond, and Netherite. Each target variant can spawn from villagers.</label>
 <label><input type="checkbox"> Set <code>netherite: 1</code> and all other recognized weights to <code>0</code>. Villagers can spawn Netherite.</label>
-<label><input type="checkbox"> Restore default weights. Over repeated village spawns, Iron, Copper, Gold, Emerald, Diamond, and Netherite are all possible outcomes; Diamond and Netherite are rare.</label>
+<label><input type="checkbox"> Restore default weights. Over repeated village spawns, Iron, Copper, Gold, Emerald, and Diamond are possible outcomes; Diamond is rare and Netherite does not spawn unless configured.</label>
 
 <h3>V2 behavior on village-spawned variants</h3>
 <label><input type="checkbox"> Village-spawned non-iron variant starts at configured full health.</label>
@@ -174,8 +175,8 @@
 <label><input type="checkbox"> Existing golems do not change after upgrading to V3.</label>
 <label><input type="checkbox"> <code>village_spawning.enabled: false</code> leaves villager-called spawns as Iron.</label>
 <label><input type="checkbox"> Fully explicit all-zero weights leave villager-called spawns as Iron.</label>
-<label><input type="checkbox"> Mob spawner iron golems do not roll variants.</label>
-<label><input type="checkbox"> Spawn egg iron golems do not roll variants.</label>
+<label><input type="checkbox"> Unmarked vanilla mob spawner iron golems do not roll variants.</label>
+<label><input type="checkbox"> Unmarked vanilla spawn egg iron golems do not roll variants.</label>
 <label><input type="checkbox"> Command-spawned iron golems do not roll variants.</label>
 <label><input type="checkbox"> Malformed <code>weights</code> falls back to defaults and logs a warning.</label>
 
@@ -204,7 +205,7 @@
 <label><input type="checkbox"> Village natural spawns are not permission-gated.</label>
 <label><input type="checkbox"> Command-spawned golems are not permission-gated.</label>
 <label><input type="checkbox"> Unmarked vanilla spawn egg golems are not permission-gated.</label>
-<label><input type="checkbox"> Mob spawner golems are not permission-gated.</label>
+<label><input type="checkbox"> Unmarked vanilla mob spawner golems are not permission-gated.</label>
 <label><input type="checkbox"> Existing golems, drops, stats, abilities, targeting, and anger behavior are unchanged.</label>
 
 <div class="version">V4 — marked spawn eggs</div>

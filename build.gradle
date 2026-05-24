@@ -256,6 +256,40 @@ tasks.register("checkV4PlanningHandoff") {
 	}
 }
 
+tasks.register("checkReleaseDocs") {
+	group = "verification"
+	description = "Requires release docs, ModMenu metadata, and icon assets to stay current."
+
+	inputs.file("scripts/check-release-docs.py")
+	inputs.file("README.md")
+	inputs.file("docs/modrinth-listing.md")
+	inputs.file("docs/curseforge-listing.md")
+	inputs.file("docs/playtest-checklist.md")
+	inputs.file("docs/playtest.html")
+	inputs.file("src/main/resources/fabric.mod.json")
+	inputs.file("src/main/resources/assets/multigolem/lang/en_us.json")
+	inputs.file("src/main/resources/assets/multigolem/icon.png")
+
+	doLast {
+		def python = providers.environmentVariable("PYTHON").getOrElse("python")
+		def result = providers.exec {
+			commandLine(python, "scripts/check-release-docs.py")
+			ignoreExitValue = true
+		}
+		def stdout = result.standardOutput.asText.get()
+		def stderr = result.standardError.asText.get()
+		if (!stdout.isBlank()) {
+			logger.lifecycle(stdout)
+		}
+		if (!stderr.isBlank()) {
+			logger.error(stderr)
+		}
+		if (result.result.get().exitValue != 0) {
+			throw new GradleException("Release docs gate failed.")
+		}
+	}
+}
+
 tasks.register("checkUnitTestCompanions") {
 	group = "verification"
 	description = "Requires unit-test companions for pure helper/state classes."
@@ -319,7 +353,7 @@ tasks.register("releaseReminder") {
 
 tasks.named("check") {
 	// V4-specific guard: keep reviewed handoff artifacts intact through the V4 branch lifecycle.
-	dependsOn("checkChangelog", "checkWrapperChecksum", "checkReleaseNotesStyle", "checkV4PlanningHandoff", "checkUnitTestCompanions")
+	dependsOn("checkChangelog", "checkWrapperChecksum", "checkReleaseNotesStyle", "checkV4PlanningHandoff", "checkReleaseDocs", "checkUnitTestCompanions")
 }
 
 tasks.named("build") {

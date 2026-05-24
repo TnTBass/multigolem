@@ -39,7 +39,7 @@ public record VillageSpawnWeights(boolean enabled, EnumMap<GolemVariant, Integer
         defaults.put(GolemVariant.GOLD, 19);
         defaults.put(GolemVariant.EMERALD, 19);
         defaults.put(GolemVariant.DIAMOND, 5);
-        defaults.put(GolemVariant.NETHERITE, 2);
+        defaults.put(GolemVariant.NETHERITE, 0);
         return new VillageSpawnWeights(true, defaults);
     }
 

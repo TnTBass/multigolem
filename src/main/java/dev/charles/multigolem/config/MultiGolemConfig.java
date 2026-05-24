@@ -39,6 +39,8 @@ public final class MultiGolemConfig {
         Set.of("CREEPERS", "ENDERMEN", "PLAYERS", "ALL_BOSSES");
     static final Set<String> RECOGNIZED_DIAMOND_TARGET_MODES =
         Set.of("ALL_HOSTILE_MOBS", "ALL_HOSTILE_MOBS_AND_PLAYERS", "BOSSES_ONLY", "NONE");
+    private static final String VILLAGE_SPAWNING_NOTE =
+        "Keep in mind, villages are made of wood and netherite golems start fires.";
 
     private final boolean allowGolemHealing;
     private final Map<GolemVariant, TierStats> tiers;
@@ -610,6 +612,7 @@ public final class MultiGolemConfig {
 
     private static JsonObject villageSpawnWeightsToJson(VillageSpawnWeights weights) {
         JsonObject village = new JsonObject();
+        village.addProperty("_note", VILLAGE_SPAWNING_NOTE);
         village.addProperty("enabled", weights.enabled());
         JsonObject weightsJson = new JsonObject();
         for (GolemVariant variant : VillageSpawnWeights.rollOrder()) {

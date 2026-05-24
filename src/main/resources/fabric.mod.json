@@ -4,12 +4,15 @@
   "version": "${version}",
   "name": "MultiGolem",
   "description": "Adds Copper, Gold, Emerald, Diamond, and Netherite Iron Golem variants. Server-side functional; vanilla clients welcome.",
+  "icon": "assets/multigolem/icon.png",
   "authors": [
     "Tyler",
     "Charles"
   ],
   "contact": {
-    "homepage": "https://github.com/TnTBass/multigolem"
+    "homepage": "https://modrinth.com/mod/multigolem",
+    "issues": "https://github.com/TnTBass/multigolem/issues",
+    "sources": "https://github.com/TnTBass/multigolem"
   },
   "license": "MIT",
   "environment": "*",

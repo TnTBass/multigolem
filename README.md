@@ -10,6 +10,7 @@ A Fabric mod for Minecraft 26.1.2 that adds Copper, Gold, Emerald, Diamond, and 
 - Heal each golem with its matching ingot.
 - Per-tier special abilities (see below).
 - Per-tier `ignored_target_types` — copper/gold/emerald/diamond/netherite ignore creepers by default to prevent collateral block damage.
+- Marked vanilla iron golem spawn eggs for Copper, Gold, Emerald, Diamond, and Netherite variants.
 - **Server-side functional.** Vanilla clients can connect with no mod installed; stats, drops, and creation all behave correctly.
 
 ## Recipes
@@ -92,7 +93,7 @@ Ability fields:
 | Diamond | `diamond_aura_range` | `12` | Block radius for passive lightning target scans. |
 | Diamond | `diamond_lightning_proof` | `true` | Makes Diamond golems immune to lightning damage. |
 | Netherite | `netherite_fire_immune` | `true` | Makes Netherite golems immune to fire and lava damage. |
-| Netherite | `netherite_ignite_seconds` | `5` | Seconds of fire applied to mobs hit by Netherite golems. |
+| Netherite | `netherite_ignite_seconds` | `5` | Seconds of fire applied to mobs hit by Netherite golems. Set to `0` to disable ignite-on-hit. |
 
 ### Permissions
 
@@ -119,7 +120,7 @@ Bypass:
 
 - `multigolem.admin.bypass`
 
-These nodes only affect player-built MultiGolem T-pattern creation and ingot-based golem healing. Village spawns, commands, spawn eggs, mob spawners, existing golems, drops, stats, abilities, targeting, and anger behavior are unchanged.
+These nodes affect player-built MultiGolem T-pattern creation, ingot-based golem healing, marked spawn egg use, and marked spawn egg spawner configuration. Village spawns, commands, unmarked vanilla spawn eggs, unmarked vanilla mob spawners, existing golems, drops, stats, abilities, targeting, and anger behavior are unchanged.
 
 ## Roadmap
 
@@ -127,7 +128,7 @@ These nodes only affect player-built MultiGolem T-pattern creation and ingot-bas
 - **V2** ✅: Client textures, five special abilities, `ignored_target_types`, lossless V1→V2 config migration.
 - **V3** ✅: Village natural-spawn variant weighting.
 - **V3.1** ✅: LuckPerms-compatible permission nodes for creation and healing.
-- **V4** (next): Spawn eggs for the 5 Iron Golem variants.
+- **V4** ✅: Spawn eggs for the 5 Iron Golem variants.
 - **V5**: Copper Golem variants.
 
 ## License

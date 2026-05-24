@@ -2,20 +2,18 @@
 
 ## Unreleased
 
-- Fixed disabled golem healing giving misleading visual feedback when players use matching ingots on damaged golems.
+## 0.3.0+mc26.1.2 — 2026-05-24
+
+- Disabled golem healing no longer plays the normal heal feedback when players use matching materials on damaged golems.
 - Villages can now naturally spawn MultiGolem variants as defenders.
-- Added server config for village spawn weights. Iron, Copper, Gold, and Emerald are common by default, while Diamond and Netherite are rare.
-- Existing golems, player-built golems, and command-spawned iron golems are unchanged.
-- Server owners can now control who may create or heal each MultiGolem tier using LuckPerms-compatible permission nodes.
+- Added server config for village spawn weights. Iron, Copper, Gold, and Emerald are common by default, Diamond is rare, and Netherite has a default weight of `0` so villages do not naturally spawn fire-starting Netherite defenders unless a server owner opts in.
+- Server owners can now control who may create or heal each MultiGolem tier using Fabric Permissions API-compatible permission providers.
 - Permissions are permissive by default, so existing servers keep their current creation and healing behavior unless a permissions plugin denies a node.
-- Permission checks apply to player-built MultiGolem creation, ingot-based healing, marked spawn egg use, and marked spawn egg spawner configuration; village spawns, commands, unmarked vanilla spawn eggs, and existing golems are unchanged.
+- Permission checks apply to player-built MultiGolem creation, ingot-based healing, marked spawn egg use, and marked spawn egg spawner configuration.
 - Added Copper, Gold, Emerald, Diamond, and Netherite Golem Spawn Egg variants as marked vanilla iron golem spawn eggs.
-- Fixed marked MultiGolem spawn eggs displaying as "Iron Golem Spawn Egg" on modded clients.
-- Fixed Diamond and Netherite golems spawned from marked eggs or spawners appearing cracked because they spawned at vanilla iron golem health instead of their configured max health.
-- Fixed a client crash when healing a MultiGolem on a multiplayer server with the mod installed on the client.
-- Server permissions for creating each MultiGolem tier now also apply to marked spawn egg use.
-- Vanilla iron golem spawn eggs remain unchanged when they are not marked as a MultiGolem variant.
+- The MultiGolem Copper Golem Spawn Egg uses a different icon from the vanilla Copper Golem Spawn Egg, but both spawn eggs have the same name.
 - Marked MultiGolem spawn eggs can configure monster spawners to spawn the matching MultiGolem variant.
+- Added a MultiGolem icon and project links for ModMenu and mod list screens.
 
 ## 0.2.2+mc26.1.2 — 2026-05-17
 
