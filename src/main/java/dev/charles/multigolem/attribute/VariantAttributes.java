@@ -3,6 +3,7 @@ package dev.charles.multigolem.attribute;
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
+import dev.charles.multigolem.config.MultiGolemConfig;
 import dev.charles.multigolem.config.TierStats;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -36,6 +37,14 @@ public final class VariantAttributes {
             ? (MultiGolem.config().tier(GolemVariant.GOLD).goldSpeedMultiplier() - 1.0)
             : 0.0;
         applyMultipliedTotal(golem.getAttribute(Attributes.MOVEMENT_SPEED), SPEED_MODIFIER_ID, speedDelta);
+    }
+
+    public static void fillFreshSpawnHealth(IronGolem golem) {
+        golem.setHealth(freshSpawnHealth(GolemVariantAttachment.get(golem), MultiGolem.config()));
+    }
+
+    public static float freshSpawnHealth(GolemVariant variant, MultiGolemConfig config) {
+        return config.tier(variant).maxHealth();
     }
 
     private static void applyDelta(AttributeInstance instance, Identifier id, double delta) {

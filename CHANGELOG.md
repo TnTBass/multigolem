@@ -10,6 +10,9 @@
 - Permissions are permissive by default, so existing servers keep their current creation and healing behavior unless a permissions plugin denies a node.
 - Permission checks apply to player-built MultiGolem creation, ingot-based healing, marked spawn egg use, and marked spawn egg spawner configuration; village spawns, commands, unmarked vanilla spawn eggs, and existing golems are unchanged.
 - Added Copper, Gold, Emerald, Diamond, and Netherite Golem Spawn Egg variants as marked vanilla iron golem spawn eggs.
+- Fixed marked MultiGolem spawn eggs displaying as "Iron Golem Spawn Egg" on modded clients.
+- Fixed Diamond and Netherite golems spawned from marked eggs or spawners appearing cracked because they spawned at vanilla iron golem health instead of their configured max health.
+- Fixed a client crash when healing a MultiGolem on a multiplayer server with the mod installed on the client.
 - Server permissions for creating each MultiGolem tier now also apply to marked spawn egg use.
 - Vanilla iron golem spawn eggs remain unchanged when they are not marked as a MultiGolem variant.
 - Marked MultiGolem spawn eggs can configure monster spawners to spawn the matching MultiGolem variant.

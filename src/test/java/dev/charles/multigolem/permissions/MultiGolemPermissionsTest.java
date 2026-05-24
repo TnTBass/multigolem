@@ -74,6 +74,15 @@ class MultiGolemPermissionsTest {
     }
 
     @Test
+    void clientSideHealPredictionDoesNotCallPermissionProvider() {
+        MultiGolemPermissions.PermissionLookup throwingLookup = (node, defaultValue) -> {
+            throw new AssertionError("Client-side prediction must not call Fabric Permissions");
+        };
+
+        assertTrue(MultiGolemPermissions.canHealForSidePrediction(false, GolemVariant.NETHERITE, throwingLookup));
+    }
+
+    @Test
     void denialMessages_useStableDisplayNames() {
         assertEquals("Iron", GolemVariant.IRON.displayName());
         assertEquals("Emerald", GolemVariant.EMERALD.displayName());

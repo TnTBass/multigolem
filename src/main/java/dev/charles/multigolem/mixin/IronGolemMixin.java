@@ -35,6 +35,8 @@ public abstract class IronGolemMixin {
         }
 
         IronGolem self = (IronGolem) (Object) this;
+        if (self.level().isClientSide()) return;
+
         GolemVariant variant = GolemVariantAttachment.get(self);
         ItemStack stack = player.getItemInHand(hand);
         if (stack.isEmpty()) return;

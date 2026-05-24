@@ -22,7 +22,11 @@ public final class MultiGolemPermissions {
     }
 
     public static boolean canHeal(Player player, GolemVariant variant) {
-        return canHeal(variant, (node, defaultValue) -> Permissions.check(player, node, defaultValue));
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            return canHealForSidePrediction(false, variant, (node, defaultValue) -> true);
+        }
+        return canHealForSidePrediction(true, variant,
+            (node, defaultValue) -> Permissions.check(serverPlayer, node, defaultValue));
     }
 
     static boolean canCreate(GolemVariant variant, PermissionLookup lookup) {
@@ -31,6 +35,13 @@ public final class MultiGolemPermissions {
 
     static boolean canHeal(GolemVariant variant, PermissionLookup lookup) {
         return checkWithBypass(healNode(variant), lookup);
+    }
+
+    static boolean canHealForSidePrediction(boolean serverSide, GolemVariant variant, PermissionLookup lookup) {
+        if (!serverSide) {
+            return true;
+        }
+        return canHeal(variant, lookup);
     }
 
     private static boolean checkWithBypass(String node, PermissionLookup lookup) {

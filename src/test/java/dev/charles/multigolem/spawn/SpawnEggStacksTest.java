@@ -38,6 +38,20 @@ class SpawnEggStacksTest {
     }
 
     @Test
+    void markedStacksHaveVariantSpawnEggNames() {
+        assertEquals("Copper Golem Spawn Egg",
+            SpawnEggStacks.create(GolemVariant.COPPER).get(DataComponents.ITEM_NAME).getString());
+        assertEquals("Gold Golem Spawn Egg",
+            SpawnEggStacks.create(GolemVariant.GOLD).get(DataComponents.ITEM_NAME).getString());
+        assertEquals("Emerald Golem Spawn Egg",
+            SpawnEggStacks.create(GolemVariant.EMERALD).get(DataComponents.ITEM_NAME).getString());
+        assertEquals("Diamond Golem Spawn Egg",
+            SpawnEggStacks.create(GolemVariant.DIAMOND).get(DataComponents.ITEM_NAME).getString());
+        assertEquals("Netherite Golem Spawn Egg",
+            SpawnEggStacks.create(GolemVariant.NETHERITE).get(DataComponents.ITEM_NAME).getString());
+    }
+
+    @Test
     void unmarkedIronGolemEggHasNoVariantMarker() {
         assertTrue(SpawnEggStacks.variantFrom(new ItemStack(Items.IRON_GOLEM_SPAWN_EGG)).isEmpty());
     }

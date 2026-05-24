@@ -53,7 +53,7 @@ public abstract class BaseSpawnerMixin {
             Optional<GolemVariant> variant = MULTIGOLEM_SPAWNER_VARIANT.get();
             if (variant.isPresent() && entity instanceof IronGolem golem) {
                 GolemVariantAttachment.set(golem, variant.get());
-                VariantAttributes.apply(golem);
+                VariantAttributes.fillFreshSpawnHealth(golem);
             }
             return level.tryAddFreshEntityWithPassengers(entity);
         } finally {

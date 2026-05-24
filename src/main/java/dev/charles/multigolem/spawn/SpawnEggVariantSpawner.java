@@ -42,7 +42,7 @@ public final class SpawnEggVariantSpawner {
         Entity spawned = type.spawn(level, stack, user, pos, reason, alignPosition, invertY);
         if (spawned instanceof IronGolem golem) {
             GolemVariantAttachment.set(golem, variant.get());
-            VariantAttributes.apply(golem);
+            VariantAttributes.fillFreshSpawnHealth(golem);
         }
         return spawned;
     }

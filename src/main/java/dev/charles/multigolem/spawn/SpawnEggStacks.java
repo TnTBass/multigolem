@@ -4,6 +4,7 @@ import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
@@ -21,6 +22,7 @@ public final class SpawnEggStacks {
             throw new IllegalArgumentException("Iron is vanilla-owned and has no marked V4 spawn egg");
         }
         ItemStack stack = new ItemStack(Items.IRON_GOLEM_SPAWN_EGG);
+        stack.set(DataComponents.ITEM_NAME, Component.literal(variant.displayName() + " Golem Spawn Egg"));
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(markerTag(variant)));
         return stack;
     }
