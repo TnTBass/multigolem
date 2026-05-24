@@ -110,6 +110,15 @@ class CheckReleaseDocsTest(unittest.TestCase):
 
             self.assertEqual([], checker.check(root))
 
+    def test_changelog_gate_ignores_generated_item_texture_outputs(self):
+        build_gradle = Path(__file__).resolve().parents[1] / "build.gradle"
+        text = build_gradle.read_text(encoding="utf-8")
+
+        self.assertIn(
+            r"textures\/(entity|item)\/.*\.png",
+            text,
+        )
+
     def write_good_repo(self, root: Path) -> Path:
         (root / "docs").mkdir(parents=True)
         (root / "src/main/resources/assets/multigolem/lang").mkdir(parents=True)
