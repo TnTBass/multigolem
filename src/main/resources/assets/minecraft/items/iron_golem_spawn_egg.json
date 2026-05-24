@@ -1,0 +1,33 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:component",
+    "component": "minecraft:custom_data",
+    "cases": [
+      {
+        "when": "{multigolem:{variant:\"copper\"}}",
+        "model": { "type": "minecraft:model", "model": "multigolem:item/copper_golem_spawn_egg" }
+      },
+      {
+        "when": "{multigolem:{variant:\"gold\"}}",
+        "model": { "type": "minecraft:model", "model": "multigolem:item/gold_golem_spawn_egg" }
+      },
+      {
+        "when": "{multigolem:{variant:\"emerald\"}}",
+        "model": { "type": "minecraft:model", "model": "multigolem:item/emerald_golem_spawn_egg" }
+      },
+      {
+        "when": "{multigolem:{variant:\"diamond\"}}",
+        "model": { "type": "minecraft:model", "model": "multigolem:item/diamond_golem_spawn_egg" }
+      },
+      {
+        "when": "{multigolem:{variant:\"netherite\"}}",
+        "model": { "type": "minecraft:model", "model": "multigolem:item/netherite_golem_spawn_egg" }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/iron_golem_spawn_egg"
+    }
+  }
+}

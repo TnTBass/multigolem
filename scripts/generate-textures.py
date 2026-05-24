@@ -8,7 +8,9 @@ import colorsys
 
 REPO = Path(__file__).resolve().parent.parent
 TEMPLATE = REPO / "build-inputs" / "textures" / "iron_golem.template.png"
+SPAWN_EGG_TEMPLATE = REPO / "build-inputs" / "textures" / "spawn_egg" / "iron_golem_spawn_egg.template.png"
 OUT_DIR = REPO / "src" / "main" / "resources" / "assets" / "multigolem" / "textures" / "entity"
+SPAWN_EGG_OUT_DIR = REPO / "src" / "main" / "resources" / "assets" / "multigolem" / "textures" / "item"
 
 TIERS = {
     "copper":    {"hue_shift": -10, "saturation": 1.25, "lightness": 0.95},
@@ -165,11 +167,48 @@ def apply_material_details(tier: str, img: Image.Image) -> Image.Image:
 
     return Image.alpha_composite(img.convert("RGBA"), overlay)
 
+def apply_spawn_egg_material_details(tier: str, img: Image.Image) -> Image.Image:
+    overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+
+    if tier == "copper":
+        img = blend_material(img, (190, 96, 58), 0.30)
+        draw_rects(draw, [(4, 4, 4, 3), (9, 9, 3, 2), (6, 12, 2, 1)], (211, 112, 61, 190))
+        draw_rects(draw, [(8, 4, 2, 2), (5, 10, 2, 2), (11, 6, 1, 2)], (70, 169, 119, 230))
+    elif tier == "gold":
+        img = blend_material(img, (255, 205, 24), 0.50)
+        draw_rects(draw, [(4, 4, 5, 3), (8, 8, 4, 3), (5, 12, 3, 1)], (255, 239, 91, 230))
+        draw_rects(draw, [(11, 5, 1, 5), (7, 12, 4, 1)], (128, 74, 8, 130))
+    elif tier == "emerald":
+        img = blend_material(img, (32, 176, 88), 0.44)
+        draw_rects(draw, [(4, 4, 5, 3), (8, 9, 4, 2), (6, 12, 2, 1)], (45, 220, 111, 225))
+        draw_lines(draw, [[(4, 4), (8, 7), (12, 4)], [(5, 11), (9, 8), (12, 11)]], (22, 95, 56, 160))
+    elif tier == "diamond":
+        img = blend_material(img, (72, 207, 218), 0.42)
+        draw_lines(draw, [[(4, 5), (7, 3), (10, 5)], [(5, 11), (8, 8), (12, 11)]], (232, 255, 247, 210))
+        draw_rects(draw, [(9, 5, 2, 2), (6, 9, 2, 2), (11, 10, 1, 2)], (42, 170, 187, 190))
+    elif tier == "netherite":
+        img = blend_material(img, (12, 11, 16), 0.72)
+        draw_rects(draw, [(4, 4, 4, 3), (9, 8, 3, 3), (5, 12, 4, 1)], (17, 15, 20, 170))
+        cracks = [[(5, 4), (5, 7), (6, 9)], [(9, 5), (10, 8), (9, 12)], [(12, 4), (11, 7), (12, 10)]]
+        draw_lines(draw, cracks, (106, 28, 17, 170), width=2)
+        draw_lines(draw, cracks, (255, 91, 29, 255), width=1)
+    return Image.alpha_composite(img.convert("RGBA"), overlay)
+
+def generate_spawn_egg_icon(tier: str, params: dict[str, float]) -> Image.Image:
+    base = Image.open(SPAWN_EGG_TEMPLATE).convert("RGBA")
+    img = shift_hue(base.copy(), params["hue_shift"], params["saturation"], params["lightness"])
+    return apply_spawn_egg_material_details(tier, img)
+
 def main() -> int:
     if not TEMPLATE.exists():
         print(f"ERROR: template not found at {TEMPLATE}", file=sys.stderr)
         return 1
+    if not SPAWN_EGG_TEMPLATE.exists():
+        print(f"ERROR: spawn egg template not found at {SPAWN_EGG_TEMPLATE}", file=sys.stderr)
+        return 1
     OUT_DIR.mkdir(parents=True, exist_ok=True)
+    SPAWN_EGG_OUT_DIR.mkdir(parents=True, exist_ok=True)
     template = Image.open(TEMPLATE)
     for tier, params in TIERS.items():
         img = shift_hue(template.copy(), params["hue_shift"], params["saturation"], params["lightness"])
@@ -177,6 +216,10 @@ def main() -> int:
         out = OUT_DIR / f"{tier}_golem.png"
         img.save(out, "PNG")
         print(f"wrote {out.relative_to(REPO)}")
+        spawn_egg = generate_spawn_egg_icon(tier, params)
+        spawn_egg_out = SPAWN_EGG_OUT_DIR / f"{tier}_golem_spawn_egg.png"
+        spawn_egg.save(spawn_egg_out, "PNG")
+        print(f"wrote {spawn_egg_out.relative_to(REPO)}")
     return 0
 
 if __name__ == "__main__":

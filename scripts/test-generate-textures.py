@@ -20,6 +20,13 @@ GENERATED_TEXTURES = (
     "diamond_golem.png",
     "netherite_golem.png",
 )
+GENERATED_SPAWN_EGG_TEXTURES = (
+    "copper_golem_spawn_egg.png",
+    "gold_golem_spawn_egg.png",
+    "emerald_golem_spawn_egg.png",
+    "diamond_golem_spawn_egg.png",
+    "netherite_golem_spawn_egg.png",
+)
 
 
 def load_generator():
@@ -98,20 +105,31 @@ class GenerateTexturesTest(unittest.TestCase):
         temp_root.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=temp_root) as first, tempfile.TemporaryDirectory(dir=temp_root) as second:
             generator.OUT_DIR = Path(first)
+            generator.SPAWN_EGG_OUT_DIR = Path(first) / "item"
             self.assertEqual(generator.main(), 0)
             first_hashes = {
                 name: hash_file(Path(first) / name)
                 for name in GENERATED_TEXTURES
             }
+            first_spawn_egg_hashes = {
+                name: hash_file(generator.SPAWN_EGG_OUT_DIR / name)
+                for name in GENERATED_SPAWN_EGG_TEXTURES
+            }
 
             generator.OUT_DIR = Path(second)
+            generator.SPAWN_EGG_OUT_DIR = Path(second) / "item"
             self.assertEqual(generator.main(), 0)
             second_hashes = {
                 name: hash_file(Path(second) / name)
                 for name in GENERATED_TEXTURES
             }
+            second_spawn_egg_hashes = {
+                name: hash_file(generator.SPAWN_EGG_OUT_DIR / name)
+                for name in GENERATED_SPAWN_EGG_TEXTURES
+            }
 
             self.assertEqual(first_hashes, second_hashes)
+            self.assertEqual(first_spawn_egg_hashes, second_spawn_egg_hashes)
 
     def test_material_details_are_visible_in_generated_outputs(self):
         generator = load_generator()
@@ -119,6 +137,7 @@ class GenerateTexturesTest(unittest.TestCase):
         temp_root.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=temp_root) as tmp:
             generator.OUT_DIR = Path(tmp)
+            generator.SPAWN_EGG_OUT_DIR = Path(tmp) / "item"
 
             self.assertEqual(generator.main(), 0)
 
@@ -127,6 +146,12 @@ class GenerateTexturesTest(unittest.TestCase):
             gold = Path(tmp) / "gold_golem.png"
             copper = Path(tmp) / "copper_golem.png"
             emerald = Path(tmp) / "emerald_golem.png"
+            spawn_egg_dir = Path(tmp) / "item"
+            copper_egg = spawn_egg_dir / "copper_golem_spawn_egg.png"
+            gold_egg = spawn_egg_dir / "gold_golem_spawn_egg.png"
+            emerald_egg = spawn_egg_dir / "emerald_golem_spawn_egg.png"
+            diamond_egg = spawn_egg_dir / "diamond_golem_spawn_egg.png"
+            netherite_egg = spawn_egg_dir / "netherite_golem_spawn_egg.png"
 
             copper_pixels = count_pixels(
                 copper,
@@ -245,6 +270,24 @@ class GenerateTexturesTest(unittest.TestCase):
             self.assertGreaterEqual(netherite_lava_pixels, 55)
             self.assertLessEqual(netherite_lava_pixels, 280)
             self.assertGreaterEqual(longest_vertical_run(netherite, lava), 8)
+
+            copper_egg_pixels = count_pixels(copper_egg, lambda r, g, b: r >= 150 and 70 <= g <= 145 and b <= 110)
+            patina_egg_pixels = count_pixels(copper_egg, lambda r, g, b: r <= 115 and g >= 135 and 95 <= b <= 160)
+            gold_egg_pixels = count_pixels(gold_egg, lambda r, g, b: r >= 215 and g >= 145 and b <= 145)
+            emerald_egg_pixels = count_pixels(emerald_egg, lambda r, g, b: r <= 100 and g >= 150 and 70 <= b <= 145)
+            diamond_egg_pixels = count_pixels(diamond_egg, lambda r, g, b: 45 <= r <= 170 and g >= 160 and b >= 150)
+            diamond_egg_olive_pixels = count_pixels(diamond_egg, lambda r, g, b: 95 <= r <= 165 and 105 <= g <= 165 and b <= 80)
+            netherite_egg_dark_pixels = count_pixels(netherite_egg, lambda r, g, b: 8 <= r <= 70 and 8 <= g <= 65 and 10 <= b <= 80)
+            netherite_egg_crack_pixels = count_pixels(netherite_egg, lava)
+
+            self.assertGreaterEqual(copper_egg_pixels, 30)
+            self.assertGreaterEqual(patina_egg_pixels, 2)
+            self.assertGreaterEqual(gold_egg_pixels, 35)
+            self.assertGreaterEqual(emerald_egg_pixels, 25)
+            self.assertGreaterEqual(diamond_egg_pixels, 25)
+            self.assertLessEqual(diamond_egg_olive_pixels, 4)
+            self.assertGreaterEqual(netherite_egg_dark_pixels, 30)
+            self.assertGreaterEqual(netherite_egg_crack_pixels, 2)
 
 
 if __name__ == "__main__":
