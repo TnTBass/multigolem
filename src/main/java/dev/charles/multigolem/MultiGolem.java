@@ -6,8 +6,10 @@ import dev.charles.multigolem.attachment.GolemVariantAttachment;
 import dev.charles.multigolem.attribute.VariantAttributes;
 import dev.charles.multigolem.config.MultiGolemConfig;
 import dev.charles.multigolem.loot.HasGolemVariantLootCondition;
+import dev.charles.multigolem.spawn.SpawnEggStacks;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
+import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
 import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.fabricmc.loader.api.FabricLoader;
@@ -16,6 +18,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.storage.loot.LootPool;
@@ -54,6 +57,7 @@ public class MultiGolem implements ModInitializer {
         );
 
         registerVariantLoot();
+        registerCreativeSpawnEggs();
 
         ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
             if (entity instanceof IronGolem golem) {
@@ -62,6 +66,16 @@ public class MultiGolem implements ModInitializer {
         });
 
         LOG.info("MultiGolem starting up - config loaded from {}", configFile);
+    }
+
+    private static void registerCreativeSpawnEggs() {
+        CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.SPAWN_EGGS).register(entries -> {
+            entries.accept(SpawnEggStacks.create(GolemVariant.COPPER));
+            entries.accept(SpawnEggStacks.create(GolemVariant.GOLD));
+            entries.accept(SpawnEggStacks.create(GolemVariant.EMERALD));
+            entries.accept(SpawnEggStacks.create(GolemVariant.DIAMOND));
+            entries.accept(SpawnEggStacks.create(GolemVariant.NETHERITE));
+        });
     }
 
     private static void registerVariantLoot() {
