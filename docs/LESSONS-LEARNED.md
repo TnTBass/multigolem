@@ -228,6 +228,17 @@ The V4 design-intent review found several issues that were not implementation bu
 - Marked spawn eggs must not call `setPlayerCreated(true)`; only T-pattern player-built golems get that ownership flag.
 - Any spawner thread-local must be cleared with a guaranteed cleanup path.
 - Spawner `setEntityId` and the marker write happen synchronously in one `useOn` call; document that there is no async save window between those injects.
+- `BaseSpawner.setEntityId` mutates the existing `SpawnData.entity` compound. If a marked egg configures a spawner and a later unmarked vanilla iron golem egg reconfigures the same spawner, clear the `multigolem` marker or the stale variant will leak into future spawns.
+
+### V4 planning guardrails should be mechanical
+
+The V4 spawn egg planning session produced several process failures that should be caught by scripts, not remembered:
+
+- Use absolute paths for new files in assigned worktrees, or immediately verify both the assigned worktree and parent checkout with `git status --short`. A relative patch can land in the parent checkout even after `git rev-parse --show-toplevel` was verified in the shell.
+- Do not parallelize dependent file moves, especially copy-then-delete cleanup. Run those steps sequentially so the delete cannot win before the copy reads the source.
+- If Revue MCP `review_create` times out but `revue-worker doctor` is healthy, check `revue-worker status` before retrying so duplicate requests are not created. If a temporary helper is needed, keep it under ignored `.agent-review/tmp/`, call the canonical `review_create`, and show `operator-links` before `revue-worker once`.
+- Revue `review_unit` uses `"scope_basis": "explicit-files"` plus `recommended`, `user_choice`, and `reason`. Do not use the older ad hoc `type/files/notes` shape.
+- For V4 spawn egg planning, `scripts/check-v4-planning-handoff.py` is the mechanical gate. It must keep checking the plan-only review fixes: exact `custom_data` selector verification, null-player spawner denial, existing `BaseSpawner.nextSpawnData` mutation, one entity per tick for the spawner thread-local, and vanilla-client icon fallback. The authoritative marker list lives in the script.
 
 ---
 
