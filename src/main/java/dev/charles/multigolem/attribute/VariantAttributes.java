@@ -40,6 +40,7 @@ public final class VariantAttributes {
     }
 
     public static void fillFreshSpawnHealth(IronGolem golem) {
+        apply(golem);
         golem.setHealth(freshSpawnHealth(GolemVariantAttachment.get(golem), MultiGolem.config()));
     }
 

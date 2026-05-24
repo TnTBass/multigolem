@@ -24,6 +24,9 @@ public abstract class IronGolemMixin {
             at = @At("HEAD"), cancellable = true)
     private void multigolem$healWithMatchingIngot(Player player, InteractionHand hand,
                                                    CallbackInfoReturnable<InteractionResult> cir) {
+        IronGolem self = (IronGolem) (Object) this;
+        if (self.level().isClientSide()) return;
+
         if (!MultiGolem.config().allowGolemHealing()) {
             // Healing disabled globally — cancel ALL heal interactions (including vanilla iron→iron)
             // so the iron-ingot heal doesn't sneak through.
@@ -33,9 +36,6 @@ public abstract class IronGolemMixin {
             }
             return;
         }
-
-        IronGolem self = (IronGolem) (Object) this;
-        if (self.level().isClientSide()) return;
 
         GolemVariant variant = GolemVariantAttachment.get(self);
         ItemStack stack = player.getItemInHand(hand);
