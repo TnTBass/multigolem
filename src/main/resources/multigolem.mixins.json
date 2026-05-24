@@ -10,7 +10,8 @@
     "LivingEntityMixin",
     "GolemTargetingMixin",
     "IronGolemAttackMixin",
-    "VillagerMixin"
+    "VillagerMixin",
+    "SpawnEggItemMixin"
   ],
   "injectors": {
     "defaultRequire": 1
