@@ -11,6 +11,8 @@
     "GolemTargetingMixin",
     "IronGolemAttackMixin",
     "VillagerMixin",
+    "BaseSpawnerAccessor",
+    "BaseSpawnerMixin",
     "SpawnEggItemMixin"
   ],
   "injectors": {
