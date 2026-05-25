@@ -76,6 +76,7 @@ class GolemStatsResolverTest {
         GolemStatsResolver r = new GolemStatsResolver(MultiGolemConfig.defaults());
         assertTrue(r.netheriteFireImmune());
         assertEquals(5, r.netheriteIgniteSeconds());
+        assertEquals(0, r.netheriteVillageIgniteSeconds());
     }
 
     @Test

@@ -94,6 +94,7 @@ Ability fields:
 | Diamond | `diamond_lightning_proof` | `true` | Makes Diamond golems immune to lightning damage. |
 | Netherite | `netherite_fire_immune` | `true` | Makes Netherite golems immune to fire and lava damage. |
 | Netherite | `netherite_ignite_seconds` | `5` | Seconds of fire applied to mobs hit by Netherite golems. Set to `0` to disable ignite-on-hit. |
+| Netherite | `netherite_village_ignite_seconds` | `0` | Seconds of fire applied by village-spawned Netherite golems. Village-spawned Netherite golems avoid ignite-on-hit by default so opt-in Netherite village defenders do not start fires unless configured. |
 
 ### Permissions
 

@@ -38,13 +38,27 @@ class CheckV4PlanningHandoffTest(unittest.TestCase):
             parent_plan_dir = parent / "docs" / "superpowers" / "plans"
             parent_plan_dir.mkdir(parents=True)
             (parent_plan_dir / "2026-05-23-multigolem-v4-spawn-eggs.md").write_text(
-                self.good_plan_text(),
+                "parent checkout draft",
                 encoding="utf-8",
             )
 
             errors = checker.check(root)
 
             self.assertIn("also exists in parent checkout", "\n".join(errors))
+
+    def test_allows_same_tracked_plan_in_parent_checkout_after_v4_merge(self):
+        checker = load_checker()
+        with tempfile.TemporaryDirectory() as tmp:
+            parent = Path(tmp) / "MultiGolem"
+            root = self.write_repo(parent / ".worktrees" / "codex-v4-1")
+            parent_plan_dir = parent / "docs" / "superpowers" / "plans"
+            parent_plan_dir.mkdir(parents=True)
+            (parent_plan_dir / "2026-05-23-multigolem-v4-spawn-eggs.md").write_text(
+                self.good_plan_text(),
+                encoding="utf-8",
+            )
+
+            self.assertEqual([], checker.check(root))
 
     def test_fails_when_review_fix_guardrails_are_missing(self):
         checker = load_checker()

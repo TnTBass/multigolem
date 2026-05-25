@@ -33,7 +33,8 @@ public record TierStats(
     Boolean diamondLightningProof,
     // Netherite
     Boolean netheriteFireImmune,
-    Integer netheriteIgniteSeconds
+    Integer netheriteIgniteSeconds,
+    Integer netheriteVillageIgniteSeconds
 ) {
 
     public static final int MIN_HEALTH = 1;
@@ -56,7 +57,7 @@ public record TierStats(
             goldSpeedMultiplier, goldSprintParticlesEnabled, goldSunlightShineEnabled,
             emeraldAuraRange, emeraldHealIntervalSeconds, emeraldHealPerTick, emeraldCountWanderingTraders,
             diamondTargetMode, diamondCooldownMinSeconds, diamondCooldownMaxSeconds, diamondAuraRange, diamondLightningProof,
-            netheriteFireImmune, netheriteIgniteSeconds);
+            netheriteFireImmune, netheriteIgniteSeconds, netheriteVillageIgniteSeconds);
     }
 
     public boolean isHealthDamageClamped() {

@@ -94,7 +94,7 @@ def collect(root: Path = ROOT) -> CheckResult:
         duplicates = [
             parent_plan_dir / plan.name
             for plan in plan_candidates
-            if (parent_plan_dir / plan.name).exists()
+            if parent_has_conflicting_plan(plan, parent_plan_dir / plan.name)
         ]
         if duplicates:
             names = ", ".join(str(path.relative_to(parent_checkout)) for path in duplicates)
@@ -122,6 +122,12 @@ def parent_checkout_for_worktree(root: Path) -> Path | None:
     if index == 0:
         return None
     return Path(*parts[:index])
+
+
+def parent_has_conflicting_plan(worktree_plan: Path, parent_plan: Path) -> bool:
+    if not parent_plan.exists():
+        return False
+    return parent_plan.read_text(encoding="utf-8") != worktree_plan.read_text(encoding="utf-8")
 
 
 def main() -> None:

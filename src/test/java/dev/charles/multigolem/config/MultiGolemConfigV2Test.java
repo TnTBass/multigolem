@@ -52,6 +52,7 @@ class MultiGolemConfigV2Test {
         TierStats nh = cfg.tier(GolemVariant.NETHERITE);
         assertTrue(nh.netheriteFireImmune());
         assertEquals(5, nh.netheriteIgniteSeconds());
+        assertEquals(0, nh.netheriteVillageIgniteSeconds());
     }
 
     @Test
@@ -81,6 +82,51 @@ class MultiGolemConfigV2Test {
         assertEquals(3600, cfg.tier(GolemVariant.DIAMOND).diamondCooldownMaxSeconds());
         assertEquals(64, cfg.tier(GolemVariant.DIAMOND).diamondAuraRange());
         assertEquals(0, cfg.tier(GolemVariant.NETHERITE).netheriteIgniteSeconds());
+    }
+
+    @Test
+    void v2_parsesAndClampsNetheriteVillageIgniteSeconds(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "tiers": {
+                "netherite": {
+                  "netherite_ignite_seconds": 2,
+                  "netherite_village_ignite_seconds": 0
+                }
+              }
+            }
+            """);
+
+        TierStats stats = MultiGolemConfig.loadOrCreate(file).tier(GolemVariant.NETHERITE);
+        assertEquals(2, stats.netheriteIgniteSeconds());
+        assertEquals(0, stats.netheriteVillageIgniteSeconds());
+
+        Path negative = tmp.resolve("negative.json");
+        Files.writeString(negative, """
+            {
+              "tiers": {
+                "netherite": {
+                  "netherite_village_ignite_seconds": -1
+                }
+              }
+            }
+            """);
+        assertEquals(0, MultiGolemConfig.loadOrCreate(negative)
+            .tier(GolemVariant.NETHERITE).netheriteVillageIgniteSeconds());
+
+        Path tooLarge = tmp.resolve("too-large.json");
+        Files.writeString(tooLarge, """
+            {
+              "tiers": {
+                "netherite": {
+                  "netherite_village_ignite_seconds": 301
+                }
+              }
+            }
+            """);
+        assertEquals(300, MultiGolemConfig.loadOrCreate(tooLarge)
+            .tier(GolemVariant.NETHERITE).netheriteVillageIgniteSeconds());
     }
 
     @Test

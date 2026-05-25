@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added separate `netherite_village_ignite_seconds` config so server admins can opt Netherite village defenders into ignite-on-hit separately from player-built and other non-village Netherite golems.
+
 ## 0.3.0+mc26.1.2 — 2026-05-24
 
 - Disabled golem healing no longer plays the normal heal feedback when players use matching materials on damaged golems.

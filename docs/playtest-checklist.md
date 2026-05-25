@@ -152,7 +152,12 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 - [ ] Gold speed and particles work.
 - [ ] Emerald villager aura works.
 - [ ] Diamond lightning behavior works.
-- [ ] Netherite fire immunity and ignite-on-hit work.
+- [ ] Netherite fire immunity and configured ignite behavior work.
+- [ ] Set `village_spawning.weights.netherite` to `1` and all other village weights to `0`.
+- [ ] Set `netherite_ignite_seconds: 2` and `netherite_village_ignite_seconds: 0`.
+- [ ] Trigger villager-called Netherite spawn; hit mob; no fire.
+- [ ] Spawn/build Netherite via non-village path; hit mob; fire for 2 seconds.
+- [ ] Existing/legacy Netherite golems with no stored origin use base `netherite_ignite_seconds`.
 - [ ] `ignored_target_types` applies.
 - [ ] `anger_on_hit` applies.
 

@@ -6,7 +6,10 @@ import dev.charles.multigolem.ability.DiamondAbility;
 import dev.charles.multigolem.ability.TargetFilter;
 import dev.charles.multigolem.attachment.GolemAbilityState;
 import dev.charles.multigolem.attachment.GolemAbilityStateAttachment;
+import dev.charles.multigolem.attachment.GolemSpawnOrigin;
+import dev.charles.multigolem.attachment.GolemSpawnOriginAttachment;
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
+import dev.charles.multigolem.config.TierStats;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -72,16 +75,31 @@ public abstract class IronGolemAttackMixin {
         }
 
         if (variant == GolemVariant.NETHERITE) {
-            if (!MultiGolem.config().tier(GolemVariant.NETHERITE).netheriteFireImmune()) return;
+            TierStats stats = MultiGolem.config().tier(GolemVariant.NETHERITE);
+            if (!stats.netheriteFireImmune()) return;
             if (target instanceof IronGolem otherGolem
-                    && GolemVariantAttachment.get(otherGolem) == GolemVariant.NETHERITE
-                    && MultiGolem.config().tier(GolemVariant.NETHERITE).netheriteFireImmune()) {
+                    && GolemVariantAttachment.get(otherGolem) == GolemVariant.NETHERITE) {
                 return;
             }
-            int seconds = MultiGolem.config().tier(GolemVariant.NETHERITE).netheriteIgniteSeconds();
+            int seconds = netheriteIgniteSeconds(stats, self);
             if (seconds > 0) {
                 target.igniteForSeconds(seconds);
             }
         }
+    }
+
+    private static int netheriteIgniteSeconds(TierStats stats, IronGolem self) {
+        return netheriteIgniteSeconds(stats, GolemSpawnOriginAttachment.get(self));
+    }
+
+    static int netheriteIgniteSeconds(TierStats stats, GolemSpawnOrigin origin) {
+        Integer seconds = origin == GolemSpawnOrigin.VILLAGE
+            ? stats.netheriteVillageIgniteSeconds()
+            : stats.netheriteIgniteSeconds();
+        if (seconds != null) {
+            return seconds;
+        }
+        Integer fallback = stats.netheriteIgniteSeconds();
+        return fallback != null ? fallback : 0;
     }
 }

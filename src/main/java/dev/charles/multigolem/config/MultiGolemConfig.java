@@ -63,37 +63,37 @@ public final class MultiGolemConfig {
             null, null, null,  // gold
             null, null, null, null,  // emerald
             null, null, null, null, null,  // diamond
-            null, null));  // netherite
+            null, null, null));  // netherite
         m.put(GolemVariant.IRON, new TierStats(100, 15.0, true, List.of(),
             null, null,
             null, null, null,
             null, null, null, null,
             null, null, null, null, null,
-            null, null));
+            null, null, null));
         m.put(GolemVariant.GOLD, new TierStats(130, 22.5, true, List.of("CREEPERS"),
             null, null,
             1.75, true, true,
             null, null, null, null,
             null, null, null, null, null,
-            null, null));
+            null, null, null));
         m.put(GolemVariant.EMERALD, new TierStats(200, 40.0, true, List.of("CREEPERS"),
             null, null,
             null, null, null,
             8, 2.0, 1.0, true,
             null, null, null, null, null,
-            null, null));
+            null, null, null));
         m.put(GolemVariant.DIAMOND, new TierStats(350, 62.5, true, List.of("CREEPERS"),
             null, null,
             null, null, null,
             null, null, null, null,
             "ALL_HOSTILE_MOBS", 30, 60, 12, true,
-            null, null));
+            null, null, null));
         m.put(GolemVariant.NETHERITE, new TierStats(600, 85.0, true, List.of("CREEPERS"),
             null, null,
             null, null, null,
             null, null, null, null,
             null, null, null, null, null,
-            true, 5));
+            true, 5, 0));
         return new MultiGolemConfig(true, m, VillageSpawnWeights.defaults());
     }
 
@@ -292,7 +292,10 @@ public final class MultiGolemConfig {
             canonicalizeInt(t, "diamond_aura_range", 1, 64);
         }
         // Netherite
-        canonicalizeInt(t, "netherite_ignite_seconds", 0, 300);
+        if (variant == GolemVariant.NETHERITE) {
+            canonicalizeInt(t, "netherite_ignite_seconds", 0, 300);
+            canonicalizeInt(t, "netherite_village_ignite_seconds", 0, 300);
+        }
     }
 
     private static void canonicalizeInt(JsonObject t, String key, int min, int max) {
@@ -445,13 +448,16 @@ public final class MultiGolemConfig {
         Integer netheriteIgnite = def.netheriteIgniteSeconds() != null
             ? clampInt(readInt(t, "netherite_ignite_seconds", def.netheriteIgniteSeconds()), 0, 300, "netherite_ignite_seconds")
             : null;
+        Integer netheriteVillageIgnite = def.netheriteVillageIgniteSeconds() != null
+            ? clampInt(readInt(t, "netherite_village_ignite_seconds", def.netheriteVillageIgniteSeconds()), 0, 300, "netherite_village_ignite_seconds")
+            : null;
 
         return new TierStats(health, damage, anger, ignored,
             copperImmune, copperHeal,
             goldSpeed, goldSprint, goldShine,
             emeraldRange, emeraldInterval, emeraldHeal, emeraldWandering,
             diamondMode, diamondMin, diamondMax, diamondRange, diamondProof,
-            netheriteImmune, netheriteIgnite);
+            netheriteImmune, netheriteIgnite, netheriteVillageIgnite);
     }
 
     private static List<String> parseIgnoredTargetTypes(JsonObject t, List<String> fallback) {
@@ -604,6 +610,7 @@ public final class MultiGolemConfig {
             // Netherite
             if (s.netheriteFireImmune() != null) t.addProperty("netherite_fire_immune", s.netheriteFireImmune());
             if (s.netheriteIgniteSeconds() != null) t.addProperty("netherite_ignite_seconds", s.netheriteIgniteSeconds());
+            if (s.netheriteVillageIgniteSeconds() != null) t.addProperty("netherite_village_ignite_seconds", s.netheriteVillageIgniteSeconds());
             tiers.add(v.id(), t);
         }
         root.add("tiers", tiers);
