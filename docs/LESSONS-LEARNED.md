@@ -230,6 +230,26 @@ The V4 design-intent review found several issues that were not implementation bu
 - Spawner `setEntityId` and the marker write happen synchronously in one `useOn` call; document that there is no async save window between those injects.
 - `BaseSpawner.setEntityId` mutates the existing `SpawnData.entity` compound. If a marked egg configures a spawner and a later unmarked vanilla iron golem egg reconfigures the same spawner, clear the `multigolem` marker or the stale variant will leak into future spawns.
 
+### Zombie Golem planning guardrails should be mechanical
+
+The Zombie Golem design intentionally stretches MultiGolem in places where a vague implementation plan would drift:
+
+- Call zombie-village spawning a **desired-count maintenance rule**, not a spawn rate. The default is max 2 Zombie Golems per qualifying village area, with existing Zombie Golems counted against the cap.
+- Zombie villagers are the eligibility anchor. One zombie villager is enough; regular zombies alone must never qualify an area. Regular zombies can only add bonus pressure when zombie villagers are already present.
+- Generated abandoned villages are the player-facing target, but strict generated-structure filtering is not assumed. If the implementation wants "naturally generated abandoned villages only," it must first prove a clean source signal and return for design review before adding that restriction.
+- Keep Zombie Golems inside the existing `IronGolem` + `GolemVariantAttachment` architecture unless a source spike proves that impossible.
+- Set faction rules before coding targeting hooks: Zombie Golems attack players, villagers, wandering traders, vanilla Iron Golems, and non-zombie MultiGolems; they ignore zombies and zombie villagers; non-zombie golems fight Zombie Golems.
+- Civilian conversion is the signature mechanic. Villagers and wandering traders become zombie villagers with 100% default chance, and the conversion hit should not also apply normal Iron Golem damage.
+- The next plan must spike village-area maintenance, targeting/faction hooks, villager/trader conversion data preservation, Rotten Flesh healing, and V4 marked spawn egg/spawner behavior before implementation.
+
+Mechanical gate:
+
+```powershell
+python scripts/check-zombie-golem-planning-handoff.py
+```
+
+The gate verifies the Zombie Golem spec and lessons exist. Once a Zombie Golem plan exists, it also checks that the plan carries the source-spike constraints and approved behavior markers forward.
+
 ### V4 planning guardrails should be mechanical
 
 The V4 spawn egg planning session produced several process failures that should be caught by scripts, not remembered:
@@ -351,5 +371,6 @@ Read this file first. Every item here cost real time the first time we learned i
 - **V3 starting point:** `docs/superpowers/specs/2026-05-15-multigolem-design.md` §3 (V3 scope) and §6.1.1 (config weights including the Charles preset). Follow the same brainstorm -> spec -> Codex review -> plan -> execute flow used by V1 and V2.
 - **V4 starting point:** use the V4 spawn egg spike sections in `docs/26.1.2-mojang-targets.md`, especially the Revue follow-up section, then write the formal implementation plan before coding. The vanilla `SpawnEggItem` lives at `net.minecraft.world.item.SpawnEggItem`; the current V4 branch already source-spiked the normal egg path, item-model path, and spawner path.
 - **V5 starting point:** no spec yet. Start with a fresh brainstorming session. The vanilla `CopperGolem` entity is at `net.minecraft.world.entity.animal.golem.CopperGolem` and its spawn flow is documented in `docs/26.1.2-mojang-targets.md` under the "Copper Golem already exists in vanilla 26.1.2" finding.
+- **Zombie Golem starting point:** `docs/superpowers/specs/2026-05-25-multigolem-zombie-golem-design.md`, then run `python scripts/check-zombie-golem-planning-handoff.py` while drafting the implementation plan. Do not implement until the plan has spiked village-area maintenance, targeting/faction hooks, civilian conversion, Rotten Flesh healing, and V4 spawn egg/spawner reuse.
 
 V3, V4, V5 are independent of each other after V3's natural-spawn ships. They can be released in any order, or interleaved with other work. The recommended order above (V3 -> V4 -> V5) honors the original V1 roadmap promise first.
