@@ -93,6 +93,7 @@ While a Redstone golem is in combat, it emits a pulse at a configured interval. 
 Default behavior:
 
 - Pulse only while the golem has or recently had a valid combat target.
+- The recent-combat window defaults to 5 seconds after the last valid combat target.
 - Affect hostile mobs within 6 blocks.
 - Apply `Slowness I` for 3 seconds.
 - Pulse every 5 seconds.
@@ -119,6 +120,7 @@ Default behavior:
 | `redstone_pulse_enabled` | `true` | Enables the combat pulse. |
 | `redstone_pulse_range` | `6` | Block radius for affected hostile mobs. |
 | `redstone_pulse_interval_seconds` | `5.0` | Seconds between pulses. |
+| `redstone_pulse_combat_linger_seconds` | `5.0` | Seconds after the last valid combat target during which pulses may continue. |
 | `redstone_pulse_slowness_seconds` | `3.0` | Slowness duration applied by pulse. |
 | `redstone_static_strike_enabled` | `true` | Enables on-hit weakness. |
 | `redstone_static_strike_weakness_seconds` | `4.0` | Weakness duration applied on hit. |
@@ -181,6 +183,8 @@ This is intentional and approved. A charmed creeper may target and explode near 
 
 Collateral damage is part of the trade-off. The design should document this in public copy and playtest rows rather than hiding it behind a surprising config edge.
 
+A Lapis golem can be inside the blast radius when it charms a creeper at melee range. That self-damage risk is intentional unless implementation testing shows it makes the ability unusable. The implementation should not make Lapis explosion-proof by default; if playtesting shows the golem dies too reliably to its own charmed creepers, tune charm targeting or retreat behavior in a follow-up design change.
+
 ### 5.5 Boss And Edge-Case Rules
 
 Bosses are immune to charm by default.
@@ -196,6 +200,8 @@ Default exclusions:
 - Players, villagers, and wandering traders.
 
 Endermen and other complex mobs are allowed unless implementation evidence shows they cannot be safely supported. If a mob cannot be supported cleanly, the implementation should document the exclusion and add a playtest note.
+
+Lapis charm also respects Lapis's `ignored_target_types` in addition to the explicit exclusions above. Lapis must not include `CREEPERS` in `ignored_target_types` by default because creeper charm is an approved feature.
 
 ### 5.6 Lapis Config Defaults
 
@@ -215,6 +221,8 @@ Endermen and other complex mobs are allowed unless implementation evidence shows
 | `lapis_charm_max_active_targets` | `1` | Maximum simultaneous charmed mobs per Lapis golem. |
 | `lapis_charm_glowing_enabled` | `true` | Applies Glowing while charmed. |
 | `lapis_particles_enabled` | `true` | Enables ward and charm visuals. |
+
+If `lapis_charm_max_active_targets` is already reached, a later Lapis hit does not refresh the existing charm, does not charm a new target, and does not consume the cooldown. This keeps active-target limits predictable and testable.
 
 Suggested validation:
 
@@ -253,6 +261,8 @@ The roll order should be updated deliberately. A natural order for player-facing
 
 Existing configs must migrate by filling missing `redstone` and `lapis` weights with defaults while preserving unknown fields.
 
+Existing tier configs must also migrate by filling missing Redstone and Lapis tier objects and all missing Redstone/Lapis ability fields from defaults. Unknown user fields must remain preserved through the existing raw `JsonObject` merge/canonicalize/write-back flow.
+
 ## 7. Permissions
 
 Add matching create/heal permission nodes:
@@ -276,6 +286,8 @@ Required visual assets:
 - Lapis golem texture.
 - Redstone spawn egg stack display.
 - Lapis spawn egg stack display.
+
+Asset ownership defaults to Tyler and Charles for final art direction. If final art is not ready during implementation, use clearly material-colored placeholder textures that preserve the vanilla iron golem silhouette and are good enough for playtesting. Placeholders must be documented in the implementation summary and must not block server-side functionality.
 
 Required particle cues:
 
@@ -305,8 +317,11 @@ The Lapis charm implementation needs an attachment or state record to track:
 - Charm expiry game time.
 - The Lapis golem that applied the charm, if enforcing max active targets per golem.
 - Original target clearing or veto state.
+- Cleanup on charmed mob death, owning Lapis golem death, and chunk unload or entity removal.
 
 Do not rely on one-time `setTarget(...)` calls alone. Charmed mobs can reacquire targets through goals and retaliation paths, so the charm must be enforced while active.
+
+Charm cleanup must be deterministic. Normal expiry removes charm state and restores normal behavior. Death, chunk unload, entity removal, or owning Lapis golem death must also remove or invalidate charm state so stale attachments do not leak into later loads.
 
 ## 10. Data Flow
 
@@ -341,12 +356,14 @@ Do not rely on one-time `setTarget(...)` calls alone. Charmed mobs can reacquire
 1. Vanilla `IronGolem#doHurtTarget(...)` succeeds.
 2. Variant attack-effect dispatch sees `GolemVariant.LAPIS`.
 3. Ability checks cooldown and active target limits.
-4. Ability verifies the target is a charmable hostile mob.
-5. Ability attaches charm state to the target with an expiry time.
-6. Ability clears or redirects the target away from protected entities.
-7. Ability tries to assign a nearby hostile target.
-8. While charm is active, targeting hooks prevent protected targets and prefer hostile targets.
-9. On expiry, charm state is removed and normal mob behavior resumes.
+4. If active target limits are already reached, the hit is ignored for charm purposes and the cooldown is not consumed.
+5. Ability verifies the target is a charmable hostile mob.
+6. Ability attaches charm state to the target with an expiry time.
+7. Ability clears or redirects the target away from protected entities.
+8. Ability tries to assign a nearby hostile target.
+9. While charm is active, targeting hooks prevent protected targets and prefer hostile targets.
+10. While charm is active, retaliation against protected entities is blocked even if a player, villager, or golem damages the charmed mob.
+11. On expiry, death, chunk unload, entity removal, or owning Lapis golem death, charm state is removed or invalidated and normal mob behavior resumes.
 
 ## 11. Testing And Playtest Coverage
 
@@ -357,13 +374,21 @@ Add or update focused tests for:
 - `GolemVariant` id/body/healing/drop mappings.
 - Config defaults for Redstone and Lapis stats.
 - Config merge/write-back fills `redstone` and `lapis` tiers into older configs.
+- Config merge/write-back fills all Redstone and Lapis ability fields into older configs missing those keys.
 - Config validation clamps new ability fields.
 - Village weights include Redstone and Lapis and preserve intentional all-zero behavior.
 - Permission node generation for create/heal.
 - Spawn egg stack generation includes Redstone and Lapis.
 - Redstone pulse target filtering.
+- Redstone pulse stops after `redstone_pulse_combat_linger_seconds` expires with no new valid combat target.
 - Lapis charm target filtering, including creepers allowed and bosses denied by default.
+- Lapis charm respects `ignored_target_types` without excluding creepers by default.
+- Lapis charm blocks retaliation re-targeting against players, villagers, and golems when those entities attack the charmed mob.
+- Lapis charm ignores later hits without consuming cooldown when `lapis_charm_max_active_targets` is already reached.
 - Charm expiry behavior for attachment/state helpers.
+- Charm cleanup on charmed mob death.
+- Charm cleanup or invalidation on owning Lapis golem death.
+- Charm cleanup or invalidation on chunk unload or entity removal.
 
 ### 11.2 Manual Playtest Rows
 
@@ -379,9 +404,11 @@ Add rows to `docs/playtest-checklist.md` and `docs/playtest.html` for:
 - Verify Lapis ward grants Resistance to villagers and golems.
 - Verify players do not receive Lapis ward by default.
 - Verify Lapis charm makes a hostile mob stop targeting villagers/players/golems.
+- Verify a charmed mob does not retaliate against a player, villager, or golem that damages it while charm is active.
 - Verify a charmed mob attacks another hostile when one is nearby.
 - Verify a charmed mob becomes passive when no hostile target is nearby.
 - Verify creepers can be charmed and may explode near enemy mobs.
+- Verify Lapis golem survives or is documented as intentionally harmed when a charmed creeper explodes at close range.
 - Verify bosses are not charmed by default.
 - Verify village-spawn forced weights for Redstone and Lapis.
 - Verify Redstone and Lapis spawn eggs apply variants and permissions.
@@ -411,6 +438,7 @@ Public wording should be clear that:
 |---|---|
 | Lapis charm fights Minecraft AI. | Keep charm temporary, enforce through targeting veto while active, and exclude edge-case mobs if needed. |
 | Charmed creepers damage villages. | Keep this as intentional behavior, document it, and make `lapis_charm_affects_creepers` configurable. |
+| Charmed creepers damage the Lapis golem that charmed them. | Treat self-damage as an intentional risk during the first implementation; document and playtest close-range creeper explosions before adding mitigation. |
 | Lapis replaces Emerald. | Lapis grants resistance and charm; it does not heal. Emerald remains the sustain tier. |
 | Redstone replaces Gold. | Redstone controls mobs; Gold remains faster and higher damage. |
 | New config fields make `TierStats` bulky. | Follow the existing nullable ability-field pattern for this implementation, and avoid unrelated config refactors. |
@@ -436,6 +464,7 @@ Scope:
 - Implement Redstone and Lapis golems exactly as specified.
 - Keep the no-new-entity architecture.
 - Add config, tests, docs, playtest rows, permissions, spawn eggs, village weights, textures/assets, and changelog updates required by the spec.
+- If final Redstone/Lapis art is not ready, use material-colored placeholder textures and document them.
 - Lapis charm must affect creepers by default.
 - Bosses remain charm-immune by default.
 - Redstone must not power redstone components.
