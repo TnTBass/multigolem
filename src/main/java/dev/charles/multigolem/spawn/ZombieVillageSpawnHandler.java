@@ -34,18 +34,16 @@ public final class ZombieVillageSpawnHandler {
     }
 
     public int desiredSpawnAttempts(ZombieVillageScan scan) {
-        int desired = resolver.desiredCount(
-            scan.countZombieVillagers(),
-            scan.countRegularZombies(),
-            scan.countLiveZombieGolems());
-        return Math.max(0, desired - scan.countLiveZombieGolems());
+        int currentZombieGolems = scan.countLiveZombieGolems();
+        int desired = resolver.desiredCount(scan.countZombieVillagers(), scan.countRegularZombies());
+        return Math.max(0, desired - currentZombieGolems);
     }
 
     public void maintain(ZombieVillageScan scan) {
         int zombieVillagers = scan.countZombieVillagers();
         int regularZombies = scan.countRegularZombies();
         int currentZombieGolems = scan.countLiveZombieGolems();
-        int desired = resolver.desiredCount(zombieVillagers, regularZombies, currentZombieGolems);
+        int desired = resolver.desiredCount(zombieVillagers, regularZombies);
         while (currentZombieGolems < desired) {
             Optional<BlockPos> pos = scan.findSafeVillageSpawnPosition();
             if (pos.isEmpty()) break;
@@ -64,8 +62,12 @@ public final class ZombieVillageSpawnHandler {
         boolean spawnZombieGolem(BlockPos pos);
     }
 
+    public static double scanRange() {
+        return RuntimeZombieVillageScan.SCAN_RANGE;
+    }
+
     private static final class RuntimeZombieVillageScan implements ZombieVillageScan {
-        private static final double SCAN_RANGE = 10.0;
+        private static final double SCAN_RANGE = 32.0;
         private final ServerLevel level;
         private final BlockPos center;
         private final AABB box;

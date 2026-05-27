@@ -44,4 +44,20 @@ class ZombieGolemFactionTest {
         assertFalse(ZombieGolemFaction.nonZombieGolemCanTarget(GolemVariant.ZOMBIE, GolemVariant.ZOMBIE));
         assertFalse(ZombieGolemFaction.nonZombieGolemCanTarget(GolemVariant.GOLD, GolemVariant.IRON));
     }
+
+    @Test
+    void goalPredicatesCoverZombieAndDefenderTargets() {
+        assertTrue(ZombieGolemFaction.zombieGoalCanTargetClass(Player.class, GolemVariant.IRON));
+        assertTrue(ZombieGolemFaction.zombieGoalCanTargetClass(Villager.class, GolemVariant.IRON));
+        assertTrue(ZombieGolemFaction.zombieGoalCanTargetClass(WanderingTrader.class, GolemVariant.IRON));
+        assertTrue(ZombieGolemFaction.zombieGoalCanTargetClass(IronGolem.class, GolemVariant.GOLD));
+        assertFalse(ZombieGolemFaction.zombieGoalCanTargetClass(IronGolem.class, GolemVariant.ZOMBIE));
+        assertTrue(ZombieGolemFaction.defenderGoalCanTarget(GolemVariant.GOLD, GolemVariant.ZOMBIE));
+    }
+
+    @Test
+    void zombieGolemSelfDefenseAllowsItsRecentAttackerOnly() {
+        assertTrue(ZombieGolemFaction.zombieGolemCanTargetClass(Zombie.class, GolemVariant.IRON, true));
+        assertFalse(ZombieGolemFaction.zombieGolemCanTargetClass(Zombie.class, GolemVariant.IRON, false));
+    }
 }

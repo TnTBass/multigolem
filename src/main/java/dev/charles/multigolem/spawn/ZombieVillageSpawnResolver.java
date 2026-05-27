@@ -7,7 +7,7 @@ public final class ZombieVillageSpawnResolver {
         this.config = config;
     }
 
-    public int desiredCount(int zombieVillagers, int regularZombies, int currentZombieGolems) {
-        return config.desiredCount(zombieVillagers, regularZombies, currentZombieGolems);
+    public int desiredCount(int zombieVillagers, int regularZombies) {
+        return config.desiredCount(zombieVillagers, regularZombies);
     }
 }

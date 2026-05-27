@@ -50,6 +50,11 @@ class ZombieVillageSpawnHandlerTest {
         assertEquals(0, scan.spawnAttempts());
     }
 
+    @Test
+    void runtimeScanCoversTheVillageArea() {
+        assertEquals(32.0, ZombieVillageSpawnHandler.scanRange(), 0.0001);
+    }
+
     private static FakeZombieVillageScan scan(int zombieVillagers, int regularZombies, int zombieGolems) {
         return new FakeZombieVillageScan()
             .withZombieVillagers(zombieVillagers)

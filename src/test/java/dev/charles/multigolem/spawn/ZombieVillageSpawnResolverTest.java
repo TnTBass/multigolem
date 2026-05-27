@@ -10,12 +10,12 @@ class ZombieVillageSpawnResolverTest {
     void defaultsComputeDesiredZombieGolems() {
         ZombieVillageSpawnResolver resolver = new ZombieVillageSpawnResolver(ZombieVillageSpawningConfig.defaults());
 
-        assertEquals(0, resolver.desiredCount(0, 0, 0));
-        assertEquals(1, resolver.desiredCount(1, 0, 0));
-        assertEquals(1, resolver.desiredCount(4, 0, 0));
-        assertEquals(2, resolver.desiredCount(5, 0, 0));
-        assertEquals(0, resolver.desiredCount(0, 4, 0), "regular zombies alone never qualify");
-        assertEquals(2, resolver.desiredCount(1, 3, 0));
-        assertEquals(2, resolver.desiredCount(20, 20, 0), "default max_zombie_golems_per_village is 2");
+        assertEquals(0, resolver.desiredCount(0, 0));
+        assertEquals(1, resolver.desiredCount(1, 0));
+        assertEquals(1, resolver.desiredCount(4, 0));
+        assertEquals(2, resolver.desiredCount(5, 0));
+        assertEquals(0, resolver.desiredCount(0, 4), "regular zombies alone never qualify");
+        assertEquals(2, resolver.desiredCount(1, 3));
+        assertEquals(2, resolver.desiredCount(20, 20), "default max_zombie_golems_per_village is 2");
     }
 }

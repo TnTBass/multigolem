@@ -12,4 +12,10 @@ class ZombieGolemConversionTest {
         assertEquals(ZombieGolemConversion.Outcome.FAILED_ROLL_NO_DAMAGE, ZombieGolemConversion.roll(0.0, 0.0));
         assertEquals(ZombieGolemConversion.Outcome.FAILED_ROLL_NO_DAMAGE, ZombieGolemConversion.roll(0.25, 0.25));
     }
+
+    @Test
+    void disabledConversionStillSuppressesNormalDamage() {
+        assertEquals(ZombieGolemConversion.Outcome.FAILED_ROLL_NO_DAMAGE,
+            ZombieGolemConversion.roll(false, 1.0, 0.0));
+    }
 }

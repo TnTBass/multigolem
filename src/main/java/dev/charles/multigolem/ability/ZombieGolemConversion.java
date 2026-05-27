@@ -21,19 +21,25 @@ public final class ZombieGolemConversion {
         return roll < chance ? Outcome.CONVERT : Outcome.FAILED_ROLL_NO_DAMAGE;
     }
 
+    public static Outcome roll(boolean enabled, double chance, double roll) {
+        return enabled ? roll(chance, roll) : Outcome.FAILED_ROLL_NO_DAMAGE;
+    }
+
     public static boolean suppressesNormalDamage(Object target) {
         return target instanceof Villager || target instanceof WanderingTrader;
     }
 
     public static boolean handle(ServerLevel level, Object target, TierStats stats, double randomRoll) {
-        if (target instanceof Villager villager && Boolean.TRUE.equals(stats.zombieConvertVillagersEnabled())) {
-            if (roll(stats.zombieVillagerConversionChance(), randomRoll) == Outcome.CONVERT) {
+        if (target instanceof Villager villager) {
+            if (roll(Boolean.TRUE.equals(stats.zombieConvertVillagersEnabled()),
+                    stats.zombieVillagerConversionChance(), randomRoll) == Outcome.CONVERT) {
                 convertVillager(level, villager);
             }
             return true;
         }
-        if (target instanceof WanderingTrader trader && Boolean.TRUE.equals(stats.zombieConvertWanderingTradersEnabled())) {
-            if (roll(stats.zombieWanderingTraderConversionChance(), randomRoll) == Outcome.CONVERT) {
+        if (target instanceof WanderingTrader trader) {
+            if (roll(Boolean.TRUE.equals(stats.zombieConvertWanderingTradersEnabled()),
+                    stats.zombieWanderingTraderConversionChance(), randomRoll) == Outcome.CONVERT) {
                 convertTrader(level, trader);
             }
             return true;

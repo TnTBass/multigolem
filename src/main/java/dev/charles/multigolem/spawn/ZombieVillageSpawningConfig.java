@@ -12,7 +12,7 @@ public record ZombieVillageSpawningConfig(
         return new ZombieVillageSpawningConfig(true, 1, 5, true, 3, 2);
     }
 
-    public int desiredCount(int zombieVillagers, int regularZombies, int currentZombieGolems) {
+    public int desiredCount(int zombieVillagers, int regularZombies) {
         if (!enabled || maxZombieGolemsPerVillage <= 0 || zombieVillagers < minZombieVillagers) {
             return 0;
         }
