@@ -53,6 +53,23 @@ class MultiGolemConfigV2Test {
         assertTrue(nh.netheriteFireImmune());
         assertEquals(5, nh.netheriteIgniteSeconds());
         assertEquals(0, nh.netheriteVillageIgniteSeconds());
+        // Zombie
+        TierStats zombie = cfg.tier(GolemVariant.ZOMBIE);
+        assertEquals(100, zombie.maxHealth());
+        assertEquals(15.0, zombie.attackDamage(), 0.0001);
+        assertTrue(zombie.angerOnHit(), "schema keeps anger_on_hit, runtime ignores it for ZOMBIE");
+        assertEquals(List.of(), zombie.ignoredTargetTypes());
+        assertEquals(25.0, zombie.zombieRottenFleshHealAmount(), 0.0001);
+        assertTrue(zombie.zombieHungerEnabled());
+        assertEquals(12, zombie.zombieHungerSeconds());
+        assertTrue(zombie.zombieNauseaEnabled());
+        assertEquals(4, zombie.zombieNauseaSeconds());
+        assertTrue(zombie.zombiePoisonEnabled());
+        assertEquals(4, zombie.zombiePoisonSeconds());
+        assertTrue(zombie.zombieConvertVillagersEnabled());
+        assertEquals(1.0, zombie.zombieVillagerConversionChance(), 0.0001);
+        assertTrue(zombie.zombieConvertWanderingTradersEnabled());
+        assertEquals(1.0, zombie.zombieWanderingTraderConversionChance(), 0.0001);
     }
 
     @Test
@@ -284,7 +301,55 @@ class MultiGolemConfigV2Test {
         // Disk written with V2 schema
         String after = Files.readString(file);
         assertTrue(after.contains("\"copper_lightning_immune\""));
+        assertTrue(after.contains("\"zombie_village_spawning\""));
+        assertTrue(after.contains("\"zombie_rotten_flesh_heal_amount\""));
         assertTrue(after.contains("\"max_health\": 75"), "V1 value preserved on disk");
+    }
+
+    @Test
+    void zombieFieldsClampAndCanonicalize(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "zombie_village_spawning": {
+                "enabled": true,
+                "min_zombie_villagers": 0,
+                "zombie_villagers_per_golem": 0,
+                "regular_zombie_bonus_enabled": true,
+                "regular_zombie_bonus_threshold": 0,
+                "max_zombie_golems_per_village": -1
+              },
+              "tiers": {
+                "zombie": {
+                  "zombie_rotten_flesh_heal_amount": -5.0,
+                  "zombie_hunger_seconds": -1,
+                  "zombie_hunger_amplifier": -1,
+                  "zombie_nausea_seconds": -1,
+                  "zombie_nausea_amplifier": -1,
+                  "zombie_poison_seconds": -1,
+                  "zombie_poison_amplifier": -1,
+                  "zombie_villager_conversion_chance": 5.0,
+                  "zombie_wandering_trader_conversion_chance": -1.0
+                }
+              }
+            }
+            """);
+
+        MultiGolemConfig cfg = MultiGolemConfig.loadOrCreate(file);
+        TierStats zombie = cfg.tier(GolemVariant.ZOMBIE);
+        assertEquals(0.0, zombie.zombieRottenFleshHealAmount(), 0.0001);
+        assertEquals(0, zombie.zombieHungerSeconds());
+        assertEquals(0, zombie.zombieHungerAmplifier());
+        assertEquals(0, zombie.zombieNauseaSeconds());
+        assertEquals(0, zombie.zombieNauseaAmplifier());
+        assertEquals(0, zombie.zombiePoisonSeconds());
+        assertEquals(0, zombie.zombiePoisonAmplifier());
+        assertEquals(1.0, zombie.zombieVillagerConversionChance(), 0.0001);
+        assertEquals(0.0, zombie.zombieWanderingTraderConversionChance(), 0.0001);
+        assertEquals(0, cfg.zombieVillageSpawning().maxZombieGolemsPerVillage());
+        assertEquals(1, cfg.zombieVillageSpawning().minZombieVillagers());
+        assertEquals(1, cfg.zombieVillageSpawning().zombieVillagersPerGolem());
+        assertEquals(1, cfg.zombieVillageSpawning().regularZombieBonusThreshold());
     }
 
     @Test

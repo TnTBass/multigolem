@@ -34,7 +34,22 @@ public record TierStats(
     // Netherite
     Boolean netheriteFireImmune,
     Integer netheriteIgniteSeconds,
-    Integer netheriteVillageIgniteSeconds
+    Integer netheriteVillageIgniteSeconds,
+    // Zombie
+    Double zombieRottenFleshHealAmount,
+    Boolean zombieHungerEnabled,
+    Integer zombieHungerSeconds,
+    Integer zombieHungerAmplifier,
+    Boolean zombieNauseaEnabled,
+    Integer zombieNauseaSeconds,
+    Integer zombieNauseaAmplifier,
+    Boolean zombiePoisonEnabled,
+    Integer zombiePoisonSeconds,
+    Integer zombiePoisonAmplifier,
+    Boolean zombieConvertVillagersEnabled,
+    Double zombieVillagerConversionChance,
+    Boolean zombieConvertWanderingTradersEnabled,
+    Double zombieWanderingTraderConversionChance
 ) {
 
     public static final int MIN_HEALTH = 1;
@@ -47,6 +62,38 @@ public record TierStats(
         ignoredTargetTypes = List.copyOf(ignoredTargetTypes);
     }
 
+    public TierStats(
+        int maxHealth,
+        double attackDamage,
+        boolean angerOnHit,
+        List<String> ignoredTargetTypes,
+        Boolean copperLightningImmune,
+        Double copperLightningHealAmount,
+        Double goldSpeedMultiplier,
+        Boolean goldSprintParticlesEnabled,
+        Boolean goldSunlightShineEnabled,
+        Integer emeraldAuraRange,
+        Double emeraldHealIntervalSeconds,
+        Double emeraldHealPerTick,
+        Boolean emeraldCountWanderingTraders,
+        String diamondTargetMode,
+        Integer diamondCooldownMinSeconds,
+        Integer diamondCooldownMaxSeconds,
+        Integer diamondAuraRange,
+        Boolean diamondLightningProof,
+        Boolean netheriteFireImmune,
+        Integer netheriteIgniteSeconds,
+        Integer netheriteVillageIgniteSeconds
+    ) {
+        this(maxHealth, attackDamage, angerOnHit, ignoredTargetTypes,
+            copperLightningImmune, copperLightningHealAmount,
+            goldSpeedMultiplier, goldSprintParticlesEnabled, goldSunlightShineEnabled,
+            emeraldAuraRange, emeraldHealIntervalSeconds, emeraldHealPerTick, emeraldCountWanderingTraders,
+            diamondTargetMode, diamondCooldownMinSeconds, diamondCooldownMaxSeconds, diamondAuraRange, diamondLightningProof,
+            netheriteFireImmune, netheriteIgniteSeconds, netheriteVillageIgniteSeconds,
+            null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    }
+
     /** Clamp V1 fields. V2 field clamping happens in MultiGolemConfig.parse. */
     public TierStats clampedHealthDamage() {
         int h = Math.max(MIN_HEALTH, Math.min(MAX_HEALTH, maxHealth));
@@ -57,7 +104,12 @@ public record TierStats(
             goldSpeedMultiplier, goldSprintParticlesEnabled, goldSunlightShineEnabled,
             emeraldAuraRange, emeraldHealIntervalSeconds, emeraldHealPerTick, emeraldCountWanderingTraders,
             diamondTargetMode, diamondCooldownMinSeconds, diamondCooldownMaxSeconds, diamondAuraRange, diamondLightningProof,
-            netheriteFireImmune, netheriteIgniteSeconds, netheriteVillageIgniteSeconds);
+            netheriteFireImmune, netheriteIgniteSeconds, netheriteVillageIgniteSeconds,
+            zombieRottenFleshHealAmount, zombieHungerEnabled, zombieHungerSeconds, zombieHungerAmplifier,
+            zombieNauseaEnabled, zombieNauseaSeconds, zombieNauseaAmplifier,
+            zombiePoisonEnabled, zombiePoisonSeconds, zombiePoisonAmplifier,
+            zombieConvertVillagersEnabled, zombieVillagerConversionChance,
+            zombieConvertWanderingTradersEnabled, zombieWanderingTraderConversionChance);
     }
 
     public boolean isHealthDamageClamped() {

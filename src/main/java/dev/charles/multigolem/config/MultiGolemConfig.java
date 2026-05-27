@@ -11,6 +11,7 @@ import com.google.gson.JsonSyntaxException;
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
 import dev.charles.multigolem.spawn.VillageSpawnWeights;
+import dev.charles.multigolem.spawn.ZombieVillageSpawningConfig;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -45,16 +46,20 @@ public final class MultiGolemConfig {
     private final boolean allowGolemHealing;
     private final Map<GolemVariant, TierStats> tiers;
     private final VillageSpawnWeights villageSpawnWeights;
+    private final ZombieVillageSpawningConfig zombieVillageSpawning;
 
-    private MultiGolemConfig(boolean allowGolemHealing, Map<GolemVariant, TierStats> tiers, VillageSpawnWeights villageSpawnWeights) {
+    private MultiGolemConfig(boolean allowGolemHealing, Map<GolemVariant, TierStats> tiers, VillageSpawnWeights villageSpawnWeights,
+                             ZombieVillageSpawningConfig zombieVillageSpawning) {
         this.allowGolemHealing = allowGolemHealing;
         this.tiers = new EnumMap<>(tiers);
         this.villageSpawnWeights = villageSpawnWeights;
+        this.zombieVillageSpawning = zombieVillageSpawning;
     }
 
     public boolean allowGolemHealing() { return allowGolemHealing; }
     public TierStats tier(GolemVariant variant) { return tiers.get(variant); }
     public VillageSpawnWeights villageSpawnWeights() { return villageSpawnWeights; }
+    public ZombieVillageSpawningConfig zombieVillageSpawning() { return zombieVillageSpawning; }
 
     public static MultiGolemConfig defaults() {
         EnumMap<GolemVariant, TierStats> m = new EnumMap<>(GolemVariant.class);
@@ -94,7 +99,17 @@ public final class MultiGolemConfig {
             null, null, null, null,
             null, null, null, null, null,
             true, 5, 0));
-        return new MultiGolemConfig(true, m, VillageSpawnWeights.defaults());
+        m.put(GolemVariant.ZOMBIE, new TierStats(100, 15.0, true, List.of(),
+            null, null,
+            null, null, null,
+            null, null, null, null,
+            null, null, null, null, null,
+            null, null, null,
+            25.0, true, 12, 0,
+            true, 4, 0,
+            true, 4, 0,
+            true, 1.0, true, 1.0));
+        return new MultiGolemConfig(true, m, VillageSpawnWeights.defaults(), ZombieVillageSpawningConfig.defaults());
     }
 
     public static MultiGolemConfig loadOrCreate(Path path) {
@@ -151,6 +166,7 @@ public final class MultiGolemConfig {
 
     private static void canonicalizeAndValidateInPlace(JsonObject root) {
         canonicalizeVillageSpawningInPlace(root);
+        canonicalizeZombieVillageSpawningInPlace(root);
 
         JsonObject tiers = root.has("tiers") && root.get("tiers").isJsonObject()
             ? root.getAsJsonObject("tiers") : null;
@@ -296,6 +312,39 @@ public final class MultiGolemConfig {
             canonicalizeInt(t, "netherite_ignite_seconds", 0, 300);
             canonicalizeInt(t, "netherite_village_ignite_seconds", 0, 300);
         }
+        if (variant == GolemVariant.ZOMBIE) {
+            canonicalizeDouble(t, "zombie_rotten_flesh_heal_amount", 0.0, 2048.0, Double.NaN);
+            canonicalizeInt(t, "zombie_hunger_seconds", 0, 300);
+            canonicalizeInt(t, "zombie_hunger_amplifier", 0, 255);
+            canonicalizeInt(t, "zombie_nausea_seconds", 0, 300);
+            canonicalizeInt(t, "zombie_nausea_amplifier", 0, 255);
+            canonicalizeInt(t, "zombie_poison_seconds", 0, 300);
+            canonicalizeInt(t, "zombie_poison_amplifier", 0, 255);
+            canonicalizeDouble(t, "zombie_villager_conversion_chance", 0.0, 1.0, Double.NaN);
+            canonicalizeDouble(t, "zombie_wandering_trader_conversion_chance", 0.0, 1.0, Double.NaN);
+        }
+    }
+
+    private static void canonicalizeZombieVillageSpawningInPlace(JsonObject root) {
+        if (!root.has("zombie_village_spawning") || !root.get("zombie_village_spawning").isJsonObject()) {
+            root.add("zombie_village_spawning", zombieVillageSpawningToJson(ZombieVillageSpawningConfig.defaults()));
+            return;
+        }
+
+        JsonObject zombie = root.getAsJsonObject("zombie_village_spawning");
+        ZombieVillageSpawningConfig defaults = ZombieVillageSpawningConfig.defaults();
+        if (!zombie.has("enabled") || !zombie.get("enabled").isJsonPrimitive()
+                || !zombie.get("enabled").getAsJsonPrimitive().isBoolean()) {
+            zombie.addProperty("enabled", defaults.enabled());
+        }
+        canonicalizeInt(zombie, "min_zombie_villagers", 1, Integer.MAX_VALUE);
+        canonicalizeInt(zombie, "zombie_villagers_per_golem", 1, Integer.MAX_VALUE);
+        if (!zombie.has("regular_zombie_bonus_enabled") || !zombie.get("regular_zombie_bonus_enabled").isJsonPrimitive()
+                || !zombie.get("regular_zombie_bonus_enabled").getAsJsonPrimitive().isBoolean()) {
+            zombie.addProperty("regular_zombie_bonus_enabled", defaults.regularZombieBonusEnabled());
+        }
+        canonicalizeInt(zombie, "regular_zombie_bonus_threshold", 1, Integer.MAX_VALUE);
+        canonicalizeInt(zombie, "max_zombie_golems_per_village", 0, Integer.MAX_VALUE);
     }
 
     private static void canonicalizeInt(JsonObject t, String key, int min, int max) {
@@ -352,6 +401,7 @@ public final class MultiGolemConfig {
         MultiGolemConfig defaults = defaults();
         boolean healing = readBoolean(root, "allow_golem_healing", defaults.allowGolemHealing);
         VillageSpawnWeights villageSpawnWeights = parseVillageSpawnWeights(root, defaults.villageSpawnWeights);
+        ZombieVillageSpawningConfig zombieVillageSpawning = parseZombieVillageSpawning(root, defaults.zombieVillageSpawning);
 
         EnumMap<GolemVariant, TierStats> tiers = new EnumMap<>(GolemVariant.class);
         JsonObject tiersJson = root.has("tiers") && root.get("tiers").isJsonObject()
@@ -364,7 +414,22 @@ public final class MultiGolemConfig {
             }
             tiers.put(v, parseTier(v, tiersJson.getAsJsonObject(v.id()), def));
         }
-        return new MultiGolemConfig(healing, tiers, villageSpawnWeights);
+        return new MultiGolemConfig(healing, tiers, villageSpawnWeights, zombieVillageSpawning);
+    }
+
+    private static ZombieVillageSpawningConfig parseZombieVillageSpawning(JsonObject root, ZombieVillageSpawningConfig fallback) {
+        if (!root.has("zombie_village_spawning") || !root.get("zombie_village_spawning").isJsonObject()) {
+            return fallback;
+        }
+        JsonObject zombie = root.getAsJsonObject("zombie_village_spawning");
+        return new ZombieVillageSpawningConfig(
+            readBoolean(zombie, "enabled", fallback.enabled()),
+            clampInt(readInt(zombie, "min_zombie_villagers", fallback.minZombieVillagers()), 1, Integer.MAX_VALUE, "min_zombie_villagers"),
+            clampInt(readInt(zombie, "zombie_villagers_per_golem", fallback.zombieVillagersPerGolem()), 1, Integer.MAX_VALUE, "zombie_villagers_per_golem"),
+            readBoolean(zombie, "regular_zombie_bonus_enabled", fallback.regularZombieBonusEnabled()),
+            clampInt(readInt(zombie, "regular_zombie_bonus_threshold", fallback.regularZombieBonusThreshold()), 1, Integer.MAX_VALUE, "regular_zombie_bonus_threshold"),
+            clampInt(readInt(zombie, "max_zombie_golems_per_village", fallback.maxZombieGolemsPerVillage()), 0, Integer.MAX_VALUE, "max_zombie_golems_per_village")
+        );
     }
 
     private static VillageSpawnWeights parseVillageSpawnWeights(JsonObject root, VillageSpawnWeights fallback) {
@@ -451,13 +516,60 @@ public final class MultiGolemConfig {
         Integer netheriteVillageIgnite = def.netheriteVillageIgniteSeconds() != null
             ? clampInt(readInt(t, "netherite_village_ignite_seconds", def.netheriteVillageIgniteSeconds()), 0, 300, "netherite_village_ignite_seconds")
             : null;
+        Double zombieHeal = def.zombieRottenFleshHealAmount() != null
+            ? clampDouble(readDouble(t, "zombie_rotten_flesh_heal_amount", def.zombieRottenFleshHealAmount()), 0.0, 2048.0, "zombie_rotten_flesh_heal_amount")
+            : null;
+        Boolean zombieHungerEnabled = def.zombieHungerEnabled() != null
+            ? readBoolean(t, "zombie_hunger_enabled", def.zombieHungerEnabled())
+            : null;
+        Integer zombieHungerSeconds = def.zombieHungerSeconds() != null
+            ? clampInt(readInt(t, "zombie_hunger_seconds", def.zombieHungerSeconds()), 0, 300, "zombie_hunger_seconds")
+            : null;
+        Integer zombieHungerAmplifier = def.zombieHungerAmplifier() != null
+            ? clampInt(readInt(t, "zombie_hunger_amplifier", def.zombieHungerAmplifier()), 0, 255, "zombie_hunger_amplifier")
+            : null;
+        Boolean zombieNauseaEnabled = def.zombieNauseaEnabled() != null
+            ? readBoolean(t, "zombie_nausea_enabled", def.zombieNauseaEnabled())
+            : null;
+        Integer zombieNauseaSeconds = def.zombieNauseaSeconds() != null
+            ? clampInt(readInt(t, "zombie_nausea_seconds", def.zombieNauseaSeconds()), 0, 300, "zombie_nausea_seconds")
+            : null;
+        Integer zombieNauseaAmplifier = def.zombieNauseaAmplifier() != null
+            ? clampInt(readInt(t, "zombie_nausea_amplifier", def.zombieNauseaAmplifier()), 0, 255, "zombie_nausea_amplifier")
+            : null;
+        Boolean zombiePoisonEnabled = def.zombiePoisonEnabled() != null
+            ? readBoolean(t, "zombie_poison_enabled", def.zombiePoisonEnabled())
+            : null;
+        Integer zombiePoisonSeconds = def.zombiePoisonSeconds() != null
+            ? clampInt(readInt(t, "zombie_poison_seconds", def.zombiePoisonSeconds()), 0, 300, "zombie_poison_seconds")
+            : null;
+        Integer zombiePoisonAmplifier = def.zombiePoisonAmplifier() != null
+            ? clampInt(readInt(t, "zombie_poison_amplifier", def.zombiePoisonAmplifier()), 0, 255, "zombie_poison_amplifier")
+            : null;
+        Boolean zombieConvertVillagersEnabled = def.zombieConvertVillagersEnabled() != null
+            ? readBoolean(t, "zombie_convert_villagers_enabled", def.zombieConvertVillagersEnabled())
+            : null;
+        Double zombieVillagerChance = def.zombieVillagerConversionChance() != null
+            ? clampDouble(readDouble(t, "zombie_villager_conversion_chance", def.zombieVillagerConversionChance()), 0.0, 1.0, "zombie_villager_conversion_chance")
+            : null;
+        Boolean zombieConvertWanderingTradersEnabled = def.zombieConvertWanderingTradersEnabled() != null
+            ? readBoolean(t, "zombie_convert_wandering_traders_enabled", def.zombieConvertWanderingTradersEnabled())
+            : null;
+        Double zombieWanderingTraderChance = def.zombieWanderingTraderConversionChance() != null
+            ? clampDouble(readDouble(t, "zombie_wandering_trader_conversion_chance", def.zombieWanderingTraderConversionChance()), 0.0, 1.0, "zombie_wandering_trader_conversion_chance")
+            : null;
 
         return new TierStats(health, damage, anger, ignored,
             copperImmune, copperHeal,
             goldSpeed, goldSprint, goldShine,
             emeraldRange, emeraldInterval, emeraldHeal, emeraldWandering,
             diamondMode, diamondMin, diamondMax, diamondRange, diamondProof,
-            netheriteImmune, netheriteIgnite, netheriteVillageIgnite);
+            netheriteImmune, netheriteIgnite, netheriteVillageIgnite,
+            zombieHeal, zombieHungerEnabled, zombieHungerSeconds, zombieHungerAmplifier,
+            zombieNauseaEnabled, zombieNauseaSeconds, zombieNauseaAmplifier,
+            zombiePoisonEnabled, zombiePoisonSeconds, zombiePoisonAmplifier,
+            zombieConvertVillagersEnabled, zombieVillagerChance,
+            zombieConvertWanderingTradersEnabled, zombieWanderingTraderChance);
     }
 
     private static List<String> parseIgnoredTargetTypes(JsonObject t, List<String> fallback) {
@@ -576,6 +688,7 @@ public final class MultiGolemConfig {
         JsonObject root = new JsonObject();
         root.addProperty("allow_golem_healing", cfg.allowGolemHealing);
         root.add("village_spawning", villageSpawnWeightsToJson(cfg.villageSpawnWeights));
+        root.add("zombie_village_spawning", zombieVillageSpawningToJson(cfg.zombieVillageSpawning));
         JsonObject tiers = new JsonObject();
         for (GolemVariant v : GolemVariant.values()) {
             TierStats s = cfg.tier(v);
@@ -611,6 +724,21 @@ public final class MultiGolemConfig {
             if (s.netheriteFireImmune() != null) t.addProperty("netherite_fire_immune", s.netheriteFireImmune());
             if (s.netheriteIgniteSeconds() != null) t.addProperty("netherite_ignite_seconds", s.netheriteIgniteSeconds());
             if (s.netheriteVillageIgniteSeconds() != null) t.addProperty("netherite_village_ignite_seconds", s.netheriteVillageIgniteSeconds());
+            // Zombie
+            if (s.zombieRottenFleshHealAmount() != null) t.addProperty("zombie_rotten_flesh_heal_amount", s.zombieRottenFleshHealAmount());
+            if (s.zombieHungerEnabled() != null) t.addProperty("zombie_hunger_enabled", s.zombieHungerEnabled());
+            if (s.zombieHungerSeconds() != null) t.addProperty("zombie_hunger_seconds", s.zombieHungerSeconds());
+            if (s.zombieHungerAmplifier() != null) t.addProperty("zombie_hunger_amplifier", s.zombieHungerAmplifier());
+            if (s.zombieNauseaEnabled() != null) t.addProperty("zombie_nausea_enabled", s.zombieNauseaEnabled());
+            if (s.zombieNauseaSeconds() != null) t.addProperty("zombie_nausea_seconds", s.zombieNauseaSeconds());
+            if (s.zombieNauseaAmplifier() != null) t.addProperty("zombie_nausea_amplifier", s.zombieNauseaAmplifier());
+            if (s.zombiePoisonEnabled() != null) t.addProperty("zombie_poison_enabled", s.zombiePoisonEnabled());
+            if (s.zombiePoisonSeconds() != null) t.addProperty("zombie_poison_seconds", s.zombiePoisonSeconds());
+            if (s.zombiePoisonAmplifier() != null) t.addProperty("zombie_poison_amplifier", s.zombiePoisonAmplifier());
+            if (s.zombieConvertVillagersEnabled() != null) t.addProperty("zombie_convert_villagers_enabled", s.zombieConvertVillagersEnabled());
+            if (s.zombieVillagerConversionChance() != null) t.addProperty("zombie_villager_conversion_chance", s.zombieVillagerConversionChance());
+            if (s.zombieConvertWanderingTradersEnabled() != null) t.addProperty("zombie_convert_wandering_traders_enabled", s.zombieConvertWanderingTradersEnabled());
+            if (s.zombieWanderingTraderConversionChance() != null) t.addProperty("zombie_wandering_trader_conversion_chance", s.zombieWanderingTraderConversionChance());
             tiers.add(v.id(), t);
         }
         root.add("tiers", tiers);
@@ -633,17 +761,29 @@ public final class MultiGolemConfig {
         return villageSpawnWeightsToJson(VillageSpawnWeights.defaults()).getAsJsonObject("weights");
     }
 
+    private static JsonObject zombieVillageSpawningToJson(ZombieVillageSpawningConfig cfg) {
+        JsonObject zombie = new JsonObject();
+        zombie.addProperty("enabled", cfg.enabled());
+        zombie.addProperty("min_zombie_villagers", cfg.minZombieVillagers());
+        zombie.addProperty("zombie_villagers_per_golem", cfg.zombieVillagersPerGolem());
+        zombie.addProperty("regular_zombie_bonus_enabled", cfg.regularZombieBonusEnabled());
+        zombie.addProperty("regular_zombie_bonus_threshold", cfg.regularZombieBonusThreshold());
+        zombie.addProperty("max_zombie_golems_per_village", cfg.maxZombieGolemsPerVillage());
+        return zombie;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof MultiGolemConfig that)) return false;
         return allowGolemHealing == that.allowGolemHealing
             && tiers.equals(that.tiers)
-            && villageSpawnWeights.equals(that.villageSpawnWeights);
+            && villageSpawnWeights.equals(that.villageSpawnWeights)
+            && zombieVillageSpawning.equals(that.zombieVillageSpawning);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(allowGolemHealing, tiers, villageSpawnWeights);
+        return Objects.hash(allowGolemHealing, tiers, villageSpawnWeights, zombieVillageSpawning);
     }
 }
