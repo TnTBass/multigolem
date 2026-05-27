@@ -203,6 +203,8 @@ The concrete implementation should use a zombie-villager-driven village maintena
 
 This means generated abandoned villages are the primary target, but the practical rule may also apply to overrun village areas that contain zombie villagers. If strict "naturally generated abandoned villages only" filtering is required, implementation must first prove a clean structure signal exists and then return for design review before adding that restriction. Without that proof, the design prefers the zombie-villager village-area rule below.
 
+Preliminary local 26.1.2 source evidence shows zombie village pools such as `village/plains/zombie/villagers` and `village/plains/zombie/town_centers`, so the zombie-villager rule is expected to cover generated zombie villages. The implementation plan must still source-spike every relevant village biome and confirm those templates produce live zombie villagers in-world before relying on them for the guarantee. If the spike proves generated zombie villages can exist without live zombie villagers, pause for design review instead of silently weakening the "every zombie village" goal.
+
 ### 9.2 Eligibility
 
 A village area is eligible when it has at least one zombie villager in the relevant village scan area.
@@ -233,6 +235,10 @@ Default desired-count behavior:
 - 5 or more zombie villagers: desired Zombie Golems = 2, capped by `max_zombie_golems_per_village`.
 - If regular zombie bonus is enabled and 3 or more regular zombies are present with at least 1 zombie villager, desired Zombie Golems can increase by 1, still capped by `max_zombie_golems_per_village`.
 - Existing Zombie Golems count against the desired total.
+
+With the defaults, `1` zombie villager plus `3` regular zombies can reach the max desired count of `2`. This is intentional: one zombie villager establishes eligibility, and nearby regular zombies signal an overrun village. Server owners can disable the bonus or raise `regular_zombie_bonus_threshold` if they want two Zombie Golems to require more zombie-villager density.
+
+Civilian conversion creates a feedback loop: Zombie Golems can create zombie villagers, and zombie villagers increase spawn eligibility. The hard bound is `max_zombie_golems_per_village`. Maintenance spawning must recompute the current live Zombie Golem count before every spawn attempt and must not use a stale cached count from before a conversion event.
 
 This is not a raw spawn rate. It is a local desired-count maintenance rule that should avoid runaway spawning.
 
@@ -315,7 +321,7 @@ Add `tiers.zombie` with shared fields:
 }
 ```
 
-`anger_on_hit` remains present for schema consistency, but Zombie Golems are already hostile. Implementation planning should decide whether it is meaningful for Zombie Golems or simply ignored.
+`anger_on_hit` remains present for schema consistency but is always ignored for `ZOMBIE`. Zombie Golem hostile behavior is unconditional; changing `anger_on_hit` must not make a Zombie Golem friendly or passive.
 
 ### 12.2 Spawn Maintenance Defaults
 
@@ -372,7 +378,7 @@ Add top-level `zombie_village_spawning`:
 2. MultiGolem cancels or bypasses normal damage for that hit.
 3. MultiGolem rolls the configured conversion chance.
 4. On success, MultiGolem replaces the target with a zombie villager.
-5. On failure, implementation planning must decide whether the hit does no damage or falls back to normal damage. Design preference: no normal damage, because conversion is the intended behavior.
+5. On failure, the hit deals no normal damage. This is intentional: conversion is the mechanic, and a failed conversion roll must not silently become an Iron-Golem-strength civilian hit.
 
 ### 13.4 Zombie Village Maintenance
 
@@ -382,8 +388,9 @@ Add top-level `zombie_village_spawning`:
 4. It counts regular zombies only for optional bonus pressure.
 5. It counts existing Zombie Golems.
 6. It computes desired count and caps it at `max_zombie_golems_per_village`.
-7. If existing count is below desired count, it attempts to spawn a Zombie Golem at a safe village position.
-8. The spawned entity is a vanilla `IronGolem` with `GolemVariantAttachment` set to `ZOMBIE`.
+7. Before every spawn attempt, it recomputes or verifies the current live Zombie Golem count for the area.
+8. If existing count is below desired count, it attempts to spawn a Zombie Golem at a safe village position.
+9. The spawned entity is a vanilla `IronGolem` with `GolemVariantAttachment` set to `ZOMBIE`.
 
 ## 14. Source Spike Requirements
 
@@ -399,11 +406,14 @@ The implementation plan must start with source spikes for the highest-risk hooks
 - Exact targeting/goal hooks needed to keep Zombie Golems from attacking zombies and zombie villagers.
 - Whether zombie-ish sounds can be added without a custom entity type. If not clean, sounds should be deferred.
 - Exact village-area hook or maintenance mechanism for zombie-villager-driven spawning.
+- Whether all relevant generated zombie village pools produce live zombie villagers in-world. If not, pause for design review before changing the guarantee.
 - Whether a clean generated abandoned-village structure signal exists. If not, use the zombie-villager village-area rule.
 - Exact V4 spawn egg data/model path for adding `zombie`.
 - Exact spawner marker behavior for marked Zombie Golem eggs.
 
 If any spike proves that the feature requires a custom entity type, implementation must pause for design review.
+
+If the non-zombie-golem counterattack spike proves that modifying vanilla Iron Golem targeting requires changes too invasive for the variant-only architecture, implementation must pause for design review before proceeding.
 
 ## 15. Error Handling
 
@@ -459,15 +469,18 @@ Where the current test harness can support it:
 - Let a Zombie Golem hit a survival player. Confirm Hunger, Nausea, and Poison defaults.
 - Disable each sickness effect independently and confirm it no longer applies.
 - Let a Zombie Golem hit a villager. The villager becomes a zombie villager and does not take normal hit damage first.
+- Set `zombie_villager_conversion_chance` below `1.0` and force or repeat a failed conversion roll. The villager or wandering trader remains unharmed on failed conversion.
 - Let a Zombie Golem hit a wandering trader. The trader becomes a zombie villager.
 - Confirm trader llamas are not specially targeted or converted.
 - Confirm Zombie Golems ignore zombies and zombie villagers.
 - Confirm Zombie Golems fight vanilla Iron Golems.
 - Confirm Copper, Gold, Emerald, Diamond, and Netherite golems fight Zombie Golems.
 - Confirm regular zombies alone do not produce Zombie Golems.
+- Confirm 1 zombie villager plus 3 regular zombies can maintain up to 2 Zombie Golems by default.
 - Confirm an area with 1 zombie villager can spawn/maintain 1 Zombie Golem.
 - Confirm an area with enough zombie villagers can maintain up to 2 Zombie Golems by default.
 - Confirm existing Zombie Golems count against the cap.
+- Confirm conversion-created zombie villagers do not cause maintenance spawning above `max_zombie_golems_per_village`.
 - Confirm setting `max_zombie_golems_per_village` to `0` disables maintenance spawning but not player-built or egg-spawned Zombie Golems.
 
 ## 17. Documentation And Release Notes
@@ -491,7 +504,6 @@ These are plan/spike questions, not unresolved product decisions:
 - Can implementation reliably identify a "village area" without persisting new per-village state?
 - Can vanilla conversion helpers preserve enough villager/trader data, or is explicit replacement cleaner?
 - Can zombie-ish sounds be attached cleanly to an `IronGolem` variant?
-- Does `anger_on_hit` have any useful meaning for an always-hostile Zombie Golem, or should it be retained only for schema consistency?
 
 ## 19. Approved Design Decisions
 

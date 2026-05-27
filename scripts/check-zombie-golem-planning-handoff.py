@@ -35,6 +35,7 @@ REQUIRED_LESSONS_MARKERS = [
     "strict generated-structure filtering is not assumed",
     "IronGolem` + `GolemVariantAttachment",
     "Civilian conversion is the signature mechanic",
+    "current live Zombie Golem count",
     "python scripts/check-zombie-golem-planning-handoff.py",
 ]
 
@@ -60,12 +61,21 @@ REQUIRED_PLAN_MARKERS = [
     "marked",
     "spawn egg",
     "spawner",
+    "current live Zombie Golem count",
+    "failed conversion",
+    "deals no normal damage",
+    "anger_on_hit",
+    "ignored for `ZOMBIE`",
 ]
 
 REQUIRED_PLAN_SPIKE_MARKERS = [
     "village-area maintenance",
+    "generated zombie-village",
+    "zombie-villager template",
     "targeting",
     "faction",
+    "vanilla Iron Golem counterattack",
+    "too invasive",
     "conversion",
     "Rotten Flesh healing",
     "spawn egg",
