@@ -3,6 +3,7 @@ package dev.charles.multigolem.mixin;
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
+import dev.charles.multigolem.config.TierStats;
 import dev.charles.multigolem.permissions.MultiGolemPermissions;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
@@ -62,7 +63,7 @@ public abstract class IronGolemMixin {
         }
 
         float before = self.getHealth();
-        self.heal(25.0F);
+        self.heal(healAmount(variant, MultiGolem.config().tier(variant)));
         if (self.getHealth() == before) {
             // already full HP — do nothing (mimics vanilla PASS behavior)
             return;
@@ -71,5 +72,12 @@ public abstract class IronGolemMixin {
         self.playSound(SoundEvents.IRON_GOLEM_REPAIR, 1.0F, pitch);
         stack.consume(1, player);
         cir.setReturnValue(InteractionResult.SUCCESS);
+    }
+
+    static float healAmount(GolemVariant variant, TierStats stats) {
+        if (variant == GolemVariant.ZOMBIE && stats.zombieRottenFleshHealAmount() != null) {
+            return stats.zombieRottenFleshHealAmount().floatValue();
+        }
+        return 25.0F;
     }
 }
