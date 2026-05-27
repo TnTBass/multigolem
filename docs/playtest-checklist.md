@@ -217,6 +217,7 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 - [ ] Emerald Golem Spawn Egg spawns an emerald MultiGolem `IronGolem`.
 - [ ] Diamond Golem Spawn Egg spawns a diamond MultiGolem `IronGolem`.
 - [ ] Netherite Golem Spawn Egg spawns a netherite MultiGolem `IronGolem`.
+- [ ] Zombie Golem Spawn Egg spawns a zombie MultiGolem `IronGolem` and it is immediately hostile.
 - [ ] Denied normal marked egg use does not consume the egg.
 - [ ] Denied normal marked egg use may arm-swing; overlay denial feedback appears and no golem spawns.
 - [ ] Egg-spawned MultiGolem variants are not player-created.
@@ -236,4 +237,42 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 - [ ] Allowed marked egg use on a spawner configures the matching MultiGolem variant.
 - [ ] Unmarked vanilla iron golem spawn egg clears any previous MultiGolem spawner marker and remains vanilla-owned.
 - [ ] Spawner-spawned variants get attachment/stats and are not player-created.
+- [ ] Zombie Golem spawner spawns are immediately hostile.
 - [ ] Spawner thread-local cleanup cannot leak across spawn attempts.
+
+---
+
+# Zombie Golem - hostile corrupted golems
+
+## Creation and healing
+
+- [ ] Mossy Cobblestone T-pattern + carved pumpkin spawns a Zombie Golem.
+- [ ] Player-built Zombie Golem immediately attacks the creator.
+- [ ] Denied `multigolem.create.zombie` leaves all T-pattern blocks intact and no Zombie Golem spawns.
+- [ ] Damaged Zombie Golem heals with Rotten Flesh and checks `multigolem.heal.zombie`.
+- [ ] Full-health Zombie Golem plus Rotten Flesh is a no-op before permission checks.
+- [ ] Damaged Zombie Golem does not heal from Iron Ingot through vanilla fallback.
+- [ ] Denied `multigolem.heal.zombie` does not consume Rotten Flesh.
+
+## Combat and conversion
+
+- [ ] Zombie Golem player hit applies Hunger, Nausea, and Poison defaults.
+- [ ] Disabled Hunger, Nausea, and Poison effects are skipped independently.
+- [ ] Villager hit converts to zombie villager and takes no normal damage.
+- [ ] Failed villager conversion roll deals no normal damage.
+- [ ] Wandering trader hit converts to zombie villager and takes no normal damage.
+- [ ] Failed wandering trader conversion roll deals no normal damage.
+- [ ] Trader llamas are ignored.
+- [ ] Zombie Golems ignore zombies and zombie villagers.
+- [ ] Zombie Golems ignore other Zombie Golems.
+- [ ] Zombie Golems fight vanilla Iron Golems and non-zombie MultiGolems.
+- [ ] Vanilla Iron Golems and non-zombie MultiGolems can fight Zombie Golems.
+
+## Zombie-village maintenance
+
+- [ ] One zombie villager qualifies a village-area scan.
+- [ ] Regular zombies alone never qualify.
+- [ ] One zombie villager plus three regular zombies can reach the default max desired count.
+- [ ] Default max is 2 Zombie Golems per qualifying village area.
+- [ ] Current live Zombie Golem count is checked before every maintenance spawn attempt.
+- [ ] `max_zombie_golems_per_village = 0` disables maintenance spawning while craft and egg paths still work.

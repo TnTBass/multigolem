@@ -1,16 +1,17 @@
 # MultiGolem
 
-A Fabric mod for Minecraft 26.1.2 that adds Copper, Gold, Emerald, Diamond, and Netherite golem variants alongside the vanilla Iron Golem. Built by Tyler and Charles.
+A Fabric mod for Minecraft 26.1.2 that adds Copper, Gold, Emerald, Diamond, Netherite, and Zombie golem variants alongside the vanilla Iron Golem. Built by Tyler and Charles.
 
 ## What it does
 
-- Five new golem tiers, built like an Iron Golem (T-pattern + carved pumpkin) but with a different body block.
+- Six new golem tiers, built like an Iron Golem (T-pattern + carved pumpkin) but with a different body block.
 - Each tier has a unique texture on modded clients. Vanilla clients see all variants as regular iron golems.
 - Stats scale: Copper is weakest, Netherite is strongest (designed to beat a Warden 1v1).
-- Heal each golem with its matching ingot.
+- Heal each golem with its matching material.
 - Per-tier special abilities (see below).
 - Per-tier `ignored_target_types` — copper/gold/emerald/diamond/netherite ignore creepers by default to prevent collateral block damage.
-- Marked vanilla iron golem spawn eggs for Copper, Gold, Emerald, Diamond, and Netherite variants.
+- Hostile Zombie Golems built from Mossy Cobblestone, healed with Rotten Flesh, and maintained in zombie-villager village areas.
+- Marked vanilla iron golem spawn eggs for Copper, Gold, Emerald, Diamond, Netherite, and Zombie variants.
 - **Server-side functional.** Vanilla clients can connect with no mod installed; stats, drops, and creation all behave correctly.
 
 ## Recipes
@@ -25,6 +26,7 @@ Build a T-shape (1 base block, 1 center, 2 arms) out of one of:
 | Emerald Block | Emerald Golem |
 | Diamond Block | Diamond Golem |
 | Netherite Block | Netherite Golem |
+| Mossy Cobblestone | Zombie Golem |
 
 Place a carved pumpkin on top. Waxed and oxidized copper blocks work for MultiGolem's iron-golem-style Copper Golem. The vanilla single-copper-block + pumpkin recipe still spawns the vanilla Copper Golem (with its chest behavior).
 
@@ -38,6 +40,7 @@ Place a carved pumpkin on top. Waxed and oxidized copper blocks work for MultiGo
 | Emerald | 200 | 40.0 |
 | Diamond | 350 | 62.5 |
 | Netherite | 600 | 85.0 |
+| Zombie | 100 | 15.0 |
 
 ## Special Abilities
 
@@ -48,6 +51,7 @@ Place a carved pumpkin on top. Waxed and oxidized copper blocks work for MultiGo
 | Emerald | Heals passively while any villager or wandering trader is within 8 blocks |
 | Diamond | Passive LOS lightning zap of nearby hostiles (30–60s cooldown) + on-attack lightning; self-immune to lightning damage |
 | Netherite | Fully immune to fire and lava; ignites any mob it hits for 5 seconds |
+| Zombie | Hostile corrupted golem; heals from Rotten Flesh, spreads zombie villagers, applies sickness to players, and fights village defenders |
 
 All ability parameters are configurable per-tier in `config/multigolem.json`.
 
@@ -62,8 +66,9 @@ Top-level fields:
 | Field | Default | What it does |
 |---|---:|---|
 | `allow_golem_healing` | `true` | Enables or disables ingot-based healing for all golem tiers. |
+| `zombie_village_spawning` | object | Maintains Zombie Golems near zombie-villager village areas. Defaults to enabled, one zombie villager minimum, regular zombie bonus at 3, and max 2 Zombie Golems. |
 
-Each tier lives under `tiers.<tier_id>`, where `tier_id` is one of `copper`, `iron`, `gold`, `emerald`, `diamond`, or `netherite`.
+Each tier lives under `tiers.<tier_id>`, where `tier_id` is one of `copper`, `iron`, `gold`, `emerald`, `diamond`, `netherite`, or `zombie`.
 
 Shared per-tier fields:
 
@@ -95,6 +100,12 @@ Ability fields:
 | Netherite | `netherite_fire_immune` | `true` | Makes Netherite golems immune to fire and lava damage. |
 | Netherite | `netherite_ignite_seconds` | `5` | Seconds of fire applied to mobs hit by Netherite golems. Set to `0` to disable ignite-on-hit. |
 | Netherite | `netherite_village_ignite_seconds` | `0` | Seconds of fire applied by village-spawned Netherite golems. Village-spawned Netherite golems avoid ignite-on-hit by default so opt-in Netherite village defenders do not start fires unless configured. |
+| Zombie | `zombie_rotten_flesh_heal_amount` | `25.0` | HP restored when healing a Zombie Golem with Rotten Flesh. |
+| Zombie | `zombie_hunger_enabled`, `zombie_hunger_seconds`, `zombie_hunger_amplifier` | `true`, `12`, `0` | Hunger applied to players hit by Zombie Golems. |
+| Zombie | `zombie_nausea_enabled`, `zombie_nausea_seconds`, `zombie_nausea_amplifier` | `true`, `4`, `0` | Nausea applied to players hit by Zombie Golems. |
+| Zombie | `zombie_poison_enabled`, `zombie_poison_seconds`, `zombie_poison_amplifier` | `true`, `4`, `0` | Poison applied to players hit by Zombie Golems. |
+| Zombie | `zombie_convert_villagers_enabled`, `zombie_villager_conversion_chance` | `true`, `1.0` | Villager conversion to zombie villagers. Failed rolls deal no normal Iron Golem damage. |
+| Zombie | `zombie_convert_wandering_traders_enabled`, `zombie_wandering_trader_conversion_chance` | `true`, `1.0` | Wandering trader conversion to zombie villagers. Trader llamas are not special-cased. |
 
 ### Permissions
 
@@ -107,6 +118,7 @@ Creation permissions:
 - `multigolem.create.emerald`
 - `multigolem.create.diamond`
 - `multigolem.create.netherite`
+- `multigolem.create.zombie`
 
 Healing permissions:
 
@@ -116,6 +128,7 @@ Healing permissions:
 - `multigolem.heal.emerald`
 - `multigolem.heal.diamond`
 - `multigolem.heal.netherite`
+- `multigolem.heal.zombie`
 
 Bypass:
 
@@ -129,7 +142,8 @@ These nodes affect player-built MultiGolem T-pattern creation, ingot-based golem
 - **V2** ✅: Client textures, five special abilities, `ignored_target_types`, lossless V1→V2 config migration.
 - **V3** ✅: Village natural-spawn variant weighting.
 - **V3.1** ✅: LuckPerms-compatible permission nodes for creation and healing.
-- **V4** ✅: Spawn eggs for the 5 Iron Golem variants.
+- **V4** ✅: Spawn eggs for the Iron Golem variants.
+- **Zombie Golem** ✅: Hostile Mossy Cobblestone golems with Rotten Flesh healing, sickness effects, civilian conversion, marked eggs, and zombie-village maintenance.
 - **V5**: Copper Golem variants.
 
 ## License
