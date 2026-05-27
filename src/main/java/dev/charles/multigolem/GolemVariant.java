@@ -25,7 +25,8 @@ public enum GolemVariant {
     GOLD     ("gold",      "Gold",      Blocks.GOLD_BLOCK,      Items.GOLD_INGOT,      Items.GOLD_INGOT),
     EMERALD  ("emerald",   "Emerald",   Blocks.EMERALD_BLOCK,   Items.EMERALD,         Items.EMERALD),
     DIAMOND  ("diamond",   "Diamond",   Blocks.DIAMOND_BLOCK,   Items.DIAMOND,         Items.DIAMOND),
-    NETHERITE("netherite", "Netherite", Blocks.NETHERITE_BLOCK, Items.NETHERITE_INGOT, Items.NETHERITE_SCRAP);
+    NETHERITE("netherite", "Netherite", Blocks.NETHERITE_BLOCK, Items.NETHERITE_INGOT, Items.NETHERITE_SCRAP),
+    ZOMBIE   ("zombie",    "Zombie",    Blocks.MOSSY_COBBLESTONE, Items.ROTTEN_FLESH,  Items.ROTTEN_FLESH);
 
     public static final StreamCodec<ByteBuf, GolemVariant> STREAM_CODEC =
         ByteBufCodecs.STRING_UTF8.map(
