@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "multigolem:item/zombie_golem_spawn_egg"
+  }
+}

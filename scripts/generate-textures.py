@@ -18,6 +18,7 @@ TIERS = {
     "emerald":   {"hue_shift": 110, "saturation": 1.45, "lightness": 0.85},
     "diamond":   {"hue_shift": 165, "saturation": 1.00, "lightness": 1.12},
     "netherite": {"hue_shift": 280, "saturation": 0.34, "lightness": 0.36},
+    "zombie":    {"hue_shift": 92,  "saturation": 0.72, "lightness": 0.62},
 }
 
 def shift_hue(img: Image.Image, hue_deg: float, sat_mul: float, lum_mul: float) -> Image.Image:
@@ -165,6 +166,27 @@ def apply_material_details(tier: str, img: Image.Image) -> Image.Image:
             [(42, 6), (48, 15), (42, 22)],
         ], (24, 99, 58, 150))
 
+    elif tier == "zombie":
+        img = blend_material(img, (68, 108, 54), 0.42)
+        draw_rects(draw, [
+            (12, 52, 17, 11), (66, 28, 5, 25), (42, 6, 6, 16),
+            (65, 6, 6, 16), (40, 51, 18, 12), (76, 64, 4, 28),
+        ], (57, 88, 43, 150))
+        draw_lines(draw, [
+            [(13, 52), (17, 58), (15, 64)],
+            [(68, 29), (67, 39), (70, 50)],
+            [(43, 7), (45, 14), (43, 21)],
+            [(66, 8), (69, 15), (67, 21)],
+            [(42, 52), (50, 57), (57, 62)],
+        ], (101, 132, 61, 185), width=2)
+        draw_rects(draw, [
+            (14, 55, 3, 3), (22, 59, 4, 2), (69, 36, 2, 5),
+            (44, 15, 2, 3), (67, 17, 3, 2), (51, 56, 4, 3),
+        ], (138, 171, 86, 220))
+        draw_rects(draw, [
+            (8, 13, 2, 2), (13, 13, 2, 2),
+        ], (177, 36, 28, 220))
+
     return Image.alpha_composite(img.convert("RGBA"), overlay)
 
 def apply_spawn_egg_material_details(tier: str, img: Image.Image) -> Image.Image:
@@ -193,6 +215,11 @@ def apply_spawn_egg_material_details(tier: str, img: Image.Image) -> Image.Image
         cracks = [[(5, 4), (5, 7), (6, 9)], [(9, 5), (10, 8), (9, 12)], [(12, 4), (11, 7), (12, 10)]]
         draw_lines(draw, cracks, (106, 28, 17, 170), width=2)
         draw_lines(draw, cracks, (255, 91, 29, 255), width=1)
+    elif tier == "zombie":
+        img = blend_material(img, (68, 108, 54), 0.48)
+        draw_rects(draw, [(4, 4, 5, 3), (9, 8, 3, 3), (5, 12, 4, 1)], (59, 92, 44, 190))
+        draw_lines(draw, [[(5, 4), (6, 7), (5, 11)], [(10, 5), (9, 8), (11, 12)]], (131, 162, 84, 220))
+        draw_rects(draw, [(7, 5, 1, 1), (11, 7, 1, 1)], (177, 36, 28, 230))
     return Image.alpha_composite(img.convert("RGBA"), overlay)
 
 def generate_spawn_egg_icon(tier: str, params: dict[str, float]) -> Image.Image:
