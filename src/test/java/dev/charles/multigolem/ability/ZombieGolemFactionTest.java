@@ -1,0 +1,47 @@
+package dev.charles.multigolem.ability;
+
+import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.test.MinecraftBootstrap;
+import net.minecraft.world.entity.animal.golem.IronGolem;
+import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.monster.zombie.ZombieVillager;
+import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.entity.npc.wanderingtrader.WanderingTrader;
+import net.minecraft.world.entity.player.Player;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+class ZombieGolemFactionTest {
+
+    @BeforeAll
+    static void bootstrap() {
+        MinecraftBootstrap.ensure();
+    }
+
+    @Test
+    void zombieGolemTargetsPlayersCiviliansAndNonZombieGolems() {
+        assertTrue(ZombieGolemFaction.zombieGolemCanTargetClass(Player.class, GolemVariant.IRON));
+        assertTrue(ZombieGolemFaction.zombieGolemCanTargetClass(Villager.class, GolemVariant.IRON));
+        assertTrue(ZombieGolemFaction.zombieGolemCanTargetClass(WanderingTrader.class, GolemVariant.IRON));
+        assertTrue(ZombieGolemFaction.zombieGolemCanTargetClass(IronGolem.class, GolemVariant.IRON));
+        assertTrue(ZombieGolemFaction.zombieGolemCanTargetClass(IronGolem.class, GolemVariant.GOLD));
+    }
+
+    @Test
+    void zombieGolemIgnoresZombieFamilyAndZombieGolems() {
+        assertFalse(ZombieGolemFaction.zombieGolemCanTargetClass(Zombie.class, GolemVariant.IRON));
+        assertFalse(ZombieGolemFaction.zombieGolemCanTargetClass(ZombieVillager.class, GolemVariant.IRON));
+        assertFalse(ZombieGolemFaction.zombieGolemCanTargetClass(IronGolem.class, GolemVariant.ZOMBIE));
+    }
+
+    @Test
+    void nonZombieGolemsTreatZombieGolemsAsTargets() {
+        assertTrue(ZombieGolemFaction.nonZombieGolemCanTarget(GolemVariant.IRON, GolemVariant.ZOMBIE));
+        assertTrue(ZombieGolemFaction.nonZombieGolemCanTarget(GolemVariant.DIAMOND, GolemVariant.ZOMBIE));
+        assertFalse(ZombieGolemFaction.nonZombieGolemCanTarget(GolemVariant.ZOMBIE, GolemVariant.ZOMBIE));
+        assertFalse(ZombieGolemFaction.nonZombieGolemCanTarget(GolemVariant.GOLD, GolemVariant.IRON));
+    }
+}

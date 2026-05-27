@@ -2,6 +2,7 @@ package dev.charles.multigolem.mixin;
 
 import dev.charles.multigolem.MultiGolem;
 import dev.charles.multigolem.ability.TargetFilter;
+import dev.charles.multigolem.ability.ZombieGolemFaction;
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -20,6 +21,10 @@ public abstract class GolemTargetingMixin {
         Mob self = (Mob) (Object) this;
         if (!(self instanceof IronGolem golem)) return;
         if (target == null) return;
+        if (ZombieGolemFaction.shouldCancelTarget(golem, target)) {
+            ci.cancel();
+            return;
+        }
         var variant = GolemVariantAttachment.get(golem);
         var filter = TargetFilter.fromIgnoredList(MultiGolem.config().tier(variant).ignoredTargetTypes());
         if (filter.isExcluded(target)) {
