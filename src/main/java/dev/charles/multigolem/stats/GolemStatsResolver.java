@@ -46,4 +46,5 @@ public final class GolemStatsResolver {
     // V2 netherite-only
     public boolean netheriteFireImmune() { return config.tier(GolemVariant.NETHERITE).netheriteFireImmune(); }
     public int netheriteIgniteSeconds() { return config.tier(GolemVariant.NETHERITE).netheriteIgniteSeconds(); }
+    public int netheriteVillageIgniteSeconds() { return config.tier(GolemVariant.NETHERITE).netheriteVillageIgniteSeconds(); }
 }

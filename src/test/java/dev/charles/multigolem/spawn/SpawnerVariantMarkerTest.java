@@ -27,6 +27,17 @@ class SpawnerVariantMarkerTest {
     }
 
     @Test
+    void zombieSpawnerMarkerRoundTrips() {
+        CompoundTag entity = new CompoundTag();
+        entity.putString("id", "minecraft:iron_golem");
+
+        SpawnerVariantMarker.write(entity, GolemVariant.ZOMBIE);
+
+        assertEquals("minecraft:iron_golem", entity.getStringOr("id", ""));
+        assertEquals(GolemVariant.ZOMBIE, SpawnerVariantMarker.read(entity).orElseThrow());
+    }
+
+    @Test
     void unmarkedSpawnerEntityTagReadsEmpty() {
         CompoundTag entity = new CompoundTag();
         entity.putString("id", "minecraft:iron_golem");

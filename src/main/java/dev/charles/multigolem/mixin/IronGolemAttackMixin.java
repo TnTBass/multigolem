@@ -3,15 +3,21 @@ package dev.charles.multigolem.mixin;
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
 import dev.charles.multigolem.ability.DiamondAbility;
+import dev.charles.multigolem.ability.GolemCombatRules;
 import dev.charles.multigolem.ability.TargetFilter;
+import dev.charles.multigolem.ability.ZombieGolemConversion;
+import dev.charles.multigolem.ability.ZombieGolemEffects;
 import dev.charles.multigolem.attachment.GolemAbilityState;
 import dev.charles.multigolem.attachment.GolemAbilityStateAttachment;
+import dev.charles.multigolem.attachment.GolemSpawnOriginAttachment;
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
+import dev.charles.multigolem.config.TierStats;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.golem.IronGolem;
+import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -23,6 +29,24 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  */
 @Mixin(IronGolem.class)
 public abstract class IronGolemAttackMixin {
+
+    @Inject(method = "doHurtTarget(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;)Z",
+            at = @At("HEAD"), cancellable = true)
+    private void multigolem$zombieCivilianConversion(ServerLevel level, Entity target,
+                                                     CallbackInfoReturnable<Boolean> cir) {
+        if (target == null || !target.isAlive() || target.isRemoved()) return;
+        IronGolem self = (IronGolem) (Object) this;
+        if (GolemVariantAttachment.get(self) != GolemVariant.ZOMBIE) return;
+        TierStats stats = MultiGolem.config().tier(GolemVariant.ZOMBIE);
+        try {
+            if (ZombieGolemConversion.handle(level, target, stats, level.getRandom().nextDouble())) {
+                cir.setReturnValue(true);
+            }
+        } catch (Throwable t) {
+            MultiGolem.LOG.error("IronGolemAttackMixin zombie conversion failed", t);
+            cir.setReturnValue(true);
+        }
+    }
 
     @Inject(method = "doHurtTarget(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;)Z",
             at = @At("TAIL"))
@@ -72,16 +96,26 @@ public abstract class IronGolemAttackMixin {
         }
 
         if (variant == GolemVariant.NETHERITE) {
-            if (!MultiGolem.config().tier(GolemVariant.NETHERITE).netheriteFireImmune()) return;
+            TierStats stats = MultiGolem.config().tier(GolemVariant.NETHERITE);
+            if (!stats.netheriteFireImmune()) return;
             if (target instanceof IronGolem otherGolem
-                    && GolemVariantAttachment.get(otherGolem) == GolemVariant.NETHERITE
-                    && MultiGolem.config().tier(GolemVariant.NETHERITE).netheriteFireImmune()) {
+                    && GolemVariantAttachment.get(otherGolem) == GolemVariant.NETHERITE) {
                 return;
             }
-            int seconds = MultiGolem.config().tier(GolemVariant.NETHERITE).netheriteIgniteSeconds();
+            int seconds = netheriteIgniteSeconds(stats, self);
             if (seconds > 0) {
                 target.igniteForSeconds(seconds);
             }
         }
+
+        if (variant == GolemVariant.ZOMBIE && target instanceof Player player) {
+            for (var effect : ZombieGolemEffects.effects(MultiGolem.config().tier(GolemVariant.ZOMBIE))) {
+                player.addEffect(effect);
+            }
+        }
+    }
+
+    private static int netheriteIgniteSeconds(TierStats stats, IronGolem self) {
+        return GolemCombatRules.netheriteIgniteSeconds(stats, GolemSpawnOriginAttachment.get(self));
     }
 }

@@ -29,6 +29,8 @@ class MultiGolemConfigTest {
         assertEquals(15.0, cfg.tier(GolemVariant.IRON).attackDamage(), 0.0001);
         assertEquals(600,  cfg.tier(GolemVariant.NETHERITE).maxHealth());
         assertEquals(85.0, cfg.tier(GolemVariant.NETHERITE).attackDamage(), 0.0001);
+        assertEquals(100,  cfg.tier(GolemVariant.ZOMBIE).maxHealth());
+        assertEquals(15.0, cfg.tier(GolemVariant.ZOMBIE).attackDamage(), 0.0001);
         for (GolemVariant v : GolemVariant.values()) {
             assertTrue(cfg.tier(v).angerOnHit(), v + " should default angerOnHit=true");
         }
@@ -113,5 +115,6 @@ class MultiGolemConfigTest {
         assertEquals(70, cfg.tier(GolemVariant.COPPER).maxHealth());
         assertEquals(100, cfg.tier(GolemVariant.IRON).maxHealth(), "missing tier uses default");
         assertEquals(600, cfg.tier(GolemVariant.NETHERITE).maxHealth(), "missing tier uses default");
+        assertEquals(100, cfg.tier(GolemVariant.ZOMBIE).maxHealth(), "missing zombie tier uses default");
     }
 }

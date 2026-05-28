@@ -55,6 +55,16 @@ class GolemVariantTest {
     }
 
     @Test
+    void zombieUsesMossyCobblestoneAndRottenFlesh() {
+        assertEquals(GolemVariant.ZOMBIE, GolemVariant.fromBodyBlock(Blocks.MOSSY_COBBLESTONE).orElseThrow());
+        assertTrue(GolemVariant.ZOMBIE.matchesBodyBlock(Blocks.MOSSY_COBBLESTONE.defaultBlockState()));
+        assertEquals(GolemVariant.ZOMBIE, GolemVariant.fromIngot(Items.ROTTEN_FLESH).orElseThrow());
+        assertEquals(Items.ROTTEN_FLESH, GolemVariant.ZOMBIE.dropItem());
+        assertEquals("zombie", GolemVariant.ZOMBIE.id());
+        assertEquals("Zombie", GolemVariant.ZOMBIE.displayName());
+    }
+
+    @Test
     void idIsStableLowercase() {
         assertEquals("copper",    GolemVariant.COPPER.id());
         assertEquals("iron",      GolemVariant.IRON.id());

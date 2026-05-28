@@ -22,7 +22,8 @@ class MultiGolemConfigV3Test {
 
     @Test
     void defaults_V3_villageSpawningFields() {
-        VillageSpawnWeights weights = MultiGolemConfig.defaults().villageSpawnWeights();
+        MultiGolemConfig cfg = MultiGolemConfig.defaults();
+        VillageSpawnWeights weights = cfg.villageSpawnWeights();
         assertTrue(weights.enabled());
         assertEquals(19, weights.weight(GolemVariant.IRON));
         assertEquals(19, weights.weight(GolemVariant.COPPER));
@@ -30,6 +31,8 @@ class MultiGolemConfigV3Test {
         assertEquals(19, weights.weight(GolemVariant.EMERALD));
         assertEquals(5, weights.weight(GolemVariant.DIAMOND));
         assertEquals(0, weights.weight(GolemVariant.NETHERITE));
+        assertEquals(5, cfg.tier(GolemVariant.NETHERITE).netheriteIgniteSeconds());
+        assertEquals(0, cfg.tier(GolemVariant.NETHERITE).netheriteVillageIgniteSeconds());
     }
 
     @Test
@@ -59,6 +62,7 @@ class MultiGolemConfigV3Test {
         String after = Files.readString(file);
         assertTrue(after.contains("\"village_spawning\""));
         assertTrue(after.contains("villages are made of wood"));
+        assertTrue(after.contains("\"netherite_village_ignite_seconds\": 0"));
         assertTrue(after.contains("_user_note"));
         assertTrue(after.contains("_tier_note"));
 

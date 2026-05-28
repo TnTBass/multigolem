@@ -19,6 +19,7 @@ GENERATED_TEXTURES = (
     "emerald_golem.png",
     "diamond_golem.png",
     "netherite_golem.png",
+    "zombie_golem.png",
 )
 GENERATED_SPAWN_EGG_TEXTURES = (
     "copper_golem_spawn_egg.png",
@@ -26,6 +27,7 @@ GENERATED_SPAWN_EGG_TEXTURES = (
     "emerald_golem_spawn_egg.png",
     "diamond_golem_spawn_egg.png",
     "netherite_golem_spawn_egg.png",
+    "zombie_golem_spawn_egg.png",
 )
 
 

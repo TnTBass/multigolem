@@ -9,6 +9,8 @@
     "BlockItemMixin",
     "LivingEntityMixin",
     "GolemTargetingMixin",
+    "MobTargetSelectorAccessor",
+    "IronGolemRegisterGoalsMixin",
     "IronGolemAttackMixin",
     "VillagerMixin",
     "BaseSpawnerAccessor",

@@ -1,5 +1,5 @@
 {
   "modmenu.nameTranslation.multigolem": "MultiGolem",
-  "modmenu.summaryTranslation.multigolem": "Material-based iron golem variants with server-side gameplay.",
-  "modmenu.descriptionTranslation.multigolem": "Adds Copper, Gold, Emerald, Diamond, and Netherite variants of the vanilla Iron Golem, including configurable stats, abilities, village spawns, permissions, and marked spawn eggs. Server-side gameplay works for vanilla clients; modded clients get custom textures and item visuals."
+  "modmenu.summaryTranslation.multigolem": "Material-based and Zombie iron golem variants with server-side gameplay.",
+  "modmenu.descriptionTranslation.multigolem": "Adds Copper, Gold, Emerald, Diamond, Netherite, and Zombie variants of the vanilla Iron Golem, including configurable stats, abilities, village spawns, permissions, and marked spawn eggs. Server-side gameplay works for vanilla clients; modded clients get custom textures and item visuals."
 }

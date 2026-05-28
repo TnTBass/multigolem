@@ -2,6 +2,8 @@ package dev.charles.multigolem.spawn;
 
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
+import dev.charles.multigolem.attachment.GolemSpawnOrigin;
+import dev.charles.multigolem.attachment.GolemSpawnOriginAttachment;
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
 import net.minecraft.world.entity.animal.golem.IronGolem;
 
@@ -21,9 +23,23 @@ public final class VillageGolemSpawnHandler {
     }
 
     private static void applyVariant(IronGolem golem, GolemVariant variant) {
+        applyVariant(golem, variant, VillageGolemSpawnHandler::applyVariantAttachments);
+    }
+
+    static void applyVariant(IronGolem golem, GolemVariant variant, VillageVariantApplier applier) {
         if (variant == GolemVariant.IRON) return;
 
-        GolemVariantAttachment.set(golem, variant);
+        applier.apply(golem, variant, GolemSpawnOrigin.VILLAGE);
         golem.setHealth(golem.getMaxHealth());
+    }
+
+    private static void applyVariantAttachments(IronGolem golem, GolemVariant variant, GolemSpawnOrigin origin) {
+        GolemVariantAttachment.set(golem, variant);
+        GolemSpawnOriginAttachment.set(golem, origin);
+    }
+
+    @FunctionalInterface
+    interface VillageVariantApplier {
+        void apply(IronGolem golem, GolemVariant variant, GolemSpawnOrigin origin);
     }
 }

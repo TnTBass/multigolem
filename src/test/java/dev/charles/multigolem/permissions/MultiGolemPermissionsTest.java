@@ -66,6 +66,16 @@ class MultiGolemPermissionsTest {
     }
 
     @Test
+    void zombiePermissionNodesArePermissiveByDefault() {
+        MultiGolemPermissions.PermissionLookup lookup = (node, defaultValue) -> defaultValue;
+
+        assertTrue(MultiGolemPermissions.canCreate(GolemVariant.ZOMBIE, lookup));
+        assertTrue(MultiGolemPermissions.canHeal(GolemVariant.ZOMBIE, lookup));
+        assertEquals("multigolem.create.zombie", MultiGolemPermissions.createNode(GolemVariant.ZOMBIE));
+        assertEquals("multigolem.heal.zombie", MultiGolemPermissions.healNode(GolemVariant.ZOMBIE));
+    }
+
+    @Test
     void explicitTierDenial_returnsFalseWhenBypassAbsent() {
         MultiGolemPermissions.PermissionLookup lookup = (node, defaultValue) ->
             node.equals(MultiGolemPermissions.ADMIN_BYPASS_NODE) ? false : !node.equals("multigolem.create.diamond");

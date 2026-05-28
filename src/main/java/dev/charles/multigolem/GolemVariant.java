@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -25,7 +26,8 @@ public enum GolemVariant {
     GOLD     ("gold",      "Gold",      Blocks.GOLD_BLOCK,      Items.GOLD_INGOT,      Items.GOLD_INGOT),
     EMERALD  ("emerald",   "Emerald",   Blocks.EMERALD_BLOCK,   Items.EMERALD,         Items.EMERALD),
     DIAMOND  ("diamond",   "Diamond",   Blocks.DIAMOND_BLOCK,   Items.DIAMOND,         Items.DIAMOND),
-    NETHERITE("netherite", "Netherite", Blocks.NETHERITE_BLOCK, Items.NETHERITE_INGOT, Items.NETHERITE_SCRAP);
+    NETHERITE("netherite", "Netherite", Blocks.NETHERITE_BLOCK, Items.NETHERITE_INGOT, Items.NETHERITE_SCRAP),
+    ZOMBIE   ("zombie",    "Zombie",    Blocks.MOSSY_COBBLESTONE, Items.ROTTEN_FLESH,  Items.ROTTEN_FLESH);
 
     public static final StreamCodec<ByteBuf, GolemVariant> STREAM_CODEC =
         ByteBufCodecs.STRING_UTF8.map(
@@ -65,6 +67,12 @@ public enum GolemVariant {
     public Block bodyBlock() { return bodyBlock; }
     public Item healIngot() { return healIngot; }
     public Item dropItem() { return dropItem; }
+
+    public static List<GolemVariant> nonIronVariants() {
+        return Arrays.stream(values())
+            .filter(variant -> variant != IRON)
+            .toList();
+    }
 
     public boolean matchesBodyBlock(BlockState state) {
         if (this == COPPER) {

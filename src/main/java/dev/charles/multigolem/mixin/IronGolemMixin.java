@@ -2,6 +2,7 @@ package dev.charles.multigolem.mixin;
 
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
+import dev.charles.multigolem.ability.GolemCombatRules;
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
 import dev.charles.multigolem.permissions.MultiGolemPermissions;
 import net.minecraft.sounds.SoundEvents;
@@ -62,7 +63,7 @@ public abstract class IronGolemMixin {
         }
 
         float before = self.getHealth();
-        self.heal(25.0F);
+        self.heal(GolemCombatRules.healAmount(variant, MultiGolem.config().tier(variant)));
         if (self.getHealth() == before) {
             // already full HP — do nothing (mimics vanilla PASS behavior)
             return;

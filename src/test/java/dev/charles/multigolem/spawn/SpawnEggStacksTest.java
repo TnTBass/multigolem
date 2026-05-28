@@ -27,7 +27,8 @@ class SpawnEggStacksTest {
             GolemVariant.GOLD,
             GolemVariant.EMERALD,
             GolemVariant.DIAMOND,
-            GolemVariant.NETHERITE
+            GolemVariant.NETHERITE,
+            GolemVariant.ZOMBIE
         )) {
             ItemStack stack = SpawnEggStacks.create(variant);
 
@@ -49,6 +50,8 @@ class SpawnEggStacksTest {
             SpawnEggStacks.create(GolemVariant.DIAMOND).get(DataComponents.ITEM_NAME).getString());
         assertEquals("Netherite Golem Spawn Egg",
             SpawnEggStacks.create(GolemVariant.NETHERITE).get(DataComponents.ITEM_NAME).getString());
+        assertEquals("Zombie Golem Spawn Egg",
+            SpawnEggStacks.create(GolemVariant.ZOMBIE).get(DataComponents.ITEM_NAME).getString());
     }
 
     @Test

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.4.0+mc26.1.2 — 2026-05-28
+
+- Added hostile Zombie Golems built from Mossy Cobblestone. They heal with Rotten Flesh, apply Hunger/Nausea/Poison to players, convert villagers and wandering traders into zombie villagers, fight village defenders, and stay allied with zombies, zombie villagers, and other Zombie Golems.
+- Added Zombie Golem spawn support through marked spawn eggs, marked spawners, and zombie-village maintenance spawning.
+- Added permissive-by-default `multigolem.create.zombie` and `multigolem.heal.zombie` permissions.
+- Added separate `netherite_village_ignite_seconds` config so server admins can opt Netherite village defenders into ignite-on-hit separately from player-built and other non-village Netherite golems.
+
 ## 0.3.0+mc26.1.2 — 2026-05-24
 
 - Disabled golem healing no longer plays the normal heal feedback when players use matching materials on damaged golems.
