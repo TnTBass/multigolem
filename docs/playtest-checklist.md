@@ -264,6 +264,8 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 - [ ] Failed wandering trader conversion roll deals no normal damage.
 - [ ] Trader llamas are ignored.
 - [ ] Zombie Golems ignore zombies and zombie villagers.
+- [ ] Converted zombie villagers do not attack the Zombie Golem that converted them.
+- [ ] Adult villagers convert into adult zombie villagers; baby villagers convert into baby zombie villagers.
 - [ ] Zombie Golems ignore other Zombie Golems.
 - [ ] Zombie Golems fight vanilla Iron Golems and non-zombie MultiGolems.
 - [ ] Vanilla Iron Golems and non-zombie MultiGolems can fight Zombie Golems.

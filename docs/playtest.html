@@ -222,6 +222,7 @@
 <label><input type="checkbox"> Emerald Golem Spawn Egg spawns an emerald MultiGolem <code>IronGolem</code>.</label>
 <label><input type="checkbox"> Diamond Golem Spawn Egg spawns a diamond MultiGolem <code>IronGolem</code>.</label>
 <label><input type="checkbox"> Netherite Golem Spawn Egg spawns a netherite MultiGolem <code>IronGolem</code>.</label>
+<label><input type="checkbox"> Zombie Golem Spawn Egg spawns a zombie MultiGolem <code>IronGolem</code> and it is immediately hostile.</label>
 <label><input type="checkbox"> Denied normal marked egg use does not consume the egg.</label>
 <label><input type="checkbox"> Denied normal marked egg use may arm-swing; overlay denial feedback appears and no golem spawns.</label>
 <label><input type="checkbox"> Egg-spawned MultiGolem variants are not player-created.</label>
@@ -239,10 +240,47 @@
 <label><input type="checkbox"> Allowed marked egg use on a spawner configures the matching MultiGolem variant.</label>
 <label><input type="checkbox"> Unmarked vanilla iron golem spawn egg clears any previous MultiGolem spawner marker and remains vanilla-owned.</label>
 <label><input type="checkbox"> Spawner-spawned variants get attachment/stats and are not player-created.</label>
+<label><input type="checkbox"> Zombie Golem spawner spawns are immediately hostile.</label>
 <label><input type="checkbox"> Spawner thread-local cleanup cannot leak across spawn attempts.</label>
 
+<hr>
+
+<div class="version">Zombie Golem - hostile corrupted golems</div>
+
+<h3>Creation and healing</h3>
+<label><input type="checkbox"> Mossy Cobblestone T-pattern + carved pumpkin spawns a Zombie Golem.</label>
+<label><input type="checkbox"> Player-built Zombie Golem immediately attacks the creator.</label>
+<label><input type="checkbox"> Denied <code>multigolem.create.zombie</code> leaves all T-pattern blocks intact and no Zombie Golem spawns.</label>
+<label><input type="checkbox"> Damaged Zombie Golem heals with Rotten Flesh and checks <code>multigolem.heal.zombie</code>.</label>
+<label><input type="checkbox"> Full-health Zombie Golem plus Rotten Flesh is a no-op before permission checks.</label>
+<label><input type="checkbox"> Damaged Zombie Golem does not heal from Iron Ingot through vanilla fallback.</label>
+<label><input type="checkbox"> Denied <code>multigolem.heal.zombie</code> does not consume Rotten Flesh.</label>
+
+<h3>Combat and conversion</h3>
+<label><input type="checkbox"> Zombie Golem player hit applies Hunger, Nausea, and Poison defaults.</label>
+<label><input type="checkbox"> Disabled Hunger, Nausea, and Poison effects are skipped independently.</label>
+<label><input type="checkbox"> Villager hit converts to zombie villager and takes no normal damage.</label>
+<label><input type="checkbox"> Failed villager conversion roll deals no normal damage.</label>
+<label><input type="checkbox"> Wandering trader hit converts to zombie villager and takes no normal damage.</label>
+<label><input type="checkbox"> Failed wandering trader conversion roll deals no normal damage.</label>
+<label><input type="checkbox"> Trader llamas are ignored.</label>
+<label><input type="checkbox"> Zombie Golems ignore zombies and zombie villagers.</label>
+<label><input type="checkbox"> Converted zombie villagers do not attack the Zombie Golem that converted them.</label>
+<label><input type="checkbox"> Adult villagers convert into adult zombie villagers; baby villagers convert into baby zombie villagers.</label>
+<label><input type="checkbox"> Zombie Golems ignore other Zombie Golems.</label>
+<label><input type="checkbox"> Zombie Golems fight vanilla Iron Golems and non-zombie MultiGolems.</label>
+<label><input type="checkbox"> Vanilla Iron Golems and non-zombie MultiGolems can fight Zombie Golems.</label>
+
+<h3>Zombie-village maintenance</h3>
+<label><input type="checkbox"> One zombie villager qualifies a village-area scan.</label>
+<label><input type="checkbox"> Regular zombies alone never qualify.</label>
+<label><input type="checkbox"> One zombie villager plus three regular zombies can reach the default max desired count.</label>
+<label><input type="checkbox"> Default max is 2 Zombie Golems per qualifying village area.</label>
+<label><input type="checkbox"> Current live Zombie Golem count is checked before every maintenance spawn attempt.</label>
+<label><input type="checkbox"> <code>max_zombie_golems_per_village = 0</code> disables maintenance spawning while craft and egg paths still work.</label>
+
 <script>
-  const STORAGE_KEY = 'multigolem-playtest-v4';
+  const STORAGE_KEY = 'multigolem-playtest-zombie-golem';
 
   function allBoxes() {
     return Array.from(document.querySelectorAll('input[type=checkbox]'));

@@ -3,6 +3,7 @@ package dev.charles.multigolem.ability;
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import net.minecraft.world.entity.animal.golem.IronGolem;
+import net.minecraft.world.entity.monster.skeleton.Skeleton;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.monster.zombie.ZombieVillager;
 import net.minecraft.world.entity.npc.villager.Villager;
@@ -38,6 +39,21 @@ class ZombieGolemFactionTest {
     }
 
     @Test
+    void zombieFamilyDoesNotTargetZombieGolems() {
+        assertFalse(ZombieGolemFaction.zombieFamilyCanTargetGolem(Zombie.class, GolemVariant.ZOMBIE));
+        assertFalse(ZombieGolemFaction.zombieFamilyCanTargetGolem(ZombieVillager.class, GolemVariant.ZOMBIE));
+        assertTrue(ZombieGolemFaction.zombieFamilyCanTargetGolem(Zombie.class, GolemVariant.IRON));
+        assertTrue(ZombieGolemFaction.zombieFamilyCanTargetGolem(ZombieVillager.class, GolemVariant.GOLD));
+        assertTrue(ZombieGolemFaction.zombieFamilyCanTargetGolem(Skeleton.class, GolemVariant.ZOMBIE));
+    }
+
+    @Test
+    void convertedZombieVillagersCannotKeepFightsAliveWithZombieGolems() {
+        assertFalse(ZombieGolemFaction.zombieFamilyCanTargetGolem(ZombieVillager.class, GolemVariant.ZOMBIE));
+        assertFalse(ZombieGolemFaction.zombieGolemCanTargetClass(ZombieVillager.class, GolemVariant.IRON, true));
+    }
+
+    @Test
     void nonZombieGolemsTreatZombieGolemsAsTargets() {
         assertTrue(ZombieGolemFaction.nonZombieGolemCanTarget(GolemVariant.IRON, GolemVariant.ZOMBIE));
         assertTrue(ZombieGolemFaction.nonZombieGolemCanTarget(GolemVariant.DIAMOND, GolemVariant.ZOMBIE));
@@ -56,8 +72,11 @@ class ZombieGolemFactionTest {
     }
 
     @Test
-    void zombieGolemSelfDefenseAllowsItsRecentAttackerOnly() {
-        assertTrue(ZombieGolemFaction.zombieGolemCanTargetClass(Zombie.class, GolemVariant.IRON, true));
-        assertFalse(ZombieGolemFaction.zombieGolemCanTargetClass(Zombie.class, GolemVariant.IRON, false));
+    void zombieGolemSelfDefenseStillIgnoresZombieFamily() {
+        // Zombie golems and zombie-family mobs are one faction by design, so retaliation should not
+        // restart fights after conversion or incidental zombie damage.
+        assertFalse(ZombieGolemFaction.zombieGolemCanTargetClass(Zombie.class, GolemVariant.IRON, true));
+        assertFalse(ZombieGolemFaction.zombieGolemCanTargetClass(ZombieVillager.class, GolemVariant.IRON, true));
+        assertTrue(ZombieGolemFaction.zombieGolemCanTargetClass(Player.class, GolemVariant.IRON, true));
     }
 }

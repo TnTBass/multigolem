@@ -3,7 +3,7 @@
   "id": "multigolem",
   "version": "${version}",
   "name": "MultiGolem",
-  "description": "Adds Copper, Gold, Emerald, Diamond, and Netherite Iron Golem variants. Server-side functional; vanilla clients welcome.",
+  "description": "Adds Copper, Gold, Emerald, Diamond, Netherite, and Zombie Iron Golem variants. Server-side functional; vanilla clients welcome.",
   "icon": "assets/multigolem/icon.png",
   "authors": [
     "Tyler",

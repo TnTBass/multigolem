@@ -23,6 +23,10 @@
       {
         "when": "{multigolem:{variant:\"netherite\"}}",
         "model": { "type": "minecraft:model", "model": "multigolem:item/netherite_golem_spawn_egg" }
+      },
+      {
+        "when": "{multigolem:{variant:\"zombie\"}}",
+        "model": { "type": "minecraft:model", "model": "multigolem:item/zombie_golem_spawn_egg" }
       }
     ],
     "fallback": {

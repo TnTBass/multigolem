@@ -1,5 +1,6 @@
 package dev.charles.multigolem.mixin;
 
+import dev.charles.multigolem.ability.GolemCombatRules;
 import dev.charles.multigolem.attachment.GolemSpawnOrigin;
 import dev.charles.multigolem.config.TierStats;
 import org.junit.jupiter.api.Test;
@@ -20,9 +21,9 @@ class IronGolemAttackMixinTest {
             true, 7, 3);
 
         assertEquals(3,
-            IronGolemAttackMixin.netheriteIgniteSeconds(stats, GolemSpawnOrigin.VILLAGE));
+            GolemCombatRules.netheriteIgniteSeconds(stats, GolemSpawnOrigin.VILLAGE));
         assertEquals(7,
-            IronGolemAttackMixin.netheriteIgniteSeconds(stats, GolemSpawnOrigin.UNKNOWN));
+            GolemCombatRules.netheriteIgniteSeconds(stats, GolemSpawnOrigin.UNKNOWN));
     }
 
     @Test
@@ -35,6 +36,6 @@ class IronGolemAttackMixinTest {
             true, 7, null);
 
         assertEquals(7,
-            IronGolemAttackMixin.netheriteIgniteSeconds(stats, GolemSpawnOrigin.VILLAGE));
+            GolemCombatRules.netheriteIgniteSeconds(stats, GolemSpawnOrigin.VILLAGE));
     }
 }

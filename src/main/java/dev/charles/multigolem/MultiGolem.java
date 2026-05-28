@@ -30,6 +30,7 @@ import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -40,6 +41,8 @@ public class MultiGolem implements ModInitializer {
     private static volatile MultiGolemConfig CONFIG = MultiGolemConfig.defaults();
 
     public static MultiGolemConfig config() { return CONFIG; }
+
+    public record VariantLootDrop(Item item, int min, int max) {}
 
     @Override
     public void onInitialize() {
@@ -72,12 +75,14 @@ public class MultiGolem implements ModInitializer {
 
     private static void registerCreativeSpawnEggs() {
         CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.SPAWN_EGGS).register(entries -> {
-            entries.accept(SpawnEggStacks.create(GolemVariant.COPPER));
-            entries.accept(SpawnEggStacks.create(GolemVariant.GOLD));
-            entries.accept(SpawnEggStacks.create(GolemVariant.EMERALD));
-            entries.accept(SpawnEggStacks.create(GolemVariant.DIAMOND));
-            entries.accept(SpawnEggStacks.create(GolemVariant.NETHERITE));
+            for (GolemVariant variant : creativeSpawnEggVariants()) {
+                entries.accept(SpawnEggStacks.create(variant));
+            }
         });
+    }
+
+    static List<GolemVariant> creativeSpawnEggVariants() {
+        return GolemVariant.nonIronVariants();
     }
 
     private static void registerVariantLoot() {
@@ -95,12 +100,23 @@ public class MultiGolem implements ModInitializer {
             // For each non-IRON variant, add a single-roll pool that drops the variant's matching item,
             // gated on the killed entity carrying that variant attachment.
             // Iron is unchanged (vanilla iron-ingot pool still rolls for IRON variant goems via the existing table).
-            addVariantPool(builder, GolemVariant.COPPER,    Items.COPPER_INGOT,    3, 5);
-            addVariantPool(builder, GolemVariant.GOLD,      Items.GOLD_INGOT,      3, 5);
-            addVariantPool(builder, GolemVariant.EMERALD,   Items.EMERALD,         3, 5);
-            addVariantPool(builder, GolemVariant.DIAMOND,   Items.DIAMOND,         3, 5);
-            addVariantPool(builder, GolemVariant.NETHERITE, Items.NETHERITE_SCRAP, 2, 3);
+            for (GolemVariant variant : GolemVariant.nonIronVariants()) {
+                VariantLootDrop drop = lootDropFor(variant);
+                addVariantPool(builder, variant, drop.item(), drop.min(), drop.max());
+            }
         });
+    }
+
+    static VariantLootDrop lootDropFor(GolemVariant variant) {
+        return switch (variant) {
+            case COPPER -> new VariantLootDrop(Items.COPPER_INGOT, 3, 5);
+            case GOLD -> new VariantLootDrop(Items.GOLD_INGOT, 3, 5);
+            case EMERALD -> new VariantLootDrop(Items.EMERALD, 3, 5);
+            case DIAMOND -> new VariantLootDrop(Items.DIAMOND, 3, 5);
+            case NETHERITE -> new VariantLootDrop(Items.NETHERITE_SCRAP, 2, 3);
+            case ZOMBIE -> new VariantLootDrop(Items.ROTTEN_FLESH, 3, 5);
+            case IRON -> throw new IllegalArgumentException("Iron uses vanilla iron golem loot");
+        };
     }
 
     private static void addVariantPool(LootTable.Builder builder, GolemVariant variant, Item drop, int min, int max) {

@@ -3,12 +3,12 @@ package dev.charles.multigolem.mixin;
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
 import dev.charles.multigolem.ability.DiamondAbility;
+import dev.charles.multigolem.ability.GolemCombatRules;
 import dev.charles.multigolem.ability.TargetFilter;
 import dev.charles.multigolem.ability.ZombieGolemConversion;
 import dev.charles.multigolem.ability.ZombieGolemEffects;
 import dev.charles.multigolem.attachment.GolemAbilityState;
 import dev.charles.multigolem.attachment.GolemAbilityStateAttachment;
-import dev.charles.multigolem.attachment.GolemSpawnOrigin;
 import dev.charles.multigolem.attachment.GolemSpawnOriginAttachment;
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
 import dev.charles.multigolem.config.TierStats;
@@ -116,17 +116,6 @@ public abstract class IronGolemAttackMixin {
     }
 
     private static int netheriteIgniteSeconds(TierStats stats, IronGolem self) {
-        return netheriteIgniteSeconds(stats, GolemSpawnOriginAttachment.get(self));
-    }
-
-    static int netheriteIgniteSeconds(TierStats stats, GolemSpawnOrigin origin) {
-        Integer seconds = origin == GolemSpawnOrigin.VILLAGE
-            ? stats.netheriteVillageIgniteSeconds()
-            : stats.netheriteIgniteSeconds();
-        if (seconds != null) {
-            return seconds;
-        }
-        Integer fallback = stats.netheriteIgniteSeconds();
-        return fallback != null ? fallback : 0;
+        return GolemCombatRules.netheriteIgniteSeconds(stats, GolemSpawnOriginAttachment.get(self));
     }
 }

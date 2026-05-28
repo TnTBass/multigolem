@@ -7,20 +7,17 @@ import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.npc.wanderingtrader.WanderingTrader;
 import net.minecraft.world.entity.player.Player;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(IronGolem.class)
 public abstract class IronGolemRegisterGoalsMixin {
-    @Shadow @Final protected GoalSelector targetSelector;
-
     @Inject(method = "registerGoals", at = @At("TAIL"))
     private void multigolem$registerZombieFactionTargets(CallbackInfo ci) {
         IronGolem self = (IronGolem) (Object) this;
+        GoalSelector targetSelector = ((MobTargetSelectorAccessor) self).multigolem$getTargetSelector();
         targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
             self, Player.class, 10, true, false, (target, level) -> ZombieGolemFaction.zombieGoalCanTarget(self, target)));
         targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(

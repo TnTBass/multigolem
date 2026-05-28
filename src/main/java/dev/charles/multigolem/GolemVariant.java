@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -66,6 +67,12 @@ public enum GolemVariant {
     public Block bodyBlock() { return bodyBlock; }
     public Item healIngot() { return healIngot; }
     public Item dropItem() { return dropItem; }
+
+    public static List<GolemVariant> nonIronVariants() {
+        return Arrays.stream(values())
+            .filter(variant -> variant != IRON)
+            .toList();
+    }
 
     public boolean matchesBodyBlock(BlockState state) {
         if (this == COPPER) {

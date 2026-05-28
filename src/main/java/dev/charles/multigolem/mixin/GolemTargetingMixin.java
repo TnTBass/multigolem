@@ -11,16 +11,35 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Mob.class)
 public abstract class GolemTargetingMixin {
+
+    @Inject(method = "canAttack(Lnet/minecraft/world/entity/LivingEntity;)Z",
+            at = @At("HEAD"), cancellable = true)
+    private void multigolem$preventZombieFamilyAttackingZombieGolems(
+        LivingEntity target,
+        CallbackInfoReturnable<Boolean> cir
+    ) {
+        Mob self = (Mob) (Object) this;
+        if (target instanceof IronGolem targetGolem
+                && !ZombieGolemFaction.zombieFamilyCanTargetGolem(self.getClass(), GolemVariantAttachment.get(targetGolem))) {
+            cir.setReturnValue(false);
+        }
+    }
 
     @Inject(method = "setTarget(Lnet/minecraft/world/entity/LivingEntity;)V",
             at = @At("HEAD"), cancellable = true)
     private void multigolem$filterExcludedTarget(LivingEntity target, CallbackInfo ci) {
         Mob self = (Mob) (Object) this;
-        if (!(self instanceof IronGolem golem)) return;
         if (target == null) return;
+        if (target instanceof IronGolem targetGolem
+                && !ZombieGolemFaction.zombieFamilyCanTargetGolem(self.getClass(), GolemVariantAttachment.get(targetGolem))) {
+            ci.cancel();
+            return;
+        }
+        if (!(self instanceof IronGolem golem)) return;
         if (ZombieGolemFaction.shouldCancelTarget(golem, target)) {
             ci.cancel();
             return;

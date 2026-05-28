@@ -30,14 +30,12 @@ public final class ZombieGolemFaction {
     }
 
     public static boolean zombieGolemCanTarget(LivingEntity target, GolemVariant targetVariant, LivingEntity lastHurtByMob) {
-        if (target == lastHurtByMob) {
-            return true;
-        }
-        return zombieGolemCanTargetClass(target.getClass(), targetVariant);
+        boolean recentAttacker = target == lastHurtByMob;
+        return zombieGolemCanTargetClass(target.getClass(), targetVariant, recentAttacker);
     }
 
     public static boolean zombieGolemCanTargetClass(Class<? extends LivingEntity> targetClass, GolemVariant targetVariant) {
-        if (ZombieVillager.class.isAssignableFrom(targetClass) || Zombie.class.isAssignableFrom(targetClass)) {
+        if (isZombieFamily(targetClass)) {
             return false;
         }
         if (IronGolem.class.isAssignableFrom(targetClass)) {
@@ -54,7 +52,25 @@ public final class ZombieGolemFaction {
         GolemVariant targetVariant,
         boolean recentAttacker
     ) {
+        // Zombie Golems are part of the zombie faction: even self-defense should not keep fights alive with zombies.
+        if (isZombieFamily(targetClass)) {
+            return false;
+        }
         return recentAttacker || zombieGolemCanTargetClass(targetClass, targetVariant);
+    }
+
+    public static boolean zombieFamilyCanTargetGolem(
+        Class<? extends LivingEntity> attackerClass,
+        GolemVariant targetVariant
+    ) {
+        if (!isZombieFamily(attackerClass)) {
+            return true;
+        }
+        return targetVariant != GolemVariant.ZOMBIE;
+    }
+
+    private static boolean isZombieFamily(Class<? extends LivingEntity> targetClass) {
+        return Zombie.class.isAssignableFrom(targetClass);
     }
 
     public static boolean nonZombieGolemCanTarget(GolemVariant selfVariant, GolemVariant targetVariant) {

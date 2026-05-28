@@ -10,7 +10,7 @@ A Fabric mod for Minecraft 26.1.2 that adds Copper, Gold, Emerald, Diamond, Neth
 - Heal each golem with its matching material.
 - Per-tier special abilities (see below).
 - Per-tier `ignored_target_types` — copper/gold/emerald/diamond/netherite ignore creepers by default to prevent collateral block damage.
-- Hostile Zombie Golems built from Mossy Cobblestone, healed with Rotten Flesh, and maintained in zombie-villager village areas.
+- Hostile Zombie Golems built from Mossy Cobblestone, healed with Rotten Flesh, allied with zombies, and maintained in zombie-villager village areas.
 - Marked vanilla iron golem spawn eggs for Copper, Gold, Emerald, Diamond, Netherite, and Zombie variants.
 - **Server-side functional.** Vanilla clients can connect with no mod installed; stats, drops, and creation all behave correctly.
 
@@ -51,7 +51,7 @@ Place a carved pumpkin on top. Waxed and oxidized copper blocks work for MultiGo
 | Emerald | Heals passively while any villager or wandering trader is within 8 blocks |
 | Diamond | Passive LOS lightning zap of nearby hostiles (30–60s cooldown) + on-attack lightning; self-immune to lightning damage |
 | Netherite | Fully immune to fire and lava; ignites any mob it hits for 5 seconds |
-| Zombie | Hostile corrupted golem; heals from Rotten Flesh, spreads zombie villagers, applies sickness to players, and fights village defenders |
+| Zombie | Hostile corrupted golem; heals from Rotten Flesh, converts civilians into zombie villagers, applies sickness to players, fights village defenders, and stays allied with zombies |
 
 All ability parameters are configurable per-tier in `config/multigolem.json`.
 

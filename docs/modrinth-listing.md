@@ -20,7 +20,7 @@
 - **Emerald:** heals passively while villagers or wandering traders are nearby.
 - **Diamond:** passive LOS lightning zap of nearby hostiles, on-attack lightning, and lightning immunity. Creepers are excluded by default.
 - **Netherite:** immune to fire and lava damage, and ignites hit mobs for 5 seconds.
-- **Zombie:** hostile corrupted golem that heals from Rotten Flesh, applies Hunger/Nausea/Poison to players, converts villagers and wandering traders into zombie villagers, and fights village defenders.
+- **Zombie:** hostile corrupted golem that heals from Rotten Flesh, applies Hunger/Nausea/Poison to players, converts villagers and wandering traders into zombie villagers, fights village defenders, and stays allied with zombies and converted zombie villagers.
 
 Cross-tier `ignored_target_types` lets server admins stop tiers from targeting categories such as creepers, players, endermen, or bosses. Copper, Gold, Emerald, Diamond, and Netherite ignore creepers by default to prevent collateral block damage.
 
