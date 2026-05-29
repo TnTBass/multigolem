@@ -1,6 +1,7 @@
 package dev.charles.multigolem.permissions;
 
 import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.catalog.GolemVariantCatalog;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -52,11 +53,11 @@ public final class MultiGolemPermissions {
     }
 
     static String createNode(GolemVariant variant) {
-        return "multigolem.create." + variant.id();
+        return "multigolem.create." + GolemVariantCatalog.require(variant).permissionSuffix();
     }
 
     static String healNode(GolemVariant variant) {
-        return "multigolem.heal." + variant.id();
+        return "multigolem.heal." + GolemVariantCatalog.require(variant).permissionSuffix();
     }
 
     public static void sendCreateDenied(ServerPlayer player, GolemVariant variant) {

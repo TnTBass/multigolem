@@ -78,7 +78,7 @@ public abstract class IronGolemAttackMixin {
             }
             if (!ability.diamondCooldownReady(now)) return;
             var modePredicate = TargetFilter.DiamondTargetPredicate.of(stats.diamondTargetMode());
-            if (!modePredicate.matches(target)) return;
+            if (!matchesDiamondTarget(modePredicate, target)) return;
             var excludeFilter = TargetFilter.fromIgnoredList(stats.ignoredTargetTypes());
             if (excludeFilter.isExcluded(target)) return;
 
@@ -117,5 +117,12 @@ public abstract class IronGolemAttackMixin {
 
     private static int netheriteIgniteSeconds(TierStats stats, IronGolem self) {
         return GolemCombatRules.netheriteIgniteSeconds(stats, GolemSpawnOriginAttachment.get(self));
+    }
+
+    private static boolean matchesDiamondTarget(TargetFilter.DiamondTargetPredicate predicate, Entity target) {
+        if (target instanceof IronGolem golem) {
+            return predicate.matchesGolemVariant(GolemVariantAttachment.get(golem));
+        }
+        return predicate.matches(target);
     }
 }

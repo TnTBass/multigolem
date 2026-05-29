@@ -1,5 +1,6 @@
 package dev.charles.multigolem.ability;
 
+import dev.charles.multigolem.GolemVariant;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragonPart;
@@ -58,32 +59,46 @@ public final class TargetFilter {
         /** Test-friendly: check by class token without needing an entity instance. */
         boolean matchesClass(Class<?> type);
 
+        /** Test-friendly: check a MultiGolem identity carried by a vanilla IronGolem entity. */
+        boolean matchesGolemVariant(GolemVariant variant);
+
         static DiamondTargetPredicate of(String mode) {
             return switch (mode) {
                 case "ALL_HOSTILE_MOBS"             -> new ClassCheckingPredicate(
                     e -> e instanceof Enemy,
-                    t -> Enemy.class.isAssignableFrom(t));
+                    t -> Enemy.class.isAssignableFrom(t),
+                    TargetFilter::isZombieGolemVariant);
                 case "ALL_HOSTILE_MOBS_AND_PLAYERS" -> new ClassCheckingPredicate(
                     e -> e instanceof Enemy || e instanceof Player,
-                    t -> Enemy.class.isAssignableFrom(t) || Player.class.isAssignableFrom(t));
+                    t -> Enemy.class.isAssignableFrom(t) || Player.class.isAssignableFrom(t),
+                    TargetFilter::isZombieGolemVariant);
                 case "BOSSES_ONLY"                  -> new ClassCheckingPredicate(
                     e -> isBossClass(e.getClass()),
-                    t -> isBossClass(t));
+                    t -> isBossClass(t),
+                    v -> false);
                 case "NONE"                         -> new ClassCheckingPredicate(
                     e -> false,
-                    t -> false);
+                    t -> false,
+                    v -> false);
                 default                             -> new ClassCheckingPredicate(
                     e -> e instanceof Enemy,
-                    t -> Enemy.class.isAssignableFrom(t));
+                    t -> Enemy.class.isAssignableFrom(t),
+                    TargetFilter::isZombieGolemVariant);
             };
         }
     }
 
+    private static boolean isZombieGolemVariant(GolemVariant variant) {
+        return variant == GolemVariant.ZOMBIE;
+    }
+
     private record ClassCheckingPredicate(
         java.util.function.Predicate<Entity> entityTest,
-        java.util.function.Predicate<Class<?>> classTest
+        java.util.function.Predicate<Class<?>> classTest,
+        java.util.function.Predicate<GolemVariant> golemVariantTest
     ) implements DiamondTargetPredicate {
         public boolean matches(Entity entity) { return entityTest.test(entity); }
         public boolean matchesClass(Class<?> type) { return classTest.test(type); }
+        public boolean matchesGolemVariant(GolemVariant variant) { return golemVariantTest.test(variant); }
     }
 }

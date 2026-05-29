@@ -2,6 +2,7 @@ package dev.charles.multigolem.attachment;
 
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
+import dev.charles.multigolem.identity.GolemIdentity;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
@@ -23,8 +24,7 @@ public final class GolemVariantAttachment {
     private GolemVariantAttachment() {}
 
     public static GolemVariant get(Entity entity) {
-        GolemVariant attached = entity.getAttached(TYPE);
-        return attached != null ? attached : GolemVariant.IRON;
+        return GolemIdentityAttachment.get(entity).variant();
     }
 
     public static Optional<GolemVariant> getRaw(Entity entity) {
@@ -32,10 +32,19 @@ public final class GolemVariantAttachment {
     }
 
     public static void set(Entity entity, GolemVariant variant) {
+        GolemIdentityAttachment.set(entity, GolemIdentity.ofIronVariant(variant));
+    }
+
+    static Optional<GolemVariant> getRawOld(Entity entity) {
+        return Optional.ofNullable(entity.getAttached(TYPE));
+    }
+
+    static void setOldOnly(Entity entity, GolemVariant variant) {
         entity.setAttached(TYPE, variant);
-        if (entity instanceof IronGolem golem) {
-            VariantAttributes.apply(golem);
-        }
+    }
+
+    static void clearOld(Entity entity) {
+        entity.removeAttached(TYPE);
     }
 
     public static void touch() {

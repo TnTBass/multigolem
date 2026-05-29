@@ -1,6 +1,7 @@
 package dev.charles.multigolem.spawn;
 
 import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.identity.GolemIdentity;
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -34,6 +35,7 @@ class SpawnEggStacksTest {
 
             assertTrue(stack.is(Items.IRON_GOLEM_SPAWN_EGG));
             assertEquals(variant, SpawnEggStacks.variantFrom(stack).orElseThrow());
+            assertEquals(GolemIdentity.ofIronVariant(variant), SpawnEggStacks.identityFrom(stack).orElseThrow());
             assertEquals("{multigolem:{variant:\"" + variant.id() + "\"}}", SpawnEggStacks.customDataSnbt(stack));
         }
     }
@@ -83,7 +85,47 @@ class SpawnEggStacksTest {
     }
 
     @Test
+    void oldVariantOnlyMarkerReadsAsIronFamilyIdentity() {
+        ItemStack stack = markedEgg("diamond", null);
+
+        assertEquals(GolemIdentity.ofIronVariant(GolemVariant.DIAMOND), SpawnEggStacks.identityFrom(stack).orElseThrow());
+    }
+
+    @Test
+    void oldIronVariantMarkerReadsEmptyBecauseIronIsDefault() {
+        ItemStack stack = markedEgg("iron", null);
+
+        assertTrue(SpawnEggStacks.identityFrom(stack).isEmpty());
+    }
+
+    @Test
+    void familyVariantMarkerReadsAsIdentity() {
+        ItemStack stack = markedEgg("zombie", "iron_golem");
+
+        assertEquals(GolemIdentity.ofIronVariant(GolemVariant.ZOMBIE), SpawnEggStacks.identityFrom(stack).orElseThrow());
+    }
+
+    @Test
+    void unknownFamilyOrUnknownVariantMarkerReadsEmpty() {
+        assertTrue(SpawnEggStacks.identityFrom(markedEgg("diamond", "copper_golem")).isEmpty());
+        assertTrue(SpawnEggStacks.identityFrom(markedEgg("obsidian", "iron_golem")).isEmpty());
+    }
+
+    @Test
     void ironIsNotAMarkedV4EggVariant() {
         assertThrows(IllegalArgumentException.class, () -> SpawnEggStacks.create(GolemVariant.IRON));
+    }
+
+    private static ItemStack markedEgg(String variant, String family) {
+        ItemStack stack = new ItemStack(Items.IRON_GOLEM_SPAWN_EGG);
+        CompoundTag root = new CompoundTag();
+        CompoundTag multigolem = new CompoundTag();
+        if (family != null) {
+            multigolem.putString("family", family);
+        }
+        multigolem.putString("variant", variant);
+        root.put("multigolem", multigolem);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+        return stack;
     }
 }

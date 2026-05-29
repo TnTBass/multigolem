@@ -1,8 +1,10 @@
 package dev.charles.multigolem.spawn;
 
 import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.attachment.GolemIdentityAttachment;
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
 import dev.charles.multigolem.attribute.VariantAttributes;
+import dev.charles.multigolem.identity.GolemIdentity;
 import dev.charles.multigolem.permissions.MultiGolemPermissions;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -29,19 +31,20 @@ public final class SpawnEggVariantSpawner {
         boolean alignPosition,
         boolean invertY
     ) {
-        Optional<GolemVariant> variant = SpawnEggStacks.variantFrom(stack);
-        if (variant.isEmpty() || type != EntityType.IRON_GOLEM) {
+        Optional<GolemIdentity> identity = SpawnEggStacks.identityFrom(stack);
+        if (identity.isEmpty() || type != EntityType.IRON_GOLEM) {
             return type.spawn(level, stack, user, pos, reason, alignPosition, invertY);
         }
 
-        if (user instanceof ServerPlayer player && !MultiGolemPermissions.canCreate(player, variant.get())) {
-            MultiGolemPermissions.sendCreateDenied(player, variant.get());
+        GolemVariant variant = identity.get().variant();
+        if (user instanceof ServerPlayer player && !MultiGolemPermissions.canCreate(player, variant)) {
+            MultiGolemPermissions.sendCreateDenied(player, variant);
             return null;
         }
 
         Entity spawned = type.spawn(level, stack, user, pos, reason, alignPosition, invertY);
         if (spawned instanceof IronGolem golem) {
-            GolemVariantAttachment.set(golem, variant.get());
+            GolemIdentityAttachment.set(golem, identity.get());
             VariantAttributes.fillFreshSpawnHealth(golem);
         }
         return spawned;

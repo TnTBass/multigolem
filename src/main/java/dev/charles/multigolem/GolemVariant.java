@@ -1,6 +1,8 @@
 package dev.charles.multigolem;
 
 import com.mojang.serialization.Codec;
+import dev.charles.multigolem.catalog.GolemVariantCatalog;
+import dev.charles.multigolem.catalog.GolemVariantSpec;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -69,9 +71,19 @@ public enum GolemVariant {
     public Item dropItem() { return dropItem; }
 
     public static List<GolemVariant> nonIronVariants() {
-        return Arrays.stream(values())
-            .filter(variant -> variant != IRON)
-            .toList();
+        return GolemVariantCatalog.variantsWhere(spec -> spec.variant() != IRON);
+    }
+
+    public static List<GolemVariant> spawnEggVariants() {
+        return GolemVariantCatalog.variantsWhere(GolemVariantSpec::spawnEggEnabled);
+    }
+
+    public static List<GolemVariant> lootVariants() {
+        return GolemVariantCatalog.variantsWhere(GolemVariantSpec::lootEnabled);
+    }
+
+    public static List<GolemVariant> multiGolemPlayerBuildableVariants() {
+        return GolemVariantCatalog.variantsWhere(GolemVariantSpec::playerBuildable);
     }
 
     public boolean matchesBodyBlock(BlockState state) {
@@ -82,10 +94,8 @@ public enum GolemVariant {
     }
 
     public static Optional<GolemVariant> fromBodyBlock(Block block) {
-        if (block.defaultBlockState().is(BlockTags.COPPER) || isCopperFamilyBlock(block)) {
-            return Optional.of(COPPER);
-        }
-        return Optional.ofNullable(BY_BODY_BLOCK.get(block));
+        return GolemVariantCatalog.forBodyBlock(block.defaultBlockState())
+            .map(GolemVariantSpec::variant);
     }
 
     private static boolean isCopperFamilyBlock(Block block) {
@@ -97,7 +107,8 @@ public enum GolemVariant {
     }
 
     public static Optional<GolemVariant> fromIngot(Item item) {
-        return Optional.ofNullable(BY_HEAL_INGOT.get(item));
+        return GolemVariantCatalog.forHealItem(item)
+            .map(GolemVariantSpec::variant);
     }
 
     public static Optional<GolemVariant> fromId(String id) {

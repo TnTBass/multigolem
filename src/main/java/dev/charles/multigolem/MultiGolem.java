@@ -2,9 +2,12 @@ package dev.charles.multigolem;
 
 import dev.charles.multigolem.ability.AbilityRegistry;
 import dev.charles.multigolem.attachment.GolemAbilityStateAttachment;
+import dev.charles.multigolem.attachment.GolemIdentityAttachment;
 import dev.charles.multigolem.attachment.GolemSpawnOriginAttachment;
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
 import dev.charles.multigolem.attribute.VariantAttributes;
+import dev.charles.multigolem.catalog.GolemVariantCatalog;
+import dev.charles.multigolem.catalog.GolemVariantSpec;
 import dev.charles.multigolem.config.MultiGolemConfig;
 import dev.charles.multigolem.loot.HasGolemVariantLootCondition;
 import dev.charles.multigolem.spawn.SpawnEggStacks;
@@ -21,7 +24,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
@@ -46,6 +48,7 @@ public class MultiGolem implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        GolemIdentityAttachment.touch();
         GolemVariantAttachment.touch();
         GolemAbilityStateAttachment.touch();
         GolemSpawnOriginAttachment.touch();
@@ -82,7 +85,7 @@ public class MultiGolem implements ModInitializer {
     }
 
     static List<GolemVariant> creativeSpawnEggVariants() {
-        return GolemVariant.nonIronVariants();
+        return GolemVariant.spawnEggVariants();
     }
 
     private static void registerVariantLoot() {
@@ -100,7 +103,7 @@ public class MultiGolem implements ModInitializer {
             // For each non-IRON variant, add a single-roll pool that drops the variant's matching item,
             // gated on the killed entity carrying that variant attachment.
             // Iron is unchanged (vanilla iron-ingot pool still rolls for IRON variant goems via the existing table).
-            for (GolemVariant variant : GolemVariant.nonIronVariants()) {
+            for (GolemVariant variant : GolemVariant.lootVariants()) {
                 VariantLootDrop drop = lootDropFor(variant);
                 addVariantPool(builder, variant, drop.item(), drop.min(), drop.max());
             }
@@ -108,15 +111,11 @@ public class MultiGolem implements ModInitializer {
     }
 
     static VariantLootDrop lootDropFor(GolemVariant variant) {
-        return switch (variant) {
-            case COPPER -> new VariantLootDrop(Items.COPPER_INGOT, 3, 5);
-            case GOLD -> new VariantLootDrop(Items.GOLD_INGOT, 3, 5);
-            case EMERALD -> new VariantLootDrop(Items.EMERALD, 3, 5);
-            case DIAMOND -> new VariantLootDrop(Items.DIAMOND, 3, 5);
-            case NETHERITE -> new VariantLootDrop(Items.NETHERITE_SCRAP, 2, 3);
-            case ZOMBIE -> new VariantLootDrop(Items.ROTTEN_FLESH, 3, 5);
-            case IRON -> throw new IllegalArgumentException("Iron uses vanilla iron golem loot");
-        };
+        GolemVariantSpec spec = GolemVariantCatalog.require(variant);
+        if (!spec.lootEnabled()) {
+            throw new IllegalArgumentException("Iron uses vanilla iron golem loot");
+        }
+        return new VariantLootDrop(spec.dropItem(), spec.lootMin(), spec.lootMax());
     }
 
     private static void addVariantPool(LootTable.Builder builder, GolemVariant variant, Item drop, int min, int max) {

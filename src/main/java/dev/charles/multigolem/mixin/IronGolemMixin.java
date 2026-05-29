@@ -4,6 +4,7 @@ import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
 import dev.charles.multigolem.ability.GolemCombatRules;
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
+import dev.charles.multigolem.interaction.IronGolemHealInteraction;
 import dev.charles.multigolem.permissions.MultiGolemPermissions;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
@@ -26,39 +27,46 @@ public abstract class IronGolemMixin {
     private void multigolem$healWithMatchingIngot(Player player, InteractionHand hand,
                                                    CallbackInfoReturnable<InteractionResult> cir) {
         IronGolem self = (IronGolem) (Object) this;
-        if (self.level().isClientSide()) return;
-
-        if (!MultiGolem.config().allowGolemHealing()) {
-            // Healing disabled globally — cancel ALL heal interactions (including vanilla iron→iron)
-            // so the iron-ingot heal doesn't sneak through.
-            ItemStack stack = player.getItemInHand(hand);
-            if (GolemVariant.fromIngot(stack.getItem()).isPresent()) {
-                cir.setReturnValue(InteractionResult.FAIL);
-            }
-            return;
-        }
-
-        GolemVariant variant = GolemVariantAttachment.get(self);
         ItemStack stack = player.getItemInHand(hand);
         if (stack.isEmpty()) return;
 
+        GolemVariant variant = GolemVariantAttachment.get(self);
         Optional<GolemVariant> held = GolemVariant.fromIngot(stack.getItem());
-        if (held.isEmpty()) return;
-        if (held.get() != variant) {
-            cir.setReturnValue(InteractionResult.PASS);
+        GolemVariant heldVariant = held.orElse(null);
+        boolean fullHealth = self.getHealth() >= self.getMaxHealth();
+        if (!MultiGolem.config().allowGolemHealing()) {
+            // Healing disabled globally — cancel ALL heal interactions (including vanilla iron→iron)
+            // so the iron-ingot heal doesn't sneak through.
+            InteractionResult disabled = IronGolemHealInteraction.result(
+                false, variant, heldVariant, fullHealth, true);
+            if (disabled != InteractionResult.PASS) cir.setReturnValue(disabled);
             return;
         }
 
-        if (self.getHealth() >= self.getMaxHealth()) return;
+        boolean permissionRequired = variant != GolemVariant.IRON
+            && heldVariant == variant
+            && !fullHealth;
+        if (self.level().isClientSide()) {
+            InteractionResult clientResult = IronGolemHealInteraction.result(
+                true, variant, heldVariant, fullHealth, true);
+            if (clientResult != InteractionResult.PASS) cir.setReturnValue(clientResult);
+            return;
+        }
 
-        if (!MultiGolemPermissions.canHeal(player, variant)) {
+        boolean permissionAllowed = !permissionRequired || MultiGolemPermissions.canHeal(player, variant);
+        InteractionResult result = IronGolemHealInteraction.result(
+            true, variant, heldVariant, fullHealth, permissionAllowed);
+        if (result == InteractionResult.PASS) {
+            return;
+        }
+
+        if (!permissionAllowed) {
             MultiGolemPermissions.sendHealDenied(player, variant);
             cir.setReturnValue(InteractionResult.FAIL);
             return;
         }
-
-        if (variant == GolemVariant.IRON) {
-            // Permission allowed; vanilla handles iron→iron heal.
+        if (!IronGolemHealInteraction.shouldRunCustomHeal(result)) {
+            cir.setReturnValue(result);
             return;
         }
 

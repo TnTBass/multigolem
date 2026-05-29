@@ -3,18 +3,74 @@ package dev.charles.multigolem.mixin;
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.ability.GolemCombatRules;
 import dev.charles.multigolem.config.TierStats;
+import dev.charles.multigolem.interaction.IronGolemHealInteraction;
 import dev.charles.multigolem.test.MinecraftBootstrap;
+import net.minecraft.world.InteractionResult;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class IronGolemMixinTest {
     @BeforeAll
     static void bootstrap() {
         MinecraftBootstrap.ensure();
+    }
+
+    @Test
+    void customGolemRejectsKnownWrongHealItemInsteadOfPassingToVanilla() {
+        assertEquals(InteractionResult.FAIL,
+            IronGolemHealInteraction.result(
+                true, GolemVariant.DIAMOND, GolemVariant.IRON, false, true));
+    }
+
+    @Test
+    void wrongHealItemResultDoesNotRunServerHeal() {
+        assertFalse(IronGolemHealInteraction.shouldRunCustomHeal(InteractionResult.FAIL));
+    }
+
+    @Test
+    void successResultRunsServerHeal() {
+        assertTrue(IronGolemHealInteraction.shouldRunCustomHeal(InteractionResult.SUCCESS));
+    }
+
+    @Test
+    void disabledHealingBlocksVanillaIronRepair() {
+        assertEquals(InteractionResult.FAIL,
+            IronGolemHealInteraction.result(
+                false, GolemVariant.IRON, GolemVariant.IRON, false, true));
+    }
+
+    @Test
+    void customGolemAcceptsMatchingHealItemForClientPrediction() {
+        assertEquals(InteractionResult.SUCCESS,
+            IronGolemHealInteraction.result(
+                true, GolemVariant.DIAMOND, GolemVariant.DIAMOND, false, true));
+    }
+
+    @Test
+    void permissionDeniedCustomHealFails() {
+        assertEquals(InteractionResult.FAIL,
+            IronGolemHealInteraction.result(
+                true, GolemVariant.DIAMOND, GolemVariant.DIAMOND, false, false));
+    }
+
+    @Test
+    void fullHealthCustomGolemConsumesNoItemAndDoesNotPretendHeal() {
+        assertEquals(InteractionResult.PASS,
+            IronGolemHealInteraction.result(
+                true, GolemVariant.DIAMOND, GolemVariant.DIAMOND, true, true));
+    }
+
+    @Test
+    void vanillaIronGolemAlwaysPassesToVanillaRepairLogic() {
+        assertEquals(InteractionResult.PASS,
+            IronGolemHealInteraction.result(
+                true, GolemVariant.IRON, GolemVariant.DIAMOND, false, true));
     }
 
     @Test

@@ -4,6 +4,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.catalog.GolemVariantCatalog;
+import dev.charles.multigolem.catalog.GolemVariantSpec;
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -32,12 +34,12 @@ class SpawnEggItemDefinitionTest {
         var root = JsonParser.parseString(Files.readString(definition)).getAsJsonObject();
         var cases = root.getAsJsonObject("model").getAsJsonArray("cases");
 
-        assertEquals(GolemVariant.nonIronVariants().size(), cases.size());
+        assertEquals(GolemVariant.spawnEggVariants().size(), cases.size());
         List<String> actualWhenValues = new ArrayList<>();
         for (var element : cases) {
             actualWhenValues.add(element.getAsJsonObject().get("when").getAsString());
         }
-        for (GolemVariant variant : GolemVariant.nonIronVariants()) {
+        for (GolemVariant variant : GolemVariant.spawnEggVariants()) {
             String expectedWhen = "{multigolem:{variant:\"" + variant.id() + "\"}}";
             String expectedModel = "multigolem:item/" + variant.id() + "_golem_spawn_egg";
             boolean found = false;
@@ -68,6 +70,17 @@ class SpawnEggItemDefinitionTest {
         Path texturePath = assetPath(textureId, "textures", ".png")
             .orElseThrow(() -> new AssertionError("invalid texture id " + textureId));
         assertTrue(Files.isRegularFile(texturePath), "missing spawn egg texture asset " + texturePath);
+    }
+
+    @Test
+    void catalogSpawnEggAndEntityAssetPathsExist() {
+        for (GolemVariant variant : GolemVariant.spawnEggVariants()) {
+            GolemVariantSpec spec = GolemVariantCatalog.require(variant);
+
+            assertTrue(Files.isRegularFile(Path.of("src/main/resources/assets/multigolem/models/item").resolve(spec.spawnEggModelPath())));
+            assertTrue(Files.isRegularFile(Path.of("src/main/resources/assets/multigolem/textures/item").resolve(spec.spawnEggTexturePath())));
+            assertTrue(Files.isRegularFile(Path.of("src/main/resources/assets/multigolem/textures/entity").resolve(spec.entityTexturePath())));
+        }
     }
 
     private static Optional<Path> assetPath(String id, String assetKind, String extension) {

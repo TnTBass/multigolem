@@ -1,6 +1,7 @@
 package dev.charles.multigolem.mixin;
 
 import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.identity.GolemIdentity;
 import dev.charles.multigolem.permissions.MultiGolemPermissions;
 import dev.charles.multigolem.spawn.SpawnEggStacks;
 import dev.charles.multigolem.spawn.SpawnEggVariantSpawner;
@@ -38,8 +39,8 @@ public abstract class SpawnEggItemMixin {
         cancellable = true
     )
     private void multigolem$denyMarkedSpawnerUse(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
-        Optional<GolemVariant> variant = SpawnEggStacks.variantFrom(context.getItemInHand());
-        if (variant.isEmpty()) {
+        Optional<GolemIdentity> identity = SpawnEggStacks.identityFrom(context.getItemInHand());
+        if (identity.isEmpty()) {
             return;
         }
 
@@ -49,8 +50,9 @@ public abstract class SpawnEggItemMixin {
             return;
         }
 
-        if (!MultiGolemPermissions.canCreate(player, variant.get())) {
-            MultiGolemPermissions.sendCreateDenied(player, variant.get());
+        GolemVariant variant = identity.get().variant();
+        if (!MultiGolemPermissions.canCreate(player, variant)) {
+            MultiGolemPermissions.sendCreateDenied(player, variant);
             cir.setReturnValue(InteractionResult.FAIL);
             cir.cancel();
         }
@@ -75,10 +77,10 @@ public abstract class SpawnEggItemMixin {
             return;
         }
 
-        Optional<GolemVariant> variant = SpawnEggStacks.variantFrom(context.getItemInHand());
-        if (variant.isPresent()) {
+        Optional<GolemIdentity> identity = SpawnEggStacks.identityFrom(context.getItemInHand());
+        if (identity.isPresent()) {
             // Vanilla setEntityId and this marker write run synchronously inside the same server useOn call.
-            SpawnerVariantMarker.write(data.getEntityToSpawn(), variant.get());
+            SpawnerVariantMarker.writeIdentity(data.getEntityToSpawn(), identity.get());
         } else if (SpawnEggItem.getType(context.getItemInHand()) == EntityType.IRON_GOLEM) {
             SpawnerVariantMarker.clear(data.getEntityToSpawn());
         }

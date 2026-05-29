@@ -2,7 +2,9 @@ package dev.charles.multigolem.spawn;
 
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
+import dev.charles.multigolem.attachment.GolemIdentityAttachment;
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
+import dev.charles.multigolem.identity.GolemIdentity;
 import dev.charles.multigolem.permissions.MultiGolemPermissions;
 import dev.charles.multigolem.permissions.PumpkinPlacementTracker;
 import net.minecraft.advancements.CriteriaTriggers;
@@ -46,10 +48,7 @@ public final class GolemCreationHandler {
     public static boolean trySpawnVariant(Level level, BlockPos topPos) {
         if (!(level instanceof ServerLevel server)) return false;
 
-        for (GolemVariant variant : GolemVariant.values()) {
-            // IRON T-patterns are vanilla-owned and must never be permission-gated here.
-            if (variant == GolemVariant.IRON) continue;
-
+        for (GolemVariant variant : GolemVariant.multiGolemPlayerBuildableVariants()) {
             BlockPattern.BlockPatternMatch match = patternFor(variant).find(server, topPos);
             if (match == null) continue;
 
@@ -69,7 +68,7 @@ public final class GolemCreationHandler {
                 return false;
             }
             golem.setPlayerCreated(true);
-            GolemVariantAttachment.set(golem, variant);
+            GolemIdentityAttachment.set(golem, GolemIdentity.ofIronVariant(variant));
 
             // Vanilla's spawn order: clear blocks first, then position+spawn, then trigger, then updateNeighbors.
             CarvedPumpkinBlock.clearPatternBlocks(server, match);

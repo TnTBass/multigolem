@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Refactored MultiGolem's variant catalog and saved identity foundation for beta validation builds; existing Iron-family golem behavior and old saved variant data remain compatible.
+
 ## 0.4.0+mc26.1.2 — 2026-05-28
 
 - Added hostile Zombie Golems built from Mossy Cobblestone. They heal with Rotten Flesh, apply Hunger/Nausea/Poison to players, convert villagers and wandering traders into zombie villagers, fight village defenders, and stay allied with zombies, zombie villagers, and other Zombie Golems.

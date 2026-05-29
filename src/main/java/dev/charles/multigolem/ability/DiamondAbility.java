@@ -79,7 +79,7 @@ public final class DiamondAbility {
         AABB box = golem.getBoundingBox().inflate(range);
         List<Entity> candidates = world.getEntities(golem, box, e ->
             e.isAlive() && !e.isRemoved()
-                && modePredicate.matches(e)
+                && matchesTarget(modePredicate, e)
                 && !excludeFilter.isExcluded(e)
                 && hasLineOfSight(world, golem, e));
         if (candidates.isEmpty()) {
@@ -106,6 +106,13 @@ public final class DiamondAbility {
 
     public static long maxCooldownTicks(dev.charles.multigolem.config.TierStats stats) {
         return Math.max(0, stats.diamondCooldownMaxSeconds()) * 20L;
+    }
+
+    private static boolean matchesTarget(TargetFilter.DiamondTargetPredicate predicate, Entity target) {
+        if (target instanceof IronGolem golem) {
+            return predicate.matchesGolemVariant(GolemVariantAttachment.get(golem));
+        }
+        return predicate.matches(target);
     }
 
     private static boolean hasLineOfSight(ServerLevel world, LivingEntity from, Entity to) {

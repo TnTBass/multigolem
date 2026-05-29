@@ -2,9 +2,11 @@ package dev.charles.multigolem.spawn;
 
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
+import dev.charles.multigolem.attachment.GolemIdentityAttachment;
 import dev.charles.multigolem.attachment.GolemSpawnOrigin;
 import dev.charles.multigolem.attachment.GolemSpawnOriginAttachment;
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
+import dev.charles.multigolem.identity.GolemIdentity;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -116,7 +118,7 @@ public final class ZombieVillageSpawnHandler {
                 false
             );
             spawned.ifPresent(golem -> {
-                GolemVariantAttachment.set(golem, GolemVariant.ZOMBIE);
+                GolemIdentityAttachment.set(golem, GolemIdentity.ofIronVariant(GolemVariant.ZOMBIE));
                 GolemSpawnOriginAttachment.set(golem, GolemSpawnOrigin.VILLAGE);
                 golem.setHealth(golem.getMaxHealth());
             });

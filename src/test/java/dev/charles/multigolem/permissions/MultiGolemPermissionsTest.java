@@ -1,6 +1,8 @@
 package dev.charles.multigolem.permissions;
 
 import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.catalog.GolemVariantCatalog;
+import dev.charles.multigolem.catalog.GolemVariantSpec;
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -20,21 +22,18 @@ class MultiGolemPermissionsTest {
 
     @Test
     void createNodes_matchSpecExactly() {
-        assertEquals("multigolem.create.copper", MultiGolemPermissions.createNode(GolemVariant.COPPER));
-        assertEquals("multigolem.create.gold", MultiGolemPermissions.createNode(GolemVariant.GOLD));
-        assertEquals("multigolem.create.emerald", MultiGolemPermissions.createNode(GolemVariant.EMERALD));
-        assertEquals("multigolem.create.diamond", MultiGolemPermissions.createNode(GolemVariant.DIAMOND));
-        assertEquals("multigolem.create.netherite", MultiGolemPermissions.createNode(GolemVariant.NETHERITE));
+        for (GolemVariant variant : GolemVariant.multiGolemPlayerBuildableVariants()) {
+            assertEquals("multigolem.create." + GolemVariantCatalog.require(variant).permissionSuffix(),
+                MultiGolemPermissions.createNode(variant));
+        }
     }
 
     @Test
     void healNodes_matchSpecExactlyIncludingIron() {
-        assertEquals("multigolem.heal.copper", MultiGolemPermissions.healNode(GolemVariant.COPPER));
-        assertEquals("multigolem.heal.iron", MultiGolemPermissions.healNode(GolemVariant.IRON));
-        assertEquals("multigolem.heal.gold", MultiGolemPermissions.healNode(GolemVariant.GOLD));
-        assertEquals("multigolem.heal.emerald", MultiGolemPermissions.healNode(GolemVariant.EMERALD));
-        assertEquals("multigolem.heal.diamond", MultiGolemPermissions.healNode(GolemVariant.DIAMOND));
-        assertEquals("multigolem.heal.netherite", MultiGolemPermissions.healNode(GolemVariant.NETHERITE));
+        for (GolemVariant variant : GolemVariantCatalog.variantsWhere(GolemVariantSpec::healEnabled)) {
+            assertEquals("multigolem.heal." + GolemVariantCatalog.require(variant).permissionSuffix(),
+                MultiGolemPermissions.healNode(variant));
+        }
     }
 
     @Test

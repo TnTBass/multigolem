@@ -2,9 +2,10 @@ package dev.charles.multigolem.spawn;
 
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
+import dev.charles.multigolem.attachment.GolemIdentityAttachment;
 import dev.charles.multigolem.attachment.GolemSpawnOrigin;
 import dev.charles.multigolem.attachment.GolemSpawnOriginAttachment;
-import dev.charles.multigolem.attachment.GolemVariantAttachment;
+import dev.charles.multigolem.identity.GolemIdentity;
 import net.minecraft.world.entity.animal.golem.IronGolem;
 
 public final class VillageGolemSpawnHandler {
@@ -34,7 +35,7 @@ public final class VillageGolemSpawnHandler {
     }
 
     private static void applyVariantAttachments(IronGolem golem, GolemVariant variant, GolemSpawnOrigin origin) {
-        GolemVariantAttachment.set(golem, variant);
+        GolemIdentityAttachment.set(golem, GolemIdentity.ofIronVariant(variant));
         GolemSpawnOriginAttachment.set(golem, origin);
     }
 

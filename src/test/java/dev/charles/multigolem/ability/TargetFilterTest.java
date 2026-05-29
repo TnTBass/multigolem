@@ -1,5 +1,6 @@
 package dev.charles.multigolem.ability;
 
+import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.ability.TargetFilter.DiamondTargetPredicate;
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
@@ -74,10 +75,24 @@ class TargetFilterTest {
     }
 
     @Test
+    void diamondMode_allHostileMobs_matchesZombieGolemIdentityOnly() {
+        DiamondTargetPredicate p = DiamondTargetPredicate.of("ALL_HOSTILE_MOBS");
+        assertTrue(p.matchesGolemVariant(GolemVariant.ZOMBIE));
+        assertFalse(p.matchesGolemVariant(GolemVariant.DIAMOND));
+    }
+
+    @Test
     void diamondMode_allHostileMobsAndPlayers_includesPlayers() {
         DiamondTargetPredicate p = DiamondTargetPredicate.of("ALL_HOSTILE_MOBS_AND_PLAYERS");
         assertTrue(p.matchesClass(Zombie.class));
         assertTrue(p.matchesClass(Player.class));
+    }
+
+    @Test
+    void diamondMode_allHostileMobsAndPlayers_matchesZombieGolemIdentityOnly() {
+        DiamondTargetPredicate p = DiamondTargetPredicate.of("ALL_HOSTILE_MOBS_AND_PLAYERS");
+        assertTrue(p.matchesGolemVariant(GolemVariant.ZOMBIE));
+        assertFalse(p.matchesGolemVariant(GolemVariant.GOLD));
     }
 
     @Test
@@ -95,5 +110,6 @@ class TargetFilterTest {
         DiamondTargetPredicate p = DiamondTargetPredicate.of("NONE");
         assertFalse(p.matchesClass(Zombie.class));
         assertFalse(p.matchesClass(WitherBoss.class));
+        assertFalse(p.matchesGolemVariant(GolemVariant.ZOMBIE));
     }
 }
