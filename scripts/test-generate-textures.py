@@ -21,6 +21,16 @@ GENERATED_TEXTURES = (
     "netherite_golem.png",
     "zombie_golem.png",
 )
+GENERATED_COPPER_SURFACE_TEXTURES = (
+    "iron_golem/copper_golem.png",
+    "iron_golem/copper_golem_exposed.png",
+    "iron_golem/copper_golem_weathered.png",
+    "iron_golem/copper_golem_oxidized.png",
+    "iron_golem/copper_golem_waxed.png",
+    "iron_golem/copper_golem_waxed_exposed.png",
+    "iron_golem/copper_golem_waxed_weathered.png",
+    "iron_golem/copper_golem_waxed_oxidized.png",
+)
 GENERATED_SPAWN_EGG_TEXTURES = (
     "copper_golem_spawn_egg.png",
     "gold_golem_spawn_egg.png",
@@ -113,6 +123,10 @@ class GenerateTexturesTest(unittest.TestCase):
                 name: hash_file(Path(first) / name)
                 for name in GENERATED_TEXTURES
             }
+            first_surface_hashes = {
+                name: hash_file(Path(first) / name)
+                for name in GENERATED_COPPER_SURFACE_TEXTURES
+            }
             first_spawn_egg_hashes = {
                 name: hash_file(generator.SPAWN_EGG_OUT_DIR / name)
                 for name in GENERATED_SPAWN_EGG_TEXTURES
@@ -125,13 +139,52 @@ class GenerateTexturesTest(unittest.TestCase):
                 name: hash_file(Path(second) / name)
                 for name in GENERATED_TEXTURES
             }
+            second_surface_hashes = {
+                name: hash_file(Path(second) / name)
+                for name in GENERATED_COPPER_SURFACE_TEXTURES
+            }
             second_spawn_egg_hashes = {
                 name: hash_file(generator.SPAWN_EGG_OUT_DIR / name)
                 for name in GENERATED_SPAWN_EGG_TEXTURES
             }
 
             self.assertEqual(first_hashes, second_hashes)
+            self.assertEqual(first_surface_hashes, second_surface_hashes)
             self.assertEqual(first_spawn_egg_hashes, second_spawn_egg_hashes)
+
+    def test_copper_surface_textures_are_visibly_distinct(self):
+        generator = load_generator()
+        temp_root = REPO / "build" / "texture-test"
+        temp_root.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=temp_root) as tmp:
+            generator.OUT_DIR = Path(tmp)
+            generator.SPAWN_EGG_OUT_DIR = Path(tmp) / "item"
+
+            self.assertEqual(generator.main(), 0)
+
+            hashes = {
+                name: hash_file(Path(tmp) / name)
+                for name in GENERATED_COPPER_SURFACE_TEXTURES
+            }
+            self.assertEqual(len(GENERATED_COPPER_SURFACE_TEXTURES), len(set(hashes.values())))
+
+            fresh = Path(tmp) / "iron_golem" / "copper_golem.png"
+            exposed = Path(tmp) / "iron_golem" / "copper_golem_exposed.png"
+            weathered = Path(tmp) / "iron_golem" / "copper_golem_weathered.png"
+            oxidized = Path(tmp) / "iron_golem" / "copper_golem_oxidized.png"
+            waxed = Path(tmp) / "iron_golem" / "copper_golem_waxed.png"
+
+            fresh_orange = count_pixels(fresh, lambda r, g, b: r >= 155 and 70 <= g <= 135 and b <= 100)
+            exposed_patina = count_pixels(exposed, lambda r, g, b: r <= 150 and g >= 120 and 80 <= b <= 145)
+            weathered_patina = count_pixels(weathered, lambda r, g, b: r <= 130 and g >= 135 and 95 <= b <= 165)
+            oxidized_patina = count_pixels(oxidized, lambda r, g, b: r <= 115 and g >= 145 and b >= 120)
+            wax_highlights = count_pixels(waxed, lambda r, g, b: r >= 235 and g >= 205 and 110 <= b <= 190)
+
+            self.assertGreaterEqual(fresh_orange, 350)
+            self.assertGreaterEqual(exposed_patina, 220)
+            self.assertGreaterEqual(weathered_patina, 420)
+            self.assertGreaterEqual(oxidized_patina, 250)
+            self.assertGreaterEqual(wax_highlights, 16)
 
     def test_material_details_are_visible_in_generated_outputs(self):
         generator = load_generator()

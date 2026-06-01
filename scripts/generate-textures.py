@@ -21,6 +21,17 @@ TIERS = {
     "zombie":    {"hue_shift": 92,  "saturation": 0.72, "lightness": 0.62},
 }
 
+COPPER_SURFACES = {
+    "": {"patina": 0.00, "waxed": False},
+    "_exposed": {"patina": 0.30, "waxed": False},
+    "_weathered": {"patina": 0.50, "waxed": False},
+    "_oxidized": {"patina": 0.70, "waxed": False},
+    "_waxed": {"patina": 0.00, "waxed": True},
+    "_waxed_exposed": {"patina": 0.30, "waxed": True},
+    "_waxed_weathered": {"patina": 0.50, "waxed": True},
+    "_waxed_oxidized": {"patina": 0.70, "waxed": True},
+}
+
 def shift_hue(img: Image.Image, hue_deg: float, sat_mul: float, lum_mul: float) -> Image.Image:
     img = img.convert("RGBA")
     pixels = img.load()
@@ -189,6 +200,82 @@ def apply_material_details(tier: str, img: Image.Image) -> Image.Image:
 
     return Image.alpha_composite(img.convert("RGBA"), overlay)
 
+def apply_copper_surface_details(img: Image.Image, patina: float, waxed: bool) -> Image.Image:
+    if patina > 0:
+        img = blend_material(img, (62, 164, 132), patina * 0.48)
+
+    overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+
+    if patina > 0:
+        alpha = int(135 + patina * 85)
+        patina_fill = (
+            int(96 - patina * 22),
+            int(174 + patina * 24),
+            int(136 + patina * 38),
+            alpha,
+        )
+        dark_patina = (
+            int(40 + patina * 8),
+            int(116 + patina * 28),
+            int(94 + patina * 30),
+            int(120 + patina * 70),
+        )
+        draw_rects(draw, [
+            (12, 52, 17, 11), (67, 28, 5, 26), (42, 6, 6, 16),
+            (65, 6, 6, 16), (40, 51, 18, 12), (76, 27, 4, 30),
+            (76, 64, 4, 30),
+        ], patina_fill)
+        draw_lines(draw, [
+            [(14, 52), (18, 59), (15, 68)],
+            [(23, 52), (27, 57), (25, 63)],
+            [(68, 28), (70, 40), (67, 55)],
+            [(43, 7), (46, 14), (43, 21)],
+            [(66, 7), (69, 14), (66, 21)],
+            [(42, 52), (49, 56), (57, 62)],
+            [(77, 65), (79, 76), (77, 92)],
+        ], dark_patina, width=2)
+        if patina >= 0.5:
+            draw_rects(draw, [
+                (13, 56, 4, 4), (21, 59, 5, 3), (68, 36, 3, 8),
+                (44, 15, 3, 5), (67, 16, 3, 4), (48, 55, 6, 4),
+                (77, 72, 2, 11),
+            ], (82, 199, 159, int(155 + patina * 70)))
+        if patina >= 0.7:
+            draw_rects(draw, [
+                (12, 52, 17, 11), (67, 28, 5, 26), (42, 6, 6, 16),
+                (65, 6, 6, 16), (40, 51, 18, 12),
+            ], (76, 188, 168, 92))
+
+    if waxed:
+        wax = (255, 226, 133, 215)
+        wax_shadow = (168, 118, 43, 125)
+        draw_lines(draw, [
+            [(12, 52), (28, 62)],
+            [(14, 63), (28, 55)],
+            [(67, 29), (71, 47)],
+            [(42, 7), (48, 20)],
+            [(65, 7), (71, 20)],
+            [(41, 52), (57, 62)],
+            [(76, 65), (79, 92)],
+        ], wax_shadow, width=2)
+        draw_lines(draw, [
+            [(13, 52), (28, 61)],
+            [(15, 63), (28, 56)],
+            [(68, 29), (71, 45)],
+            [(43, 7), (48, 19)],
+            [(66, 7), (71, 19)],
+            [(42, 52), (57, 61)],
+            [(77, 65), (79, 91)],
+        ], wax, width=1)
+        draw_rects(draw, [
+            (16, 54, 2, 2), (24, 58, 2, 2), (69, 35, 2, 2),
+            (45, 13, 2, 2), (68, 13, 2, 2), (50, 56, 2, 2),
+            (78, 78, 1, 3),
+        ], (255, 243, 178, 235))
+
+    return Image.alpha_composite(img.convert("RGBA"), overlay)
+
 def apply_spawn_egg_material_details(tier: str, img: Image.Image) -> Image.Image:
     overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay)
@@ -236,6 +323,8 @@ def main() -> int:
         return 1
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     SPAWN_EGG_OUT_DIR.mkdir(parents=True, exist_ok=True)
+    copper_surface_dir = OUT_DIR / "iron_golem"
+    copper_surface_dir.mkdir(parents=True, exist_ok=True)
     template = Image.open(TEMPLATE)
     for tier, params in TIERS.items():
         img = shift_hue(template.copy(), params["hue_shift"], params["saturation"], params["lightness"])
@@ -247,6 +336,12 @@ def main() -> int:
         spawn_egg_out = SPAWN_EGG_OUT_DIR / f"{tier}_golem_spawn_egg.png"
         spawn_egg.save(spawn_egg_out, "PNG")
         print(f"wrote {spawn_egg_out.relative_to(REPO)}")
+        if tier == "copper":
+            for suffix, surface in COPPER_SURFACES.items():
+                surface_img = apply_copper_surface_details(img.copy(), surface["patina"], surface["waxed"])
+                surface_out = copper_surface_dir / f"copper_golem{suffix}.png"
+                surface_img.save(surface_out, "PNG")
+                print(f"wrote {surface_out.relative_to(REPO)}")
     return 0
 
 if __name__ == "__main__":
