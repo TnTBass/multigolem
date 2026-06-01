@@ -6,6 +6,7 @@ import dev.charles.multigolem.test.MinecraftBootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -62,7 +63,7 @@ class GolemVariantCatalogTest {
         assertEquals(customIronFamily, GolemVariant.lootVariants());
         assertEquals(customIronFamily, GolemVariant.multiGolemPlayerBuildableVariants());
         assertEquals(customIronFamily, GolemVariant.nonIronVariants());
-        assertFalse(java.util.Arrays.stream(GolemVariant.values())
+        assertFalse(Arrays.stream(GolemVariant.values())
             .anyMatch(v -> v.id().equals("redstone") || v.id().equals("lapis")));
     }
 

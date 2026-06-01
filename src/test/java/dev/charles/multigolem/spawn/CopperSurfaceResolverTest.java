@@ -74,6 +74,13 @@ class CopperSurfaceResolverTest {
         )));
     }
 
+    @Test
+    void emptyOrMissingBodyBlocksResolveEmpty() {
+        assertEquals(Optional.empty(), CopperSurfaceResolver.resolveBody(List.of()));
+        assertEquals(Optional.empty(), CopperSurfaceResolver.resolveBody(null));
+        assertEquals(Optional.empty(), CopperSurfaceResolver.surfaceFor(state(Blocks.IRON_BLOCK)));
+    }
+
     private static Stream<Arguments> singleCopperBlocks() {
         return Stream.of(
             Arguments.of(Blocks.COPPER_BLOCK, GolemWeatheringStage.UNAFFECTED, false),

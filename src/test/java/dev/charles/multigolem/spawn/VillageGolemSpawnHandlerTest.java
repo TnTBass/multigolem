@@ -50,8 +50,14 @@ class VillageGolemSpawnHandlerTest {
 
     @Test
     void villageCopperRollIdentityHasEmptySurfaceState() {
+        IronGolem golem = mock(IronGolem.class);
+        CapturingApplier applier = new CapturingApplier();
+        when(golem.getMaxHealth()).thenReturn(100.0F);
+
+        VillageGolemSpawnHandler.applyVariant(golem, GolemVariant.COPPER, applier);
+
         assertEquals(GolemIdentity.ofIronVariant(GolemVariant.COPPER),
-            VillageGolemSpawnHandler.identityForVillageRollForTest(GolemVariant.COPPER));
+            GolemIdentity.ofIronVariant(applier.variant));
     }
 
     private static final class CapturingApplier implements VillageGolemSpawnHandler.VillageVariantApplier {

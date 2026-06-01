@@ -2,7 +2,6 @@
 
 ## Unreleased
 
-- Added Phase 3 Copper Iron Golem surface state support so Copper T-pattern builds, marked spawn eggs, spawners, and rendering can preserve waxed and weathered Copper block forms while existing variants keep their current behavior.
 - Refactored MultiGolem's variant catalog and saved identity foundation for beta validation builds; existing Iron-family golem behavior and old saved variant data remain compatible.
 
 ## 0.4.0+mc26.1.2 — 2026-05-28

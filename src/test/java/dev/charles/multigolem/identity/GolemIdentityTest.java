@@ -1,5 +1,8 @@
 package dev.charles.multigolem.identity;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.mojang.serialization.JsonOps;
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import io.netty.buffer.ByteBuf;
@@ -72,10 +75,51 @@ class GolemIdentityTest {
     }
 
     @Test
+    void surfaceStateDoesNotChangeIdentityVariant() {
+        assertEquals(GolemVariant.COPPER, GolemIdentity.ofIronVariant(GolemVariant.COPPER,
+            new GolemSurfaceState(GolemWeatheringStage.OXIDIZED, true)).variant());
+    }
+
+    @Test
     void streamCodecRoundTripsAbsentSurfaceAsAbsent() {
         GolemIdentity decoded = roundTrip(GolemIdentity.ofIronVariant(GolemVariant.DIAMOND));
 
         assertEquals(Optional.empty(), decoded.surfaceState());
+    }
+
+    @Test
+    void streamCodecRoundTripsPresentCopperSurface() {
+        GolemIdentity identity = GolemIdentity.ofIronVariant(GolemVariant.COPPER,
+            new GolemSurfaceState(GolemWeatheringStage.WEATHERED, true));
+
+        assertEquals(identity, roundTrip(identity));
+    }
+
+    @Test
+    void streamCodecRoundTripsUnwaxedPresentCopperSurface() {
+        GolemIdentity identity = GolemIdentity.ofIronVariant(GolemVariant.COPPER,
+            new GolemSurfaceState(GolemWeatheringStage.OXIDIZED, false));
+
+        assertEquals(identity, roundTrip(identity));
+    }
+
+    @Test
+    void codecPreservesAbsentSurfaceAsAbsent() {
+        JsonElement encoded = GolemIdentity.CODEC.encodeStart(JsonOps.INSTANCE,
+            GolemIdentity.ofIronVariant(GolemVariant.COPPER)).getOrThrow();
+
+        assertFalse(encoded.getAsJsonObject().has("surface_state"));
+        assertEquals(GolemIdentity.ofIronVariant(GolemVariant.COPPER),
+            GolemIdentity.CODEC.parse(JsonOps.INSTANCE, encoded).getOrThrow());
+    }
+
+    @Test
+    void codecPreservesDefaultSurfaceAsPresent() {
+        GolemIdentity identity = GolemIdentity.ofIronVariant(GolemVariant.COPPER, GolemSurfaceState.DEFAULT);
+        JsonObject encoded = GolemIdentity.CODEC.encodeStart(JsonOps.INSTANCE, identity).getOrThrow().getAsJsonObject();
+
+        assertTrue(encoded.has("surface_state"));
+        assertEquals(identity, GolemIdentity.CODEC.parse(JsonOps.INSTANCE, encoded).getOrThrow());
     }
 
     private static GolemIdentity roundTrip(GolemIdentity identity) {

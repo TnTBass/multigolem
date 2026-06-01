@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SpawnerVariantMarkerTest {
@@ -94,6 +95,28 @@ class SpawnerVariantMarkerTest {
 
         assertEquals(identity, SpawnerVariantMarker.readIdentity(entity).orElseThrow());
         assertEquals(identity, SpawnerVariantMarker.previewIdentity(entity).orElseThrow());
+    }
+
+    @Test
+    void spawnerSurfaceEmptyCopperMarkerWritesNoSurfaceTag() {
+        CompoundTag entity = new CompoundTag();
+        GolemIdentity identity = GolemIdentity.ofIronVariant(GolemVariant.COPPER);
+
+        SpawnerVariantMarker.writeIdentity(entity, identity);
+
+        assertEquals(identity, SpawnerVariantMarker.readIdentity(entity).orElseThrow());
+        assertFalse(entity.getCompoundOrEmpty("multigolem").contains("surface"));
+    }
+
+    @Test
+    void spawnerWaxedSurfaceMarkerRoundTripsFullIdentity() {
+        CompoundTag entity = new CompoundTag();
+        GolemIdentity identity = GolemIdentity.ofIronVariant(GolemVariant.COPPER,
+            new GolemSurfaceState(GolemWeatheringStage.WEATHERED, true));
+
+        SpawnerVariantMarker.writeIdentity(entity, identity);
+
+        assertEquals(identity, SpawnerVariantMarker.readIdentity(entity).orElseThrow());
     }
 
     @Test

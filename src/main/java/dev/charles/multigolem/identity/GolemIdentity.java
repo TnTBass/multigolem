@@ -27,6 +27,7 @@ public record GolemIdentity(
         GolemFamily.STREAM_CODEC, GolemIdentity::family,
         GolemVariant.STREAM_CODEC, GolemIdentity::variant,
         ByteBufCodecs.BOOL, identity -> identity.surfaceState().isPresent(),
+        // Composite codecs decode every field, so absent Optional values still write DEFAULT bytes.
         GolemSurfaceState.STREAM_CODEC, identity -> identity.surfaceState().orElse(GolemSurfaceState.DEFAULT),
         (family, variant, hasSurface, surface) ->
             new GolemIdentity(family, variant, hasSurface ? Optional.of(surface) : Optional.empty())

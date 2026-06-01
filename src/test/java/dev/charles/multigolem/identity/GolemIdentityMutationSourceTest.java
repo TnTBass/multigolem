@@ -11,7 +11,7 @@ class GolemIdentityMutationSourceTest {
     @Test
     void explicitMutationPathsUseIdentityAttachment() throws Exception {
         assertSourceContains("src/main/java/dev/charles/multigolem/spawn/GolemCreationHandler.java",
-            "GolemIdentityAttachment.set(golem, identityForBodyStates(variant, match))");
+            "GolemIdentityAttachment.set(golem, identityFromMatchBodyStates(variant, match))");
         assertSourceContains("src/main/java/dev/charles/multigolem/spawn/VillageGolemSpawnHandler.java",
             "GolemIdentityAttachment.set(golem, GolemIdentity.ofIronVariant(variant))");
         assertSourceContains("src/main/java/dev/charles/multigolem/spawn/ZombieVillageSpawnHandler.java",

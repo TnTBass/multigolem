@@ -60,6 +60,7 @@ public final class SpawnEggStacks {
         return data == null ? "" : data.copyTag().toString();
     }
 
+    // Package-private so spawner markers reuse the exact same legacy marker parser.
     static Optional<GolemIdentity> identityFromMarker(CompoundTag multigolem) {
         Optional<GolemFamily> family = GolemFamily.fromId(multigolem.getStringOr(FAMILY_KEY, GolemFamily.IRON_GOLEM.id()));
         Optional<GolemVariant> variant = GolemVariant.fromId(multigolem.getStringOr(VARIANT_KEY, ""));

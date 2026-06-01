@@ -25,7 +25,7 @@ class GolemCreationHandlerTest {
     void copperBodyStatesDeriveSurfaceIdentity() {
         assertEquals(GolemIdentity.ofIronVariant(GolemVariant.COPPER,
                 new GolemSurfaceState(GolemWeatheringStage.OXIDIZED, false)),
-            GolemCreationHandler.identityForBodyStatesForTest(GolemVariant.COPPER, List.of(
+            GolemCreationHandler.identityForBodyStates(GolemVariant.COPPER, List.of(
                 state(Blocks.COPPER_BLOCK),
                 state(Blocks.WEATHERED_COPPER),
                 state(Blocks.OXIDIZED_COPPER),
@@ -36,7 +36,7 @@ class GolemCreationHandlerTest {
     @Test
     void nonCopperBodyStatesKeepSurfaceEmpty() {
         assertEquals(GolemIdentity.ofIronVariant(GolemVariant.GOLD),
-            GolemCreationHandler.identityForBodyStatesForTest(GolemVariant.GOLD, List.of(
+            GolemCreationHandler.identityForBodyStates(GolemVariant.GOLD, List.of(
                 state(Blocks.GOLD_BLOCK),
                 state(Blocks.GOLD_BLOCK),
                 state(Blocks.GOLD_BLOCK),

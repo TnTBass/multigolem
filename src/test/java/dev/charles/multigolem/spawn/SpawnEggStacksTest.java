@@ -102,8 +102,8 @@ class SpawnEggStacksTest {
         ItemStack stack = SpawnEggStacks.create(identity);
 
         assertEquals(identity, SpawnEggStacks.identityFrom(stack).orElseThrow());
-        assertTrue(SpawnEggStacks.customDataSnbt(stack).contains("surface"));
-        assertTrue(SpawnEggStacks.customDataSnbt(stack).contains("weathering_stage"));
+        assertEquals("{multigolem:{family:\"iron_golem\",surface:{waxed:1b,weathering_stage:\"weathered\"},variant:\"copper\"}}",
+            SpawnEggStacks.customDataSnbt(stack));
     }
 
     @Test
@@ -111,6 +111,14 @@ class SpawnEggStacksTest {
         ItemStack stack = markedEgg("copper", null);
 
         assertEquals(GolemIdentity.ofIronVariant(GolemVariant.COPPER), SpawnEggStacks.identityFrom(stack).orElseThrow());
+    }
+
+    @Test
+    void surfaceEmptyCopperSpawnEggWritesNoSurfaceMarker() {
+        ItemStack stack = SpawnEggStacks.create(GolemIdentity.ofIronVariant(GolemVariant.COPPER));
+
+        assertEquals(GolemIdentity.ofIronVariant(GolemVariant.COPPER), SpawnEggStacks.identityFrom(stack).orElseThrow());
+        assertFalse(SpawnEggStacks.customDataSnbt(stack).contains("surface"));
     }
 
     @Test

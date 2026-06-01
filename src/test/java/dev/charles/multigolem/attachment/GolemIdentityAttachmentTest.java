@@ -87,6 +87,7 @@ class GolemIdentityAttachmentTest {
         );
 
         assertEquals(GolemIdentity.ofIronVariant(GolemVariant.EMERALD), GolemIdentityMigration.resolve(storage));
+        assertTrue(storage.rawIdentity().isPresent());
         assertEquals(Optional.of(GolemVariant.EMERALD), storage.rawVariant());
     }
 
@@ -129,6 +130,8 @@ class GolemIdentityAttachmentTest {
         GolemIdentityMigration.write(storage,
             new GolemIdentity(GolemFamily.COPPER_GOLEM, GolemVariant.COPPER, Optional.empty()));
 
+        assertTrue(storage.rawIdentity().isEmpty());
+        assertTrue(storage.rawVariant().isEmpty());
         assertEquals(GolemIdentity.defaultIron(), GolemIdentityMigration.resolve(storage));
         assertTrue(storage.rawIdentity().isEmpty());
         assertTrue(storage.rawVariant().isEmpty());

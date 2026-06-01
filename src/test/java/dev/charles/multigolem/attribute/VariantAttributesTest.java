@@ -41,6 +41,8 @@ class VariantAttributesTest {
             new GolemSurfaceState(GolemWeatheringStage.OXIDIZED, true));
 
         assertEquals(config.tier(GolemVariant.COPPER).maxHealth(),
+            VariantAttributes.freshSpawnHealth(GolemIdentity.ofIronVariant(GolemVariant.COPPER).variant(), config));
+        assertEquals(config.tier(GolemVariant.COPPER).maxHealth(),
             VariantAttributes.freshSpawnHealth(oxidizedCopper.variant(), config));
     }
 }

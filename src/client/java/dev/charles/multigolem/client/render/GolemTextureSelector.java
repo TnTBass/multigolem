@@ -38,10 +38,6 @@ public final class GolemTextureSelector {
         return get(identity.variant());
     }
 
-    static Identifier copperFallbackForTest() {
-        return copperTexture(GolemSurfaceState.DEFAULT);
-    }
-
     private static Identifier copperTexture(GolemSurfaceState surface) {
         String suffix = switch (surface.weatheringStage()) {
             case UNAFFECTED -> surface.waxed() ? "_waxed" : "";

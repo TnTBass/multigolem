@@ -6,6 +6,8 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 
+import java.util.Objects;
+
 public record GolemSurfaceState(GolemWeatheringStage weatheringStage, boolean waxed) {
     public static final GolemSurfaceState DEFAULT =
         new GolemSurfaceState(GolemWeatheringStage.UNAFFECTED, false);
@@ -20,6 +22,10 @@ public record GolemSurfaceState(GolemWeatheringStage weatheringStage, boolean wa
         ByteBufCodecs.BOOL, GolemSurfaceState::waxed,
         GolemSurfaceState::new
     );
+
+    public GolemSurfaceState {
+        Objects.requireNonNull(weatheringStage, "weatheringStage");
+    }
 
     public boolean isDefault() {
         return DEFAULT.equals(this);

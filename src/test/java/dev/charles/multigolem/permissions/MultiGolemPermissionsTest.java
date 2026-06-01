@@ -26,7 +26,9 @@ class MultiGolemPermissionsTest {
             assertEquals("multigolem.create." + GolemVariantCatalog.require(variant).permissionSuffix(),
                 MultiGolemPermissions.createNode(variant));
         }
-        assertEquals("multigolem.create.copper", MultiGolemPermissions.createNode(GolemVariant.COPPER));
+        // Keep COPPER pinned as the Phase 3 surface-state tier even if set membership changes later.
+        assertEquals("multigolem.create." + GolemVariantCatalog.require(GolemVariant.COPPER).permissionSuffix(),
+            MultiGolemPermissions.createNode(GolemVariant.COPPER));
     }
 
     @Test
@@ -35,7 +37,9 @@ class MultiGolemPermissionsTest {
             assertEquals("multigolem.heal." + GolemVariantCatalog.require(variant).permissionSuffix(),
                 MultiGolemPermissions.healNode(variant));
         }
-        assertEquals("multigolem.heal.copper", MultiGolemPermissions.healNode(GolemVariant.COPPER));
+        // Keep COPPER pinned as the Phase 3 surface-state tier even if set membership changes later.
+        assertEquals("multigolem.heal." + GolemVariantCatalog.require(GolemVariant.COPPER).permissionSuffix(),
+            MultiGolemPermissions.healNode(GolemVariant.COPPER));
     }
 
     @Test

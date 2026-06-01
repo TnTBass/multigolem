@@ -1,8 +1,5 @@
 package dev.charles.multigolem;
 
-import dev.charles.multigolem.identity.GolemIdentity;
-import dev.charles.multigolem.identity.GolemSurfaceState;
-import dev.charles.multigolem.identity.GolemWeatheringStage;
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -92,8 +89,6 @@ class GolemVariantTest {
 
     @Test
     void dropItem_matchesExpected() {
-        assertEquals(GolemVariant.COPPER, GolemIdentity.ofIronVariant(GolemVariant.COPPER,
-            new GolemSurfaceState(GolemWeatheringStage.OXIDIZED, true)).variant());
         assertEquals(Items.COPPER_INGOT,    GolemVariant.COPPER.dropItem());
         assertEquals(Items.IRON_INGOT,      GolemVariant.IRON.dropItem());
         assertEquals(Items.GOLD_INGOT,      GolemVariant.GOLD.dropItem());

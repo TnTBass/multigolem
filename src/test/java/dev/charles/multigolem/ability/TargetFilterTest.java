@@ -2,9 +2,6 @@ package dev.charles.multigolem.ability;
 
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.ability.TargetFilter.DiamondTargetPredicate;
-import dev.charles.multigolem.identity.GolemIdentity;
-import dev.charles.multigolem.identity.GolemSurfaceState;
-import dev.charles.multigolem.identity.GolemWeatheringStage;
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragonPart;
@@ -80,11 +77,10 @@ class TargetFilterTest {
     @Test
     void diamondMode_allHostileMobs_matchesZombieGolemIdentityOnly() {
         DiamondTargetPredicate p = DiamondTargetPredicate.of("ALL_HOSTILE_MOBS");
-        GolemIdentity oxidizedCopper = GolemIdentity.ofIronVariant(GolemVariant.COPPER,
-            new GolemSurfaceState(GolemWeatheringStage.OXIDIZED, true));
 
         assertTrue(p.matchesGolemVariant(GolemVariant.ZOMBIE));
-        assertFalse(p.matchesGolemVariant(oxidizedCopper.variant()));
+        assertFalse(p.matchesGolemVariant(GolemVariant.DIAMOND));
+        assertFalse(p.matchesGolemVariant(GolemVariant.COPPER));
     }
 
     @Test

@@ -56,6 +56,9 @@ class IronGolemMixinTest {
         assertEquals(InteractionResult.SUCCESS,
             IronGolemHealInteraction.result(
                 true, oxidizedCopper.variant(), GolemVariant.COPPER, false, true));
+        assertEquals(InteractionResult.SUCCESS,
+            IronGolemHealInteraction.result(
+                true, GolemIdentity.ofIronVariant(GolemVariant.COPPER).variant(), GolemVariant.COPPER, false, true));
     }
 
     @Test

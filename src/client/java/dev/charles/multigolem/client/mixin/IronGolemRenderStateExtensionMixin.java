@@ -19,6 +19,8 @@ public class IronGolemRenderStateExtensionMixin implements GolemRenderStateExten
 
     @Override
     public void multigolem$setIdentity(GolemIdentity identity) {
-        this.multigolem$identity = identity == null ? GolemIdentity.defaultIron() : identity;
+        this.multigolem$identity = identity == null || !identity.isValidForPhase3()
+            ? GolemIdentity.defaultIron()
+            : identity;
     }
 }

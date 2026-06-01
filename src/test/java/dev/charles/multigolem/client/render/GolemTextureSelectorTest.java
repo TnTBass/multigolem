@@ -30,6 +30,12 @@ class GolemTextureSelectorTest {
         assertEquals(id("textures/entity/iron_golem/copper_golem_exposed.png"),
             GolemTextureSelector.get(GolemIdentity.ofIronVariant(GolemVariant.COPPER,
                 new GolemSurfaceState(GolemWeatheringStage.EXPOSED, false))));
+        assertEquals(id("textures/entity/iron_golem/copper_golem_weathered.png"),
+            GolemTextureSelector.get(GolemIdentity.ofIronVariant(GolemVariant.COPPER,
+                new GolemSurfaceState(GolemWeatheringStage.WEATHERED, false))));
+        assertEquals(id("textures/entity/iron_golem/copper_golem_waxed_weathered.png"),
+            GolemTextureSelector.get(GolemIdentity.ofIronVariant(GolemVariant.COPPER,
+                new GolemSurfaceState(GolemWeatheringStage.WEATHERED, true))));
         assertEquals(id("textures/entity/iron_golem/copper_golem_waxed_oxidized.png"),
             GolemTextureSelector.get(GolemIdentity.ofIronVariant(GolemVariant.COPPER,
                 new GolemSurfaceState(GolemWeatheringStage.OXIDIZED, true))));
@@ -44,7 +50,7 @@ class GolemTextureSelectorTest {
     @Test
     void invalidOrMissingCopperSurfaceFallsBackToCurrentCopperTexture() {
         assertEquals(id("textures/entity/iron_golem/copper_golem.png"),
-            GolemTextureSelector.copperFallbackForTest());
+            GolemTextureSelector.get(GolemIdentity.ofIronVariant(GolemVariant.COPPER)));
     }
 
     @Test

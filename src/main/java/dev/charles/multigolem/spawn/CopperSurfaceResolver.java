@@ -9,6 +9,7 @@ import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public final class CopperSurfaceResolver {
@@ -19,8 +20,9 @@ public final class CopperSurfaceResolver {
             return Optional.empty();
         }
         Block block = state.getBlock();
-        boolean waxed = HoneycombItem.WAX_OFF_BY_BLOCK.get().containsKey(block);
-        Block unwaxed = waxed ? HoneycombItem.WAX_OFF_BY_BLOCK.get().get(block) : block;
+        Map<Block, Block> waxOffByBlock = HoneycombItem.WAX_OFF_BY_BLOCK.get();
+        boolean waxed = waxOffByBlock.containsKey(block);
+        Block unwaxed = waxed ? waxOffByBlock.get(block) : block;
         if (!(unwaxed instanceof WeatheringCopper copper)) {
             return Optional.empty();
         }
