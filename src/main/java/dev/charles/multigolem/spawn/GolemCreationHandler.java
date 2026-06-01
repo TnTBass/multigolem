@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.state.pattern.BlockInWorld;
 import net.minecraft.world.level.block.state.pattern.BlockPattern;
 import net.minecraft.world.level.block.state.pattern.BlockPatternBuilder;
 
+import java.util.List;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
@@ -68,7 +69,7 @@ public final class GolemCreationHandler {
                 return false;
             }
             golem.setPlayerCreated(true);
-            GolemIdentityAttachment.set(golem, GolemIdentity.ofIronVariant(variant));
+            GolemIdentityAttachment.set(golem, identityForBodyStates(variant, match));
 
             // Vanilla's spawn order: clear blocks first, then position+spawn, then trigger, then updateNeighbors.
             CarvedPumpkinBlock.clearPatternBlocks(server, match);
@@ -85,5 +86,21 @@ public final class GolemCreationHandler {
             return true;
         }
         return false;
+    }
+
+    static GolemIdentity identityForBodyStatesForTest(GolemVariant variant, List<net.minecraft.world.level.block.state.BlockState> bodyStates) {
+        if (variant != GolemVariant.COPPER) return GolemIdentity.ofIronVariant(variant);
+        return CopperSurfaceResolver.resolveBody(bodyStates)
+            .map(surface -> GolemIdentity.ofIronVariant(GolemVariant.COPPER, surface))
+            .orElseGet(() -> GolemIdentity.ofIronVariant(GolemVariant.COPPER));
+    }
+
+    private static GolemIdentity identityForBodyStates(GolemVariant variant, BlockPattern.BlockPatternMatch match) {
+        return identityForBodyStatesForTest(variant, List.of(
+            match.getBlock(0, 1, 0).getState(),
+            match.getBlock(1, 1, 0).getState(),
+            match.getBlock(2, 1, 0).getState(),
+            match.getBlock(1, 2, 0).getState()
+        ));
     }
 }

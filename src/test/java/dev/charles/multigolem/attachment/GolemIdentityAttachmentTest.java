@@ -5,6 +5,8 @@ import dev.charles.multigolem.identity.GolemFamily;
 import dev.charles.multigolem.identity.GolemIdentity;
 import dev.charles.multigolem.identity.GolemIdentityMigration;
 import dev.charles.multigolem.identity.GolemIdentityStorage;
+import dev.charles.multigolem.identity.GolemSurfaceState;
+import dev.charles.multigolem.identity.GolemWeatheringStage;
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -59,6 +61,46 @@ class GolemIdentityAttachmentTest {
     }
 
     @Test
+    void phaseTwoIdentityWithMissingSurfaceStillResolves() {
+        MapBackedIdentityStorage storage = new MapBackedIdentityStorage();
+        storage.setRawIdentity(new GolemIdentity(GolemFamily.IRON_GOLEM, GolemVariant.ZOMBIE, Optional.empty()));
+
+        assertEquals(GolemIdentity.ofIronVariant(GolemVariant.ZOMBIE), GolemIdentityMigration.resolve(storage));
+    }
+
+    @Test
+    void validCopperSurfaceIdentityWinsOverConflictingOldVariant() {
+        GolemIdentity copper = GolemIdentity.ofIronVariant(GolemVariant.COPPER,
+            new GolemSurfaceState(GolemWeatheringStage.WEATHERED, true));
+        MapBackedIdentityStorage storage = oldAndNewStorage(GolemVariant.GOLD, copper);
+
+        assertEquals(copper, GolemIdentityMigration.resolve(storage));
+        assertEquals(Optional.of(GolemVariant.GOLD), storage.rawVariant());
+    }
+
+    @Test
+    void invalidNonCopperSurfaceFallsBackToOldVariantWithoutMutating() {
+        GolemSurfaceState surface = new GolemSurfaceState(GolemWeatheringStage.EXPOSED, false);
+        MapBackedIdentityStorage storage = oldAndNewStorage(
+            GolemVariant.EMERALD,
+            new GolemIdentity(GolemFamily.IRON_GOLEM, GolemVariant.GOLD, Optional.of(surface))
+        );
+
+        assertEquals(GolemIdentity.ofIronVariant(GolemVariant.EMERALD), GolemIdentityMigration.resolve(storage));
+        assertEquals(Optional.of(GolemVariant.EMERALD), storage.rawVariant());
+    }
+
+    @Test
+    void reservedCopperGolemFamilyFallsBackToOldVariantWithoutBeingTreatedAsRuntimeValid() {
+        MapBackedIdentityStorage storage = oldAndNewStorage(
+            GolemVariant.NETHERITE,
+            new GolemIdentity(GolemFamily.COPPER_GOLEM, GolemVariant.COPPER, Optional.empty())
+        );
+
+        assertEquals(GolemIdentity.ofIronVariant(GolemVariant.NETHERITE), GolemIdentityMigration.resolve(storage));
+    }
+
+    @Test
     void explicitIronFamilyWriteStoresNewIdentityAndOldVariant() {
         MapBackedIdentityStorage storage = new MapBackedIdentityStorage();
 
@@ -69,10 +111,34 @@ class GolemIdentityAttachmentTest {
     }
 
     @Test
+    void writingCopperSurfaceDualWritesOldCopperVariantOnly() {
+        MapBackedIdentityStorage storage = new MapBackedIdentityStorage();
+        GolemIdentity identity = GolemIdentity.ofIronVariant(GolemVariant.COPPER,
+            new GolemSurfaceState(GolemWeatheringStage.OXIDIZED, false));
+
+        GolemIdentityMigration.write(storage, identity);
+
+        assertEquals(Optional.of(identity), storage.rawIdentity());
+        assertEquals(Optional.of(GolemVariant.COPPER), storage.rawVariant());
+    }
+
+    @Test
+    void reservedCopperGolemFamilyDoesNotEnterRuntimeAsSupportedIdentity() {
+        MapBackedIdentityStorage storage = new MapBackedIdentityStorage();
+
+        GolemIdentityMigration.write(storage,
+            new GolemIdentity(GolemFamily.COPPER_GOLEM, GolemVariant.COPPER, Optional.empty()));
+
+        assertEquals(GolemIdentity.defaultIron(), GolemIdentityMigration.resolve(storage));
+        assertTrue(storage.rawIdentity().isEmpty());
+        assertTrue(storage.rawVariant().isEmpty());
+    }
+
+    @Test
     void explicitDefaultIronSetClearsBothAttachments() {
         MapBackedIdentityStorage storage = oldAndNewStorage(
             GolemVariant.DIAMOND,
-            GolemIdentity.ofIronVariant(GolemVariant.GOLD)
+            GolemIdentity.ofIronVariant(GolemVariant.COPPER, GolemSurfaceState.DEFAULT)
         );
 
         GolemIdentityMigration.write(storage, GolemIdentity.defaultIron());
@@ -94,7 +160,7 @@ class GolemIdentityAttachmentTest {
     }
 
     private static MapBackedIdentityStorage invalidNewAndOldStorage(GolemVariant oldVariant) {
-        return oldAndNewStorage(oldVariant, new GolemIdentity(null, GolemVariant.GOLD));
+        return oldAndNewStorage(oldVariant, new GolemIdentity(null, GolemVariant.GOLD, Optional.empty()));
     }
 
     private static final class MapBackedIdentityStorage implements GolemIdentityStorage {

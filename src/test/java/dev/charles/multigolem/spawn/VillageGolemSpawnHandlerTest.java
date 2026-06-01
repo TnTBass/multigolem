@@ -2,6 +2,7 @@ package dev.charles.multigolem.spawn;
 
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.attachment.GolemSpawnOrigin;
+import dev.charles.multigolem.identity.GolemIdentity;
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import net.minecraft.world.entity.animal.golem.IronGolem;
 import org.junit.jupiter.api.BeforeAll;
@@ -45,6 +46,12 @@ class VillageGolemSpawnHandlerTest {
 
         assertEquals(0, applier.calls);
         verifyNoInteractions(golem);
+    }
+
+    @Test
+    void villageCopperRollIdentityHasEmptySurfaceState() {
+        assertEquals(GolemIdentity.ofIronVariant(GolemVariant.COPPER),
+            VillageGolemSpawnHandler.identityForVillageRollForTest(GolemVariant.COPPER));
     }
 
     private static final class CapturingApplier implements VillageGolemSpawnHandler.VillageVariantApplier {

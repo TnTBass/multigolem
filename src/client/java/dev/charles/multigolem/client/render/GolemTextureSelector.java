@@ -2,6 +2,9 @@ package dev.charles.multigolem.client.render;
 
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
+import dev.charles.multigolem.identity.GolemFamily;
+import dev.charles.multigolem.identity.GolemIdentity;
+import dev.charles.multigolem.identity.GolemSurfaceState;
 import net.minecraft.resources.Identifier;
 
 import java.util.EnumMap;
@@ -26,6 +29,28 @@ public final class GolemTextureSelector {
 
     public static Identifier get(GolemVariant variant) {
         return TEXTURES.getOrDefault(variant, IRON_TEXTURE);
+    }
+
+    public static Identifier get(GolemIdentity identity) {
+        if (identity.family() == GolemFamily.IRON_GOLEM && identity.variant() == GolemVariant.COPPER) {
+            return copperTexture(identity.surfaceState().orElse(GolemSurfaceState.DEFAULT));
+        }
+        return get(identity.variant());
+    }
+
+    static Identifier copperFallbackForTest() {
+        return copperTexture(GolemSurfaceState.DEFAULT);
+    }
+
+    private static Identifier copperTexture(GolemSurfaceState surface) {
+        String suffix = switch (surface.weatheringStage()) {
+            case UNAFFECTED -> surface.waxed() ? "_waxed" : "";
+            case EXPOSED -> surface.waxed() ? "_waxed_exposed" : "_exposed";
+            case WEATHERED -> surface.waxed() ? "_waxed_weathered" : "_weathered";
+            case OXIDIZED -> surface.waxed() ? "_waxed_oxidized" : "_oxidized";
+        };
+        return Identifier.fromNamespaceAndPath(MultiGolem.MOD_ID,
+            "textures/entity/iron_golem/copper_golem" + suffix + ".png");
     }
 
     private GolemTextureSelector() {}

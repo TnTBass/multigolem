@@ -5,14 +5,14 @@ public final class GolemIdentityMigration {
 
     public static GolemIdentity resolve(GolemIdentityStorage storage) {
         return storage.rawIdentity()
-            .filter(GolemIdentity::isValidForPhase2)
+            .filter(GolemIdentity::isValidForPhase3)
             .orElseGet(() -> storage.rawVariant()
                 .map(GolemIdentity::ofIronVariant)
                 .orElse(GolemIdentity.defaultIron()));
     }
 
     public static void write(GolemIdentityStorage storage, GolemIdentity identity) {
-        if (identity == null || !identity.isValidForPhase2() || identity.isDefaultIron()) {
+        if (identity == null || !identity.isValidForPhase3() || identity.isDefaultIron()) {
             storage.clearRawIdentity();
             storage.clearRawVariant();
             return;

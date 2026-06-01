@@ -2,6 +2,8 @@ package dev.charles.multigolem.spawn;
 
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.identity.GolemIdentity;
+import dev.charles.multigolem.identity.GolemSurfaceState;
+import dev.charles.multigolem.identity.GolemWeatheringStage;
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -36,7 +38,8 @@ class SpawnEggStacksTest {
             assertTrue(stack.is(Items.IRON_GOLEM_SPAWN_EGG));
             assertEquals(variant, SpawnEggStacks.variantFrom(stack).orElseThrow());
             assertEquals(GolemIdentity.ofIronVariant(variant), SpawnEggStacks.identityFrom(stack).orElseThrow());
-            assertEquals("{multigolem:{variant:\"" + variant.id() + "\"}}", SpawnEggStacks.customDataSnbt(stack));
+            assertEquals("{multigolem:{family:\"iron_golem\",variant:\"" + variant.id() + "\"}}",
+                SpawnEggStacks.customDataSnbt(stack));
         }
     }
 
@@ -89,6 +92,55 @@ class SpawnEggStacksTest {
         ItemStack stack = markedEgg("diamond", null);
 
         assertEquals(GolemIdentity.ofIronVariant(GolemVariant.DIAMOND), SpawnEggStacks.identityFrom(stack).orElseThrow());
+    }
+
+    @Test
+    void spawnEggSurfaceMarkerRoundTripsFullIdentity() {
+        GolemIdentity identity = GolemIdentity.ofIronVariant(GolemVariant.COPPER,
+            new GolemSurfaceState(GolemWeatheringStage.WEATHERED, true));
+
+        ItemStack stack = SpawnEggStacks.create(identity);
+
+        assertEquals(identity, SpawnEggStacks.identityFrom(stack).orElseThrow());
+        assertTrue(SpawnEggStacks.customDataSnbt(stack).contains("surface"));
+        assertTrue(SpawnEggStacks.customDataSnbt(stack).contains("weathering_stage"));
+    }
+
+    @Test
+    void oldVariantOnlyCopperMarkerReadsAsSurfaceEmptyCopper() {
+        ItemStack stack = markedEgg("copper", null);
+
+        assertEquals(GolemIdentity.ofIronVariant(GolemVariant.COPPER), SpawnEggStacks.identityFrom(stack).orElseThrow());
+    }
+
+    @Test
+    void invalidSurfaceMarkerReadsEmptyInsteadOfWrongGolem() {
+        ItemStack stack = markedEgg("gold", "iron_golem");
+        CompoundTag multigolem = stack.get(DataComponents.CUSTOM_DATA).copyTag().getCompoundOrEmpty("multigolem");
+        CompoundTag surface = new CompoundTag();
+        surface.putString("weathering_stage", "oxidized");
+        surface.putBoolean("waxed", true);
+        multigolem.put("surface", surface);
+        CompoundTag root = new CompoundTag();
+        root.put("multigolem", multigolem);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+
+        assertTrue(SpawnEggStacks.identityFrom(stack).isEmpty());
+    }
+
+    @Test
+    void unknownSurfaceWeatheringStageReadsEmpty() {
+        ItemStack stack = markedEgg("copper", "iron_golem");
+        CompoundTag multigolem = stack.get(DataComponents.CUSTOM_DATA).copyTag().getCompoundOrEmpty("multigolem");
+        CompoundTag surface = new CompoundTag();
+        surface.putString("weathering_stage", "patinated");
+        surface.putBoolean("waxed", true);
+        multigolem.put("surface", surface);
+        CompoundTag root = new CompoundTag();
+        root.put("multigolem", multigolem);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+
+        assertTrue(SpawnEggStacks.identityFrom(stack).isEmpty());
     }
 
     @Test

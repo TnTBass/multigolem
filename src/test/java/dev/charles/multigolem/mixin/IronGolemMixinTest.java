@@ -3,6 +3,9 @@ package dev.charles.multigolem.mixin;
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.ability.GolemCombatRules;
 import dev.charles.multigolem.config.TierStats;
+import dev.charles.multigolem.identity.GolemIdentity;
+import dev.charles.multigolem.identity.GolemSurfaceState;
+import dev.charles.multigolem.identity.GolemWeatheringStage;
 import dev.charles.multigolem.interaction.IronGolemHealInteraction;
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import net.minecraft.world.InteractionResult;
@@ -47,9 +50,12 @@ class IronGolemMixinTest {
 
     @Test
     void customGolemAcceptsMatchingHealItemForClientPrediction() {
+        GolemIdentity oxidizedCopper = GolemIdentity.ofIronVariant(GolemVariant.COPPER,
+            new GolemSurfaceState(GolemWeatheringStage.OXIDIZED, true));
+
         assertEquals(InteractionResult.SUCCESS,
             IronGolemHealInteraction.result(
-                true, GolemVariant.DIAMOND, GolemVariant.DIAMOND, false, true));
+                true, oxidizedCopper.variant(), GolemVariant.COPPER, false, true));
     }
 
     @Test

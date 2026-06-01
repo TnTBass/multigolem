@@ -62,6 +62,8 @@ class GolemVariantCatalogTest {
         assertEquals(customIronFamily, GolemVariant.lootVariants());
         assertEquals(customIronFamily, GolemVariant.multiGolemPlayerBuildableVariants());
         assertEquals(customIronFamily, GolemVariant.nonIronVariants());
+        assertFalse(java.util.Arrays.stream(GolemVariant.values())
+            .anyMatch(v -> v.id().equals("redstone") || v.id().equals("lapis")));
     }
 
     @Test

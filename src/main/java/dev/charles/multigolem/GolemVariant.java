@@ -98,7 +98,7 @@ public enum GolemVariant {
             .map(GolemVariantSpec::variant);
     }
 
-    private static boolean isCopperFamilyBlock(Block block) {
+    public static boolean isCopperFamilyBlock(Block block) {
         if (block instanceof WeatheringCopper) {
             return true;
         }

@@ -3,6 +3,7 @@ package dev.charles.multigolem.client.mixin;
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.client.render.GolemRenderStateExtension;
 import dev.charles.multigolem.client.render.GolemTextureSelector;
+import dev.charles.multigolem.identity.GolemIdentity;
 import net.minecraft.client.renderer.entity.IronGolemRenderer;
 import net.minecraft.client.renderer.entity.state.IronGolemRenderState;
 import net.minecraft.resources.Identifier;
@@ -21,9 +22,9 @@ public class IronGolemRendererMixin {
     )
     private void multigolem$variantTexture(IronGolemRenderState state,
                                            CallbackInfoReturnable<Identifier> cir) {
-        GolemVariant variant = ((GolemRenderStateExtension) state).multigolem$getVariant();
-        if (variant != GolemVariant.IRON) {
-            cir.setReturnValue(GolemTextureSelector.get(variant));
+        GolemIdentity identity = ((GolemRenderStateExtension) state).multigolem$getIdentity();
+        if (identity.variant() != GolemVariant.IRON) {
+            cir.setReturnValue(GolemTextureSelector.get(identity));
         }
     }
 }

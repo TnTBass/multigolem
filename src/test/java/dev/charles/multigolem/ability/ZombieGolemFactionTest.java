@@ -1,6 +1,9 @@
 package dev.charles.multigolem.ability;
 
 import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.identity.GolemIdentity;
+import dev.charles.multigolem.identity.GolemSurfaceState;
+import dev.charles.multigolem.identity.GolemWeatheringStage;
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.minecraft.world.entity.monster.skeleton.Skeleton;
@@ -55,8 +58,11 @@ class ZombieGolemFactionTest {
 
     @Test
     void nonZombieGolemsTreatZombieGolemsAsTargets() {
+        GolemIdentity oxidizedCopper = GolemIdentity.ofIronVariant(GolemVariant.COPPER,
+            new GolemSurfaceState(GolemWeatheringStage.OXIDIZED, true));
+
         assertTrue(ZombieGolemFaction.nonZombieGolemCanTarget(GolemVariant.IRON, GolemVariant.ZOMBIE));
-        assertTrue(ZombieGolemFaction.nonZombieGolemCanTarget(GolemVariant.DIAMOND, GolemVariant.ZOMBIE));
+        assertTrue(ZombieGolemFaction.nonZombieGolemCanTarget(oxidizedCopper.variant(), GolemVariant.ZOMBIE));
         assertFalse(ZombieGolemFaction.nonZombieGolemCanTarget(GolemVariant.ZOMBIE, GolemVariant.ZOMBIE));
         assertFalse(ZombieGolemFaction.nonZombieGolemCanTarget(GolemVariant.GOLD, GolemVariant.IRON));
     }

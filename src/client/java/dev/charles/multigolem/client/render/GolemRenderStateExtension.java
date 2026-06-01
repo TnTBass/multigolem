@@ -1,8 +1,8 @@
 package dev.charles.multigolem.client.render;
 
-import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.identity.GolemIdentity;
 
 public interface GolemRenderStateExtension {
-    GolemVariant multigolem$getVariant();
-    void multigolem$setVariant(GolemVariant variant);
+    GolemIdentity multigolem$getIdentity();
+    void multigolem$setIdentity(GolemIdentity identity);
 }

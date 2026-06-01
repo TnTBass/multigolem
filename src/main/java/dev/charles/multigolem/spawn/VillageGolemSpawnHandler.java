@@ -34,6 +34,10 @@ public final class VillageGolemSpawnHandler {
         golem.setHealth(golem.getMaxHealth());
     }
 
+    static GolemIdentity identityForVillageRollForTest(GolemVariant variant) {
+        return GolemIdentity.ofIronVariant(variant);
+    }
+
     private static void applyVariantAttachments(IronGolem golem, GolemVariant variant, GolemSpawnOrigin origin) {
         GolemIdentityAttachment.set(golem, GolemIdentity.ofIronVariant(variant));
         GolemSpawnOriginAttachment.set(golem, origin);

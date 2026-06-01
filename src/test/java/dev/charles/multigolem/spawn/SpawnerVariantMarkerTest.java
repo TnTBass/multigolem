@@ -2,6 +2,8 @@ package dev.charles.multigolem.spawn;
 
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.identity.GolemIdentity;
+import dev.charles.multigolem.identity.GolemSurfaceState;
+import dev.charles.multigolem.identity.GolemWeatheringStage;
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.BeforeAll;
@@ -80,6 +82,18 @@ class SpawnerVariantMarkerTest {
 
         assertEquals(GolemIdentity.ofIronVariant(GolemVariant.DIAMOND),
             SpawnerVariantMarker.previewIdentity(entity).orElseThrow());
+    }
+
+    @Test
+    void spawnerSurfaceMarkerRoundTripsFullIdentity() {
+        CompoundTag entity = new CompoundTag();
+        GolemIdentity identity = GolemIdentity.ofIronVariant(GolemVariant.COPPER,
+            new GolemSurfaceState(GolemWeatheringStage.EXPOSED, false));
+
+        SpawnerVariantMarker.writeIdentity(entity, identity);
+
+        assertEquals(identity, SpawnerVariantMarker.readIdentity(entity).orElseThrow());
+        assertEquals(identity, SpawnerVariantMarker.previewIdentity(entity).orElseThrow());
     }
 
     @Test

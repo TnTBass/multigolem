@@ -12,7 +12,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public enum GolemFamily {
-    IRON_GOLEM("iron_golem");
+    IRON_GOLEM("iron_golem"),
+    COPPER_GOLEM("copper_golem");
 
     public static final Codec<GolemFamily> CODEC = Codec.STRING.flatXmap(
         id -> fromId(id)

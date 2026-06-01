@@ -1,7 +1,7 @@
 package dev.charles.multigolem.client.mixin;
 
-import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.client.render.GolemRenderStateExtension;
+import dev.charles.multigolem.identity.GolemIdentity;
 import net.minecraft.client.renderer.entity.state.IronGolemRenderState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -10,15 +10,15 @@ import org.spongepowered.asm.mixin.Unique;
 public class IronGolemRenderStateExtensionMixin implements GolemRenderStateExtension {
 
     @Unique
-    private GolemVariant multigolem$variant = GolemVariant.IRON;
+    private GolemIdentity multigolem$identity = GolemIdentity.defaultIron();
 
     @Override
-    public GolemVariant multigolem$getVariant() {
-        return multigolem$variant;
+    public GolemIdentity multigolem$getIdentity() {
+        return multigolem$identity;
     }
 
     @Override
-    public void multigolem$setVariant(GolemVariant variant) {
-        this.multigolem$variant = variant;
+    public void multigolem$setIdentity(GolemIdentity identity) {
+        this.multigolem$identity = identity == null ? GolemIdentity.defaultIron() : identity;
     }
 }
