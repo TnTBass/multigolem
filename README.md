@@ -20,7 +20,7 @@ Build a T-shape (1 base block, 1 center, 2 arms) out of one of:
 
 | Body block | Golem |
 |---|---|
-| Copper Block, including waxed or oxidized variants | Copper Golem |
+| Copper Block, including fresh, exposed, weathered, oxidized, and waxed variants | Copper Iron Golem |
 | Iron Block | Iron Golem (vanilla, unchanged) |
 | Gold Block | Gold Golem |
 | Emerald Block | Emerald Golem |
@@ -28,7 +28,7 @@ Build a T-shape (1 base block, 1 center, 2 arms) out of one of:
 | Netherite Block | Netherite Golem |
 | Mossy Cobblestone | Zombie Golem |
 
-Place a carved pumpkin on top. Waxed and oxidized copper blocks work for MultiGolem's iron-golem-style Copper Golem. The vanilla single-copper-block + pumpkin recipe still spawns the vanilla Copper Golem (with its chest behavior).
+Place a carved pumpkin on top. Copper Iron Golems preserve the fresh, exposed, weathered, oxidized, and waxed state of the copper blocks used to build them, with matching textures on modded clients. The vanilla single-copper-block + pumpkin recipe still spawns the vanilla Copper Golem (with its chest behavior).
 
 ## Stats (defaults)
 

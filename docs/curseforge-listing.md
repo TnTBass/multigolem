@@ -4,7 +4,7 @@
 
 - Adds six Iron Golem variants: Copper, Gold, Emerald, Diamond, Netherite, and Zombie.
 - Server-side functional: vanilla clients can connect to a server running MultiGolem with no mod installed.
-- Build variants with the vanilla iron-golem T-shape using copper, gold, emerald, diamond, netherite, or mossy cobblestone body blocks. Waxed and oxidized copper blocks work for the Copper variant.
+- Build variants with the vanilla iron-golem T-shape using copper, gold, emerald, diamond, netherite, or mossy cobblestone body blocks. Copper Iron Golems preserve fresh, exposed, weathered, oxidized, and waxed copper states with matching textures.
 - Marked vanilla iron golem spawn eggs for Copper, Gold, Emerald, Diamond, Netherite, and Zombie variants.
 - Stats scale by material; Copper is the weakest and Netherite is the strongest.
 - Heal each variant with its matching material.
@@ -25,14 +25,14 @@ Cross-tier `ignored_target_types` lets server admins stop tiers from targeting c
 
 Build a T-shape (1 base, 1 center, 2 arms) out of one of:
 
-- Copper Block, including waxed or oxidized variants → Copper Golem
+- Copper Block, including fresh, exposed, weathered, oxidized, and waxed variants → Copper Iron Golem
 - Gold Block → Gold Golem
 - Emerald Block → Emerald Golem
 - Diamond Block → Diamond Golem
 - Netherite Block → Netherite Golem
 - Mossy Cobblestone → Zombie Golem
 
-Place a carved pumpkin on top. Iron golem recipe is unchanged from vanilla.
+Place a carved pumpkin on top. Iron golem recipe is unchanged from vanilla. The vanilla single-copper-block Copper Golem recipe remains vanilla-owned.
 
 ## Configuration
 

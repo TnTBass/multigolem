@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-- Refactored MultiGolem's variant catalog and saved identity foundation for beta validation builds; existing Iron-family golem behavior and old saved variant data remain compatible.
+## 0.5.0+mc26.1.2 — 2026-06-02
+
+- Improved Copper Iron Golems so they keep the copper state they were built from and render matching fresh, exposed, weathered, oxidized, and waxed textures, with an updated default copper look.
+- Improved Emerald Golem textures so the body, arms, legs, and spawn egg read brighter and more clearly as emerald instead of oxidized copper.
+- Refactored golem variant code to make future golem types easier to add and to prepare for vanilla Copper Golem variants.
 
 ## 0.4.0+mc26.1.2 — 2026-05-28
 
