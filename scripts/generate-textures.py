@@ -32,6 +32,29 @@ COPPER_SURFACES = {
     "_waxed_oxidized": {"patina": 0.70, "waxed": True},
 }
 
+COPPER_STAGE_PALETTES = {
+    "fresh": {
+        "base": (190, 96, 58),
+        "highlight": (226, 135, 96),
+        "shadow": (112, 51, 30),
+    },
+    "exposed": {
+        "base": (176, 111, 95),
+        "highlight": (212, 150, 132),
+        "shadow": (102, 70, 58),
+    },
+    "weathered": {
+        "base": (91, 155, 130),
+        "highlight": (134, 190, 164),
+        "shadow": (55, 96, 83),
+    },
+    "oxidized": {
+        "base": (50, 188, 170),
+        "highlight": (106, 232, 206),
+        "shadow": (28, 118, 112),
+    },
+}
+
 def shift_hue(img: Image.Image, hue_deg: float, sat_mul: float, lum_mul: float) -> Image.Image:
     img = img.convert("RGBA")
     pixels = img.load()
@@ -200,107 +223,72 @@ def apply_material_details(tier: str, img: Image.Image) -> Image.Image:
 
     return Image.alpha_composite(img.convert("RGBA"), overlay)
 
+def remap_copper_surface_palette(img: Image.Image, stage: str) -> Image.Image:
+    palette = COPPER_STAGE_PALETTES[stage]
+    img = img.convert("RGBA")
+    pixels = img.load()
+    base = palette["base"]
+    highlight = palette["highlight"]
+    shadow = palette["shadow"]
+    for y in range(img.height):
+        for x in range(img.width):
+            r, g, b, a = pixels[x, y]
+            if a == 0:
+                continue
+            luminance = (r * 0.299 + g * 0.587 + b * 0.114) / 255.0
+            if luminance >= 0.62:
+                target = highlight
+                amount = 0.72
+            elif luminance <= 0.34:
+                target = shadow
+                amount = 0.76
+            else:
+                target = base
+                amount = 0.70
+            pixels[x, y] = (
+                int(r * (1.0 - amount) + target[0] * amount),
+                int(g * (1.0 - amount) + target[1] * amount),
+                int(b * (1.0 - amount) + target[2] * amount),
+                a,
+            )
+    return img
+
+def apply_wax_cue(img: Image.Image) -> Image.Image:
+    img = img.convert("RGBA")
+    pixels = img.load()
+    wax_pixels = [
+        (16, 54), (24, 58), (69, 35), (45, 13), (68, 13),
+        (50, 56), (36, 13), (63, 56), (82, 35), (62, 13),
+        (85, 13), (82, 78), (82, 79), (78, 78), (78, 79),
+        (12, 52), (28, 61), (67, 29), (71, 45), (42, 52),
+        (57, 61), (39, 17), (60, 52), (60, 7), (64, 19),
+    ]
+    for x, y in wax_pixels:
+        r, g, b, a = pixels[x, y]
+        if a == 0:
+            continue
+        pixels[x, y] = (
+            int(r * 0.52 + 255 * 0.48),
+            int(g * 0.52 + 228 * 0.48),
+            int(b * 0.52 + 143 * 0.48),
+            a,
+        )
+    return img
+
 def apply_copper_surface_details(img: Image.Image, patina: float, waxed: bool) -> Image.Image:
-    if patina > 0:
-        img = blend_material(img, (62, 164, 132), patina * 0.48)
+    if patina >= 0.70:
+        stage = "oxidized"
+    elif patina >= 0.50:
+        stage = "weathered"
+    elif patina >= 0.30:
+        stage = "exposed"
+    else:
+        stage = "fresh"
 
-    overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
-    draw = ImageDraw.Draw(overlay)
-
-    if patina > 0:
-        alpha = int(135 + patina * 85)
-        patina_fill = (
-            int(96 - patina * 22),
-            int(174 + patina * 24),
-            int(136 + patina * 38),
-            alpha,
-        )
-        dark_patina = (
-            int(40 + patina * 8),
-            int(116 + patina * 28),
-            int(94 + patina * 30),
-            int(120 + patina * 70),
-        )
-        draw_rects(draw, [
-            (12, 52, 17, 11), (67, 28, 5, 26), (42, 6, 6, 16),
-            (65, 6, 6, 16), (40, 51, 18, 12), (76, 27, 4, 30),
-            (76, 64, 4, 30), (32, 8, 8, 10), (58, 51, 18, 12),
-            (80, 27, 4, 30), (80, 64, 4, 30), (59, 6, 6, 16),
-            (82, 6, 6, 16),
-        ], patina_fill)
-        draw_lines(draw, [
-            [(14, 52), (18, 59), (15, 68)],
-            [(23, 52), (27, 57), (25, 63)],
-            [(68, 28), (70, 40), (67, 55)],
-            [(43, 7), (46, 14), (43, 21)],
-            [(66, 7), (69, 14), (66, 21)],
-            [(42, 52), (49, 56), (57, 62)],
-            [(77, 65), (79, 76), (77, 92)],
-            [(33, 9), (37, 13), (34, 17)],
-            [(60, 52), (67, 56), (75, 62)],
-            [(81, 28), (83, 40), (81, 55)],
-            [(83, 65), (86, 77), (83, 92)],
-            [(60, 7), (63, 14), (60, 21)],
-            [(83, 7), (86, 14), (83, 21)],
-        ], dark_patina, width=2)
-        if patina >= 0.5:
-            draw_rects(draw, [
-                (13, 56, 4, 4), (21, 59, 5, 3), (68, 36, 3, 8),
-                (44, 15, 3, 5), (67, 16, 3, 4), (48, 55, 6, 4),
-                (77, 72, 2, 11), (34, 12, 3, 4), (62, 55, 6, 4),
-                (81, 36, 3, 8), (83, 72, 2, 11), (61, 15, 3, 5),
-                (84, 16, 3, 4),
-            ], (82, 199, 159, int(155 + patina * 70)))
-        if patina >= 0.7:
-            draw_rects(draw, [
-                (12, 52, 17, 11), (67, 28, 5, 26), (42, 6, 6, 16),
-                (65, 6, 6, 16), (40, 51, 18, 12), (32, 8, 8, 10),
-                (58, 51, 18, 12), (80, 27, 4, 30), (80, 64, 4, 30),
-                (59, 6, 6, 16), (82, 6, 6, 16),
-            ], (76, 188, 168, 92))
-
+    img = remap_copper_surface_palette(img, stage)
     if waxed:
-        wax = (255, 226, 133, 215)
-        wax_shadow = (168, 118, 43, 125)
-        draw_lines(draw, [
-            [(12, 52), (28, 62)],
-            [(14, 63), (28, 55)],
-            [(67, 29), (71, 47)],
-            [(42, 7), (48, 20)],
-            [(65, 7), (71, 20)],
-            [(41, 52), (57, 62)],
-            [(76, 65), (79, 92)],
-            [(33, 9), (39, 18)],
-            [(59, 52), (75, 62)],
-            [(80, 29), (83, 47)],
-            [(59, 7), (64, 20)],
-            [(82, 7), (87, 20)],
-            [(80, 65), (83, 92)],
-        ], wax_shadow, width=2)
-        draw_lines(draw, [
-            [(13, 52), (28, 61)],
-            [(15, 63), (28, 56)],
-            [(68, 29), (71, 45)],
-            [(43, 7), (48, 19)],
-            [(66, 7), (71, 19)],
-            [(42, 52), (57, 61)],
-            [(77, 65), (79, 91)],
-            [(34, 9), (39, 17)],
-            [(60, 52), (75, 61)],
-            [(81, 29), (83, 45)],
-            [(60, 7), (64, 19)],
-            [(83, 7), (87, 19)],
-            [(81, 65), (83, 91)],
-        ], wax, width=1)
-        draw_rects(draw, [
-            (16, 54, 2, 2), (24, 58, 2, 2), (69, 35, 2, 2),
-            (45, 13, 2, 2), (68, 13, 2, 2), (50, 56, 2, 2),
-            (78, 78, 1, 3), (36, 13, 2, 2), (63, 56, 2, 2),
-            (82, 35, 2, 2), (62, 13, 2, 2), (85, 13, 2, 2),
-            (82, 78, 1, 3),
-        ], (255, 243, 178, 235))
-
-    return Image.alpha_composite(img.convert("RGBA"), overlay)
+        img = apply_wax_cue(img)
+    return img
 
 def apply_spawn_egg_material_details(tier: str, img: Image.Image) -> Image.Image:
     overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))

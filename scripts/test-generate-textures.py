@@ -91,6 +91,65 @@ def count_pixels_in_regions(path: Path, regions, predicate) -> int:
     return count
 
 
+def alpha_mask(path: Path) -> bytes:
+    image = Image.open(path).convert("RGBA")
+    return bytes(a for _, _, _, a in image.getdata())
+
+
+def changed_opaque_pixels(first: Path, second: Path) -> int:
+    a = Image.open(first).convert("RGBA")
+    b = Image.open(second).convert("RGBA")
+    count = 0
+    for pa, pb in zip(a.getdata(), b.getdata(), strict=True):
+        if pa[3] and pb[3] and pa != pb:
+            count += 1
+    return count
+
+
+def color_distance_pixels(first: Path, second: Path, minimum_delta: int) -> int:
+    a = Image.open(first).convert("RGBA")
+    b = Image.open(second).convert("RGBA")
+    count = 0
+    for pa, pb in zip(a.getdata(), b.getdata(), strict=True):
+        if not pa[3] or not pb[3]:
+            continue
+        delta = abs(pa[0] - pb[0]) + abs(pa[1] - pb[1]) + abs(pa[2] - pb[2])
+        if delta >= minimum_delta:
+            count += 1
+    return count
+
+
+def changed_opaque_pixels_in_regions(first: Path, second: Path, regions) -> int:
+    a = Image.open(first).convert("RGBA")
+    b = Image.open(second).convert("RGBA")
+    count = 0
+    for x, y, w, h in regions:
+        for py in range(y, y + h):
+            for px in range(x, x + w):
+                pa = a.getpixel((px, py))
+                pb = b.getpixel((px, py))
+                if pa[3] and pb[3] and pa != pb:
+                    count += 1
+    return count
+
+
+def color_distance_pixels_in_regions(first: Path, second: Path, regions, minimum_delta: int) -> int:
+    a = Image.open(first).convert("RGBA")
+    b = Image.open(second).convert("RGBA")
+    count = 0
+    for x, y, w, h in regions:
+        for py in range(y, y + h):
+            for px in range(x, x + w):
+                pa = a.getpixel((px, py))
+                pb = b.getpixel((px, py))
+                if not pa[3] or not pb[3]:
+                    continue
+                delta = abs(pa[0] - pb[0]) + abs(pa[1] - pb[1]) + abs(pa[2] - pb[2])
+                if delta >= minimum_delta:
+                    count += 1
+    return count
+
+
 def longest_vertical_run(path: Path, predicate) -> int:
     image = Image.open(path).convert("RGBA")
     longest = 0
@@ -194,16 +253,66 @@ class GenerateTexturesTest(unittest.TestCase):
             waxed = Path(tmp) / "iron_golem" / "copper_golem_waxed.png"
 
             fresh_orange = count_pixels(fresh, lambda r, g, b: r >= 155 and 70 <= g <= 135 and b <= 100)
-            exposed_patina = count_pixels(exposed, lambda r, g, b: r <= 150 and g >= 120 and 80 <= b <= 145)
-            weathered_patina = count_pixels(weathered, lambda r, g, b: r <= 130 and g >= 135 and 95 <= b <= 165)
-            oxidized_patina = count_pixels(oxidized, lambda r, g, b: r <= 115 and g >= 145 and b >= 120)
-            wax_highlights = count_pixels(waxed, lambda r, g, b: r >= 235 and g >= 205 and 110 <= b <= 190)
+            exposed_shift = color_distance_pixels(fresh, exposed, 40)
+            weathered_shift = color_distance_pixels(exposed, weathered, 40)
+            oxidized_shift = color_distance_pixels(weathered, oxidized, 40)
+            wax_highlights = changed_opaque_pixels(fresh, waxed)
 
             self.assertGreaterEqual(fresh_orange, 350)
-            self.assertGreaterEqual(exposed_patina, 220)
-            self.assertGreaterEqual(weathered_patina, 420)
-            self.assertGreaterEqual(oxidized_patina, 250)
-            self.assertGreaterEqual(wax_highlights, 16)
+            self.assertGreaterEqual(exposed_shift, 3500)
+            self.assertGreaterEqual(weathered_shift, 3500)
+            self.assertGreaterEqual(oxidized_shift, 2500)
+            self.assertGreaterEqual(wax_highlights, 12)
+
+    def test_copper_surface_weathering_preserves_layout(self):
+        generator = load_generator()
+        temp_root = REPO / "build" / "texture-test"
+        temp_root.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=temp_root) as tmp:
+            generator.OUT_DIR = Path(tmp)
+            generator.SPAWN_EGG_OUT_DIR = Path(tmp) / "item"
+
+            self.assertEqual(generator.main(), 0)
+
+            surface_dir = Path(tmp) / "iron_golem"
+            fresh = surface_dir / "copper_golem.png"
+            exposed = surface_dir / "copper_golem_exposed.png"
+            weathered = surface_dir / "copper_golem_weathered.png"
+            oxidized = surface_dir / "copper_golem_oxidized.png"
+
+            self.assertEqual(alpha_mask(fresh), alpha_mask(exposed))
+            self.assertEqual(alpha_mask(fresh), alpha_mask(weathered))
+            self.assertEqual(alpha_mask(fresh), alpha_mask(oxidized))
+
+            self.assertGreaterEqual(color_distance_pixels(fresh, exposed, 45), 900)
+            self.assertGreaterEqual(color_distance_pixels(exposed, weathered, 45), 900)
+            self.assertGreaterEqual(color_distance_pixels(weathered, oxidized, 45), 900)
+
+    def test_copper_surface_wax_cue_is_subtle_and_stable(self):
+        generator = load_generator()
+        temp_root = REPO / "build" / "texture-test"
+        temp_root.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=temp_root) as tmp:
+            generator.OUT_DIR = Path(tmp)
+            generator.SPAWN_EGG_OUT_DIR = Path(tmp) / "item"
+
+            self.assertEqual(generator.main(), 0)
+
+            pairs = (
+                ("copper_golem.png", "copper_golem_waxed.png"),
+                ("copper_golem_exposed.png", "copper_golem_waxed_exposed.png"),
+                ("copper_golem_weathered.png", "copper_golem_waxed_weathered.png"),
+                ("copper_golem_oxidized.png", "copper_golem_waxed_oxidized.png"),
+            )
+            surface_dir = Path(tmp) / "iron_golem"
+            for unwaxed_name, waxed_name in pairs:
+                with self.subTest(waxed=waxed_name):
+                    unwaxed = surface_dir / unwaxed_name
+                    waxed = surface_dir / waxed_name
+                    self.assertEqual(alpha_mask(unwaxed), alpha_mask(waxed))
+                    changed = changed_opaque_pixels(unwaxed, waxed)
+                    self.assertGreaterEqual(changed, 12)
+                    self.assertLessEqual(changed, 80)
 
     def test_copper_surface_details_cover_body_sides(self):
         generator = load_generator()
@@ -215,28 +324,32 @@ class GenerateTexturesTest(unittest.TestCase):
 
             self.assertEqual(generator.main(), 0)
 
+            fresh = Path(tmp) / "iron_golem" / "copper_golem.png"
             waxed = Path(tmp) / "iron_golem" / "copper_golem_waxed.png"
+            exposed = Path(tmp) / "iron_golem" / "copper_golem_exposed.png"
             weathered = Path(tmp) / "iron_golem" / "copper_golem_weathered.png"
             oxidized = Path(tmp) / "iron_golem" / "copper_golem_oxidized.png"
-            wax_pixels = lambda r, g, b: r >= 235 and g >= 205 and 110 <= b <= 190
-            oxidized_pixels = lambda r, g, b: r <= 115 and g >= 145 and b >= 120
 
             for region_name, regions in IRON_GOLEM_SURFACE_REGIONS.items():
                 with self.subTest(region=region_name, surface="waxed"):
                     self.assertGreaterEqual(
-                        count_pixels_in_regions(waxed, regions, wax_pixels),
+                        changed_opaque_pixels_in_regions(fresh, waxed, regions),
+                        1,
+                    )
+                with self.subTest(region=region_name, transition="fresh_to_exposed"):
+                    self.assertGreaterEqual(
+                        color_distance_pixels_in_regions(fresh, exposed, regions, 30),
                         8,
                     )
-                with self.subTest(region=region_name, surface="weathered"):
+                with self.subTest(region=region_name, transition="exposed_to_weathered"):
                     self.assertGreaterEqual(
-                        count_pixels_in_regions(weathered, regions, oxidized_pixels),
-                        20,
+                        color_distance_pixels_in_regions(exposed, weathered, regions, 30),
+                        8,
                     )
-                with self.subTest(region=region_name, surface="oxidized"):
-                    minimum = 16 if region_name == "front" else 20
+                with self.subTest(region=region_name, transition="weathered_to_oxidized"):
                     self.assertGreaterEqual(
-                        count_pixels_in_regions(oxidized, regions, oxidized_pixels),
-                        minimum,
+                        color_distance_pixels_in_regions(weathered, oxidized, regions, 30),
+                        8,
                     )
 
     def test_material_details_are_visible_in_generated_outputs(self):
