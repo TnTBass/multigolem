@@ -216,6 +216,7 @@ class GenerateTexturesTest(unittest.TestCase):
             self.assertEqual(generator.main(), 0)
 
             waxed = Path(tmp) / "iron_golem" / "copper_golem_waxed.png"
+            weathered = Path(tmp) / "iron_golem" / "copper_golem_weathered.png"
             oxidized = Path(tmp) / "iron_golem" / "copper_golem_oxidized.png"
             wax_pixels = lambda r, g, b: r >= 235 and g >= 205 and 110 <= b <= 190
             oxidized_pixels = lambda r, g, b: r <= 115 and g >= 145 and b >= 120
@@ -226,10 +227,16 @@ class GenerateTexturesTest(unittest.TestCase):
                         count_pixels_in_regions(waxed, regions, wax_pixels),
                         8,
                     )
+                with self.subTest(region=region_name, surface="weathered"):
+                    self.assertGreaterEqual(
+                        count_pixels_in_regions(weathered, regions, oxidized_pixels),
+                        20,
+                    )
                 with self.subTest(region=region_name, surface="oxidized"):
+                    minimum = 16 if region_name == "front" else 20
                     self.assertGreaterEqual(
                         count_pixels_in_regions(oxidized, regions, oxidized_pixels),
-                        16,
+                        minimum,
                     )
 
     def test_material_details_are_visible_in_generated_outputs(self):
