@@ -40,6 +40,25 @@ GENERATED_SPAWN_EGG_TEXTURES = (
     "zombie_golem_spawn_egg.png",
 )
 
+IRON_GOLEM_SURFACE_REGIONS = {
+    "front": [
+        (8, 8, 8, 10), (11, 51, 18, 12), (66, 27, 4, 30),
+        (66, 64, 4, 30), (42, 5, 6, 16), (65, 5, 6, 16),
+    ],
+    "back": [
+        (24, 8, 8, 10), (40, 51, 18, 12), (76, 27, 4, 30),
+        (76, 64, 4, 30), (53, 5, 6, 16), (76, 5, 6, 16),
+    ],
+    "side": [
+        (32, 8, 8, 10), (58, 51, 18, 12), (80, 27, 4, 30),
+        (80, 64, 4, 30), (59, 5, 6, 16), (82, 5, 6, 16),
+    ],
+    "arm": [
+        (66, 27, 8, 30), (76, 27, 8, 30),
+        (66, 64, 8, 30), (80, 64, 8, 30),
+    ],
+}
+
 
 def load_generator():
     spec = importlib.util.spec_from_file_location("generate_textures", SCRIPT)
@@ -185,6 +204,33 @@ class GenerateTexturesTest(unittest.TestCase):
             self.assertGreaterEqual(weathered_patina, 420)
             self.assertGreaterEqual(oxidized_patina, 250)
             self.assertGreaterEqual(wax_highlights, 16)
+
+    def test_copper_surface_details_cover_body_sides(self):
+        generator = load_generator()
+        temp_root = REPO / "build" / "texture-test"
+        temp_root.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=temp_root) as tmp:
+            generator.OUT_DIR = Path(tmp)
+            generator.SPAWN_EGG_OUT_DIR = Path(tmp) / "item"
+
+            self.assertEqual(generator.main(), 0)
+
+            waxed = Path(tmp) / "iron_golem" / "copper_golem_waxed.png"
+            oxidized = Path(tmp) / "iron_golem" / "copper_golem_oxidized.png"
+            wax_pixels = lambda r, g, b: r >= 235 and g >= 205 and 110 <= b <= 190
+            oxidized_pixels = lambda r, g, b: r <= 115 and g >= 145 and b >= 120
+
+            for region_name, regions in IRON_GOLEM_SURFACE_REGIONS.items():
+                with self.subTest(region=region_name, surface="waxed"):
+                    self.assertGreaterEqual(
+                        count_pixels_in_regions(waxed, regions, wax_pixels),
+                        8,
+                    )
+                with self.subTest(region=region_name, surface="oxidized"):
+                    self.assertGreaterEqual(
+                        count_pixels_in_regions(oxidized, regions, oxidized_pixels),
+                        16,
+                    )
 
     def test_material_details_are_visible_in_generated_outputs(self):
         generator = load_generator()
