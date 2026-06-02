@@ -44,9 +44,9 @@ COPPER_STAGE_PALETTES = {
         "shadow": (102, 70, 58),
     },
     "weathered": {
-        "base": (91, 155, 130),
-        "highlight": (134, 190, 164),
-        "shadow": (55, 96, 83),
+        "base": (86, 168, 132),
+        "highlight": (146, 208, 170),
+        "shadow": (48, 108, 86),
     },
     "oxidized": {
         "base": (50, 188, 170),

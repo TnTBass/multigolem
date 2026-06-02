@@ -253,17 +253,28 @@ class GenerateTexturesTest(unittest.TestCase):
             weathered = Path(tmp) / "iron_golem" / "copper_golem_weathered.png"
             oxidized = Path(tmp) / "iron_golem" / "copper_golem_oxidized.png"
             waxed = Path(tmp) / "iron_golem" / "copper_golem_waxed.png"
+            waxed_weathered = Path(tmp) / "iron_golem" / "copper_golem_waxed_weathered.png"
 
             fresh_orange = count_pixels(fresh, lambda r, g, b: r >= 155 and 70 <= g <= 135 and b <= 100)
             exposed_shift = color_distance_pixels(fresh, exposed, 40)
             weathered_shift = color_distance_pixels(exposed, weathered, 40)
             oxidized_shift = color_distance_pixels(weathered, oxidized, 40)
+            weathered_bright_verdigris = count_pixels(
+                weathered,
+                lambda r, g, b: g >= 145 and b >= 120 and g >= r + 20 and b >= r + 5,
+            )
+            waxed_weathered_bright_verdigris = count_pixels(
+                waxed_weathered,
+                lambda r, g, b: g >= 145 and b >= 120 and g >= r + 20 and b >= r + 5,
+            )
             wax_highlights = changed_opaque_pixels(fresh, waxed)
 
             self.assertGreaterEqual(fresh_orange, 350)
             self.assertGreaterEqual(exposed_shift, 3500)
             self.assertGreaterEqual(weathered_shift, 3500)
             self.assertGreaterEqual(oxidized_shift, 2500)
+            self.assertGreaterEqual(weathered_bright_verdigris, 1200)
+            self.assertGreaterEqual(waxed_weathered_bright_verdigris, 1200)
             self.assertGreaterEqual(wax_highlights, 12)
 
     def test_copper_surface_weathering_preserves_layout(self):
