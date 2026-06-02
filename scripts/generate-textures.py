@@ -264,6 +264,8 @@ def apply_wax_cue(img: Image.Image) -> Image.Image:
         (57, 61), (39, 17), (60, 52), (60, 7), (64, 19),
     ]
     for x, y in wax_pixels:
+        if x >= img.width or y >= img.height:
+            continue
         r, g, b, a = pixels[x, y]
         if a == 0:
             continue

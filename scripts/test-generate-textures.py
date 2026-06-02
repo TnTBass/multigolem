@@ -99,8 +99,9 @@ def alpha_mask(path: Path) -> bytes:
 def changed_opaque_pixels(first: Path, second: Path) -> int:
     a = Image.open(first).convert("RGBA")
     b = Image.open(second).convert("RGBA")
+    assert a.size == b.size
     count = 0
-    for pa, pb in zip(a.getdata(), b.getdata(), strict=True):
+    for pa, pb in zip(a.getdata(), b.getdata()):
         if pa[3] and pb[3] and pa != pb:
             count += 1
     return count
@@ -109,8 +110,9 @@ def changed_opaque_pixels(first: Path, second: Path) -> int:
 def color_distance_pixels(first: Path, second: Path, minimum_delta: int) -> int:
     a = Image.open(first).convert("RGBA")
     b = Image.open(second).convert("RGBA")
+    assert a.size == b.size
     count = 0
-    for pa, pb in zip(a.getdata(), b.getdata(), strict=True):
+    for pa, pb in zip(a.getdata(), b.getdata()):
         if not pa[3] or not pb[3]:
             continue
         delta = abs(pa[0] - pb[0]) + abs(pa[1] - pb[1]) + abs(pa[2] - pb[2])
@@ -334,7 +336,7 @@ class GenerateTexturesTest(unittest.TestCase):
                 with self.subTest(region=region_name, surface="waxed"):
                     self.assertGreaterEqual(
                         changed_opaque_pixels_in_regions(fresh, waxed, regions),
-                        1,
+                        3,
                     )
                 with self.subTest(region=region_name, transition="fresh_to_exposed"):
                     self.assertGreaterEqual(
