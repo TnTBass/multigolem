@@ -15,7 +15,7 @@ SPAWN_EGG_OUT_DIR = REPO / "src" / "main" / "resources" / "assets" / "multigolem
 TIERS = {
     "copper":    {"hue_shift": -10, "saturation": 1.25, "lightness": 0.95},
     "gold":      {"hue_shift": 38,  "saturation": 1.70, "lightness": 1.14},
-    "emerald":   {"hue_shift": 110, "saturation": 1.45, "lightness": 0.85},
+    "emerald":   {"hue_shift": 110, "saturation": 1.58, "lightness": 0.98},
     "diamond":   {"hue_shift": 165, "saturation": 1.00, "lightness": 1.12},
     "netherite": {"hue_shift": 280, "saturation": 0.34, "lightness": 0.36},
     "zombie":    {"hue_shift": 92,  "saturation": 0.72, "lightness": 0.62},
@@ -189,16 +189,20 @@ def apply_material_details(tier: str, img: Image.Image) -> Image.Image:
         draw_rects(draw, [(9, 14, 1, 1), (14, 14, 1, 1)], (255, 91, 29, 255))
 
     elif tier == "emerald":
-        img = blend_material(img, (32, 176, 88), 0.38)
+        img = blend_material(img, (42, 205, 104), 0.44)
         draw_rects(draw, [
             (12, 52, 17, 10), (68, 34, 4, 13), (43, 11, 4, 9),
-            (66, 11, 3, 8),
-        ], (45, 215, 107, 215))
+            (66, 11, 3, 8), (76, 34, 4, 13), (66, 64, 5, 24),
+            (80, 64, 5, 24),
+        ], (60, 235, 125, 225))
         draw_lines(draw, [
             [(12, 52), (18, 57), (28, 52)],
             [(66, 28), (71, 38), (66, 54)],
             [(42, 6), (48, 15), (42, 22)],
-        ], (24, 99, 58, 150))
+            [(77, 29), (80, 40), (77, 55)],
+            [(68, 65), (70, 78), (67, 92)],
+            [(82, 65), (84, 78), (82, 92)],
+        ], (20, 118, 60, 145))
 
     elif tier == "zombie":
         img = blend_material(img, (68, 108, 54), 0.42)
@@ -305,8 +309,8 @@ def apply_spawn_egg_material_details(tier: str, img: Image.Image) -> Image.Image
         draw_rects(draw, [(4, 4, 5, 3), (8, 8, 4, 3), (5, 12, 3, 1)], (255, 239, 91, 230))
         draw_rects(draw, [(11, 5, 1, 5), (7, 12, 4, 1)], (128, 74, 8, 130))
     elif tier == "emerald":
-        img = blend_material(img, (32, 176, 88), 0.44)
-        draw_rects(draw, [(4, 4, 5, 3), (8, 9, 4, 2), (6, 12, 2, 1)], (45, 220, 111, 225))
+        img = blend_material(img, (42, 205, 104), 0.50)
+        draw_rects(draw, [(4, 4, 5, 3), (8, 9, 4, 2), (6, 12, 2, 1)], (60, 235, 125, 230))
         draw_lines(draw, [[(4, 4), (8, 7), (12, 4)], [(5, 11), (9, 8), (12, 11)]], (22, 95, 56, 160))
     elif tier == "diamond":
         img = blend_material(img, (72, 207, 218), 0.42)

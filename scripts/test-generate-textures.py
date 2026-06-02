@@ -59,7 +59,6 @@ IRON_GOLEM_SURFACE_REGIONS = {
     ],
 }
 
-
 def load_generator():
     spec = importlib.util.spec_from_file_location("generate_textures", SCRIPT)
     module = importlib.util.module_from_spec(spec)
@@ -399,6 +398,11 @@ class GenerateTexturesTest(unittest.TestCase):
                 emerald,
                 lambda r, g, b: r <= 95 and g >= 155 and 75 <= b <= 140,
             )
+            emerald_arm_leg_bright_pixels = count_pixels_in_regions(
+                emerald,
+                IRON_GOLEM_SURFACE_REGIONS["arm"],
+                lambda r, g, b: r <= 125 and g >= 190 and 80 <= b <= 160 and g >= b + 25,
+            )
             blue_green_pixels = count_pixels(
                 diamond,
                 lambda r, g, b: 55 <= r <= 170 and g >= 165 and b >= 155,
@@ -484,6 +488,7 @@ class GenerateTexturesTest(unittest.TestCase):
 
             self.assertGreaterEqual(copper_pixels, 350)
             self.assertGreaterEqual(emerald_green_pixels, 120)
+            self.assertGreaterEqual(emerald_arm_leg_bright_pixels, 420)
             self.assertGreaterEqual(blue_green_pixels, 250)
             self.assertLessEqual(olive_grime_pixels, 8)
             self.assertGreaterEqual(gold_body_pixels, 1200)
