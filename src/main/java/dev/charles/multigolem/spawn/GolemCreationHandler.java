@@ -95,12 +95,12 @@ public final class GolemCreationHandler {
             .orElseGet(() -> GolemIdentity.ofIronVariant(GolemVariant.COPPER));
     }
 
-    private static GolemIdentity identityFromMatchBodyStates(GolemVariant variant, BlockPattern.BlockPatternMatch match) {
+    static GolemIdentity identityFromMatchBodyStates(GolemVariant variant, BlockPattern.BlockPatternMatch match) {
         return identityForBodyStates(variant, List.of(
             match.getBlock(0, 1, 0).getState(),
             match.getBlock(1, 1, 0).getState(),
             match.getBlock(2, 1, 0).getState(),
-            match.getBlock(1, 0, 0).getState()
+            match.getBlock(1, 2, 0).getState()
         ));
     }
 }
