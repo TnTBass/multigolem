@@ -32,6 +32,8 @@ class MultiGolemStatusIntegrationSourceTest {
         assertTrue(source.contains("ClientTickEvents.END_CLIENT_TICK"), "client tick should resolve stale unknown status");
         assertTrue(source.contains("MultiGolemStatus.tickClientStatus()"), "client tick handler must call status timeout logic");
         assertTrue(status.contains("markServerNotDetectedIfUnknown"), "timeout should become passive server-not-detected");
+        assertTrue(status.contains("private static volatile int ticksSinceJoin"), "join timeout counter must be visible across networking and client tick callbacks");
+        assertTrue(status.contains("private static volatile boolean waitingForServerStatus"), "server-status wait flag must be visible across networking and client tick callbacks");
         assertTrue(source.contains("ClientPlayNetworking.registerGlobalReceiver"), "client must receive the status payload");
         assertTrue(client.contains("MultiGolemStatusClient.register();"), "client initializer must register status client");
     }

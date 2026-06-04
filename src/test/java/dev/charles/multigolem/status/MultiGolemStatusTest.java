@@ -20,6 +20,7 @@ class MultiGolemStatusTest {
 
         assertEquals("multigolem", config.modId());
         assertEquals("MultiGolem", config.displayName());
+        // ModStatusVersion keeps the display version before any +build metadata.
         assertEquals(requiredProperty("multigolem.version").split("\\+")[0], config.clientVersion());
         assertEquals(requiredProperty("multigolem.build"), config.clientBuild());
         assertEquals("https://modrinth.com/mod/multigolem", config.updateUrl());

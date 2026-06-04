@@ -35,7 +35,7 @@ public final class MultiGolemStatusScreen extends Screen {
 
         ModStatusDisplay display = MultiGolemStatus.display();
         MutableComponent label = statusLabel(display);
-        MutableComponent dot = Component.literal(indicatorFor(display.tone()))
+        MutableComponent dot = Component.literal(indicatorDot())
             .withStyle(formattingFor(display.tone()));
         int dotWidth = font.width(dot);
         int labelWidth = font.width(label);
@@ -62,7 +62,7 @@ public final class MultiGolemStatusScreen extends Screen {
             .withStyle(formattingFor(display.tone()));
     }
 
-    private static String indicatorFor(StatusTone tone) {
+    private static String indicatorDot() {
         return "\u25CF";
     }
 

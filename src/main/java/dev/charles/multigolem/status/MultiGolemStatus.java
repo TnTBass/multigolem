@@ -40,8 +40,8 @@ public final class MultiGolemStatus {
             .build())
         .build();
     private static final ModStatusClientState CLIENT_STATE = ModStatusClientState.create(CONFIG);
-    private static int ticksSinceJoin;
-    private static boolean waitingForServerStatus;
+    private static volatile int ticksSinceJoin;
+    private static volatile boolean waitingForServerStatus;
 
     private MultiGolemStatus() {
     }

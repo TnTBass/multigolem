@@ -17,10 +17,12 @@ class MultiGolemModMenuSourceTest {
         assertTrue(build.contains("compileOnly \"com.terraformersmc:modmenu:${project.modmenu_version}\""));
         int dependsStart = metadata.indexOf("\"depends\"");
         int dependsEnd = metadata.indexOf("\n  }", dependsStart);
+        int entrypointsStart = metadata.indexOf("\"entrypoints\"");
+        assertTrue(entrypointsStart >= 0, "entrypoints key missing");
         String dependsBlock = dependsStart >= 0 && dependsEnd > dependsStart
             ? metadata.substring(dependsStart, dependsEnd)
             : "";
-        String entrypointsBlock = metadata.substring(metadata.indexOf("\"entrypoints\""), dependsStart);
+        String entrypointsBlock = metadata.substring(entrypointsStart, dependsStart);
         assertFalse(dependsBlock.contains("\"modmenu\""), "ModMenu must not be a runtime dependency");
         assertTrue(entrypointsBlock.contains("\"modmenu\""));
         assertTrue(metadata.contains("dev.charles.multigolem.client.modmenu.MultiGolemModMenu"));
@@ -37,7 +39,8 @@ class MultiGolemModMenuSourceTest {
         assertTrue(screen.contains("MultiGolemStatus.display()"));
         assertTrue(screen.contains("display.statusLabel()"));
         assertTrue(screen.contains("display.helpText()"));
-        assertTrue(screen.contains("indicatorFor(display.tone())"));
+        assertTrue(screen.contains("indicatorDot()"));
+        assertFalse(screen.contains("indicatorFor(StatusTone"));
         assertTrue(screen.contains("centeredText(font, Component.literal(display.helpText())"), "hover help should be centered instead of mouse-anchored");
         assertFalse(screen.contains("setTooltipForNextFrame"));
         assertTrue(screen.contains("DOT_SIZE"), "status UI should be a compact dot, not a config-style button stack");
