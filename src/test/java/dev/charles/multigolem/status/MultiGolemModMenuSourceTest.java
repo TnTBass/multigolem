@@ -29,7 +29,7 @@ class MultiGolemModMenuSourceTest {
     }
 
     @Test
-    void modMenuScreenRendersCompactStatusDotOnly() throws IOException {
+    void modMenuScreenRendersRichCarryBabyAnimalsStyleStatusDetails() throws IOException {
         String api = Files.readString(Path.of("src/client/java/dev/charles/multigolem/client/modmenu/MultiGolemModMenu.java"));
         String screen = Files.readString(Path.of("src/client/java/dev/charles/multigolem/client/modmenu/MultiGolemStatusScreen.java"));
 
@@ -39,15 +39,17 @@ class MultiGolemModMenuSourceTest {
         assertTrue(screen.contains("MultiGolemStatus.display()"));
         assertTrue(screen.contains("display.statusLabel()"));
         assertTrue(screen.contains("display.helpText()"));
-        assertTrue(screen.contains("indicatorDot()"));
-        assertFalse(screen.contains("indicatorFor(StatusTone"));
-        assertTrue(screen.contains("centeredText(font, Component.literal(display.helpText())"), "hover help should be centered instead of mouse-anchored");
-        assertFalse(screen.contains("setTooltipForNextFrame"));
-        assertTrue(screen.contains("DOT_SIZE"), "status UI should be a compact dot, not a config-style button stack");
+        assertTrue(screen.contains("tooltipText(ModStatusDisplay display)"), "screen should build a rich CBA-style status tooltip");
+        assertTrue(screen.contains("\"Status: \" + display.statusLabel()"));
+        assertTrue(screen.contains("\"Client: \" + versionWithBuild(display.clientVersion(), display.clientBuild())"));
+        assertTrue(screen.contains("\"Server: \" + versionWithBuild(display.serverVersion(), display.serverBuild())"));
+        assertTrue(screen.contains("display.displayName()"));
+        assertTrue(screen.contains("setComponentTooltipForNextFrame"), "hover should use the Minecraft tooltip surface");
+        assertFalse(screen.contains("centeredText(font, Component.literal(display.helpText())"));
+        assertTrue(screen.contains("guiGraphics.fill"), "status UI should use a filled square like Carry Baby Animals");
+        assertTrue(screen.contains("STATUS_SIZE"), "status UI should use stable status-square dimensions");
         assertTrue(screen.contains("Button.builder(Component.literal(\"Cancel\")"), "screen should have a clear CarryBabyAnimals-style cancel affordance");
         assertTrue(screen.contains("button -> onClose()"), "cancel button should return to the parent screen");
-        assertFalse(screen.contains("\"Client: \""));
-        assertFalse(screen.contains("\"Server: \""));
         assertFalse(screen.contains("\"Updates\""));
         assertFalse(screen.contains("\"Done\""));
     }

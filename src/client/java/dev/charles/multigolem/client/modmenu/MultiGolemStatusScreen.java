@@ -11,8 +11,11 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public final class MultiGolemStatusScreen extends Screen {
-    private static final int DOT_SIZE = 8;
+    private static final int STATUS_SIZE = 8;
     private static final int GAP = 6;
     private final Screen parent;
 
@@ -35,20 +38,18 @@ public final class MultiGolemStatusScreen extends Screen {
 
         ModStatusDisplay display = MultiGolemStatus.display();
         MutableComponent label = statusLabel(display);
-        MutableComponent dot = Component.literal(indicatorDot())
-            .withStyle(formattingFor(display.tone()));
-        int dotWidth = font.width(dot);
         int labelWidth = font.width(label);
-        int totalWidth = dotWidth + GAP + labelWidth;
+        int totalWidth = STATUS_SIZE + GAP + labelWidth;
         int left = (width - totalWidth) / 2;
         int top = Math.max(32, height / 2 - 5);
-        int textLeft = left + dotWidth + GAP;
+        int textLeft = left + STATUS_SIZE + GAP;
 
-        guiGraphics.text(font, dot, left, top, 0xFFFFFFFF);
+        guiGraphics.fill(left, top, left + STATUS_SIZE, top + STATUS_SIZE, 0xAA000000);
+        guiGraphics.fill(left + 1, top + 1, left + STATUS_SIZE - 1, top + STATUS_SIZE - 1, toneColor(display.tone()));
         guiGraphics.text(font, label, textLeft, top, 0xFFFFFFFF);
 
         if (isHoveringStatus(left, top, totalWidth, mouseX, mouseY)) {
-            guiGraphics.centeredText(font, Component.literal(display.helpText()), width / 2, top - 24, 0xFFFFFFFF);
+            guiGraphics.setComponentTooltipForNextFrame(font, tooltipLines(display), mouseX, mouseY);
         }
     }
 
@@ -62,8 +63,12 @@ public final class MultiGolemStatusScreen extends Screen {
             .withStyle(formattingFor(display.tone()));
     }
 
-    private static String indicatorDot() {
-        return "\u25CF";
+    private static int toneColor(StatusTone tone) {
+        return switch (tone) {
+            case GREEN -> 0xFF55FF55;
+            case ORANGE -> 0xFFFFAA00;
+            case GRAY -> 0xFFAAAAAA;
+        };
     }
 
     private static ChatFormatting formattingFor(StatusTone tone) {
@@ -74,10 +79,32 @@ public final class MultiGolemStatusScreen extends Screen {
         };
     }
 
+    private static List<Component> tooltipLines(ModStatusDisplay display) {
+        return tooltipText(display).stream()
+            .<Component>map(Component::literal)
+            .toList();
+    }
+
+    static List<String> tooltipText(ModStatusDisplay display) {
+        List<String> text = new ArrayList<>();
+        text.add(display.displayName());
+        text.add("Status: " + display.statusLabel());
+        text.add("Client: " + versionWithBuild(display.clientVersion(), display.clientBuild()));
+        text.add("Server: " + versionWithBuild(display.serverVersion(), display.serverBuild()));
+        if (!display.helpText().isEmpty()) {
+            text.add(display.helpText());
+        }
+        return text;
+    }
+
+    private static String versionWithBuild(String version, String build) {
+        return build == null ? version : version + "+" + build;
+    }
+
     private static boolean isHoveringStatus(int left, int top, int width, int mouseX, int mouseY) {
         return mouseX >= left
             && mouseX <= left + width
             && mouseY >= top - 2
-            && mouseY <= top + DOT_SIZE + 2;
+            && mouseY <= top + STATUS_SIZE + 2;
     }
 }
