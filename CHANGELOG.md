@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added optional ModMenu status UI showing whether the connected server reports the same MultiGolem version. Different versions are informational; gameplay remains compatible.
+- Embedded build metadata in the jar for the ModMenu status UI without changing the published jar filename.
+
 ## 0.5.0+mc26.1.2 — 2026-06-02
 
 - Improved Copper Iron Golems so they keep the copper state they were built from and render matching fresh, exposed, weathered, oxidized, and waxed textures, with an updated default copper look.

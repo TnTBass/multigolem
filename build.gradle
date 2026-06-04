@@ -7,6 +7,20 @@ version = project.mod_version
 group = project.maven_group
 base.archivesName = project.archives_base_name
 
+def gitShortCommit = {
+	try {
+		def process = new ProcessBuilder("git", "-C", rootDir.absolutePath, "rev-parse", "--short", "HEAD")
+			.redirectErrorStream(true)
+			.start()
+		process.waitFor()
+		def value = process.inputStream.getText("UTF-8").trim()
+		if (process.exitValue() != 0) return null
+		return value.isEmpty() ? null : value
+	} catch (Exception ignored) {
+		return null
+	}
+}
+
 repositories {
 	// Add repositories to retrieve artifacts from in here.
 	// You should only use this when depending on other mods because
@@ -14,6 +28,10 @@ repositories {
 	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
 	// for more information about repositories.
 	mavenCentral()
+	maven {
+		name = "Terraformers"
+		url = "https://maven.terraformersmc.com/"
+	}
 }
 
 loom {
@@ -37,11 +55,36 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 	implementation include("me.lucko:fabric-permissions-api:0.7.0")
+	compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
 
 	testImplementation "org.junit.jupiter:junit-jupiter:6.0.3"
 	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 	testImplementation "org.mockito:mockito-core:5.14.2"
 	testImplementation "net.bytebuddy:byte-buddy-agent:1.14.18"
+}
+
+def generatedBuildInfoDir = layout.buildDirectory.dir("generated/resources/buildInfo")
+
+sourceSets {
+	main {
+		resources.srcDir(generatedBuildInfoDir)
+	}
+}
+
+tasks.register("generateBuildInfo") {
+	inputs.property("build", providers.provider { gitShortCommit() ?: "" })
+	outputs.dir(generatedBuildInfoDir)
+
+	doLast {
+		def buildId = gitShortCommit()
+		def outputFile = generatedBuildInfoDir.get().file("multigolem-build.properties").asFile
+		outputFile.parentFile.mkdirs()
+		if (buildId == null) {
+			outputFile.text = "# Build metadata unavailable.${System.lineSeparator()}"
+		} else {
+			outputFile.text = "build=${buildId}${System.lineSeparator()}"
+		}
+	}
 }
 
 processResources {
@@ -59,7 +102,9 @@ tasks.withType(JavaCompile).configureEach {
 
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
+    systemProperty "multigolem.version", project.version.toString()
     doFirst {
+        systemProperty "multigolem.build", gitShortCommit() ?: ""
         def agentJar = configurations.testRuntimeClasspath.find { it.name.contains('byte-buddy-agent') }
         if (agentJar) jvmArgs "-javaagent:${agentJar}"
     }
@@ -408,8 +453,8 @@ tasks.register("genTextures") {
     }
 }
 
-processResources.dependsOn("genTextures")
-tasks.named("sourcesJar") { dependsOn("genTextures") }
+processResources.dependsOn("genTextures", "generateBuildInfo")
+tasks.named("sourcesJar") { dependsOn("genTextures", "generateBuildInfo") }
 
 // configure the maven publication
 publishing {

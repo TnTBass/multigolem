@@ -22,6 +22,9 @@
     ],
     "client": [
       "dev.charles.multigolem.client.MultiGolemClient"
+    ],
+    "modmenu": [
+      "dev.charles.multigolem.client.modmenu.MultiGolemModMenu"
     ]
   },
   "mixins": [

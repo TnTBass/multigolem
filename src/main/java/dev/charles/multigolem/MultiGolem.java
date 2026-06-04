@@ -11,6 +11,7 @@ import dev.charles.multigolem.catalog.GolemVariantSpec;
 import dev.charles.multigolem.config.MultiGolemConfig;
 import dev.charles.multigolem.loot.HasGolemVariantLootCondition;
 import dev.charles.multigolem.spawn.SpawnEggStacks;
+import dev.charles.multigolem.status.MultiGolemStatusNetworking;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
@@ -57,6 +58,7 @@ public class MultiGolem implements ModInitializer {
         CONFIG = MultiGolemConfig.loadOrCreate(configFile);
 
         AbilityRegistry.register();
+        MultiGolemStatusNetworking.registerServer();
 
         Registry.register(
             BuiltInRegistries.LOOT_CONDITION_TYPE,
