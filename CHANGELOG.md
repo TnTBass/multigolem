@@ -2,8 +2,9 @@
 
 ## Unreleased
 
-- Added optional ModMenu status UI showing whether the connected server reports the same MultiGolem version. Different versions are informational; gameplay remains compatible.
-- Embedded build metadata in the jar for the ModMenu status UI without changing the published jar filename.
+## 0.5.1+mc26.1.2 — 2026-06-04
+
+- Added a ModMenu status indicator so players and server owners can quickly confirm they are running the same MultiGolem version, with client and server version/build details in the tooltip.
 
 ## 0.5.0+mc26.1.2 — 2026-06-02
 
