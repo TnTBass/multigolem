@@ -107,10 +107,21 @@ public final class MultiGolemStatusScreen extends Screen {
         text.add("Status: " + display.statusLabel());
         text.add("Client: " + versionWithBuild(display.clientVersion(), display.clientBuild()));
         text.add("Server: " + versionWithBuild(display.serverVersion(), display.serverBuild()));
-        if (!display.helpText().isEmpty()) {
-            text.add(display.helpText());
-        }
+        addHelpTextLines(text, display.helpText());
         return text;
+    }
+
+    private static void addHelpTextLines(List<String> text, String helpText) {
+        if (helpText == null || helpText.isBlank()) {
+            return;
+        }
+
+        for (String sentence : helpText.split("(?<=\\.)\\s+")) {
+            String trimmed = sentence.trim();
+            if (!trimmed.isEmpty()) {
+                text.add(trimmed);
+            }
+        }
     }
 
     private static String versionWithBuild(String version, String build) {

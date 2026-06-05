@@ -43,6 +43,9 @@ class MultiGolemModMenuSourceTest {
         assertTrue(screen.contains("\"Status: \" + display.statusLabel()"));
         assertTrue(screen.contains("\"Client: \" + versionWithBuild(display.clientVersion(), display.clientBuild())"));
         assertTrue(screen.contains("\"Server: \" + versionWithBuild(display.serverVersion(), display.serverBuild())"));
+        assertTrue(screen.contains("addHelpTextLines(text, display.helpText())"), "tooltip help text should wrap into sentence-sized lines");
+        assertTrue(screen.contains("helpText.split(\"(?<=\\\\.)\\\\s+\")"), "sentence wrapping should split after periods");
+        assertFalse(screen.contains("text.add(display.helpText())"), "tooltip should not keep long help text on one line");
         assertTrue(screen.contains("case TEAL -> 0xFF55FFFF"), "screen should map MSK teal build-mismatch tone");
         assertTrue(screen.contains("case TEAL -> ChatFormatting.AQUA"), "screen should format teal status labels");
         assertTrue(screen.contains("renderStatusRow(guiGraphics"), "screen should use an explicit reference-style status row");
