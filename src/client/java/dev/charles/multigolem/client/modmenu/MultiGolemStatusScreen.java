@@ -15,7 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class MultiGolemStatusScreen extends Screen {
-    private static final int STATUS_SIZE = 8;
+    private static final int STATUS_SQUARE_SIZE = 8;
+    private static final int STATUS_SQUARE_BORDER_COLOR = 0xFF222222;
     private static final int GAP = 6;
     private final Screen parent;
 
@@ -37,7 +38,7 @@ public final class MultiGolemStatusScreen extends Screen {
         super.extractRenderState(guiGraphics, mouseX, mouseY, tickDelta);
 
         ModStatusDisplay display = MultiGolemStatus.display();
-        int statusWidth = STATUS_SIZE + GAP + font.width(statusLabel(display));
+        int statusWidth = STATUS_SQUARE_SIZE + GAP + font.width(statusLabel(display));
         int left = (width - statusWidth) / 2;
         int top = Math.max(32, height / 2 - 5);
 
@@ -84,15 +85,19 @@ public final class MultiGolemStatusScreen extends Screen {
         int mouseY
     ) {
         MutableComponent label = statusLabel(display);
-        int textLeft = left + STATUS_SIZE + GAP;
+        int textLeft = left + STATUS_SQUARE_SIZE + GAP;
 
-        guiGraphics.fill(left, top, left + STATUS_SIZE, top + STATUS_SIZE, 0xAA000000);
-        guiGraphics.fill(left + 1, top + 1, left + STATUS_SIZE - 1, top + STATUS_SIZE - 1, toneColor(display.tone()));
+        renderStatusSquare(guiGraphics, display.tone(), left, top);
         guiGraphics.text(font, label, textLeft, top, 0xFFFFFFFF);
 
         if (isHoveringStatus(left, top, rowWidth, mouseX, mouseY)) {
             guiGraphics.setComponentTooltipForNextFrame(font, tooltipLines(display), mouseX, mouseY);
         }
+    }
+
+    private static void renderStatusSquare(GuiGraphicsExtractor guiGraphics, StatusTone tone, int left, int top) {
+        guiGraphics.fill(left, top, left + STATUS_SQUARE_SIZE, top + STATUS_SQUARE_SIZE, STATUS_SQUARE_BORDER_COLOR);
+        guiGraphics.fill(left + 1, top + 1, left + STATUS_SQUARE_SIZE - 1, top + STATUS_SQUARE_SIZE - 1, toneColor(tone));
     }
 
     private static List<Component> tooltipLines(ModStatusDisplay display) {
@@ -135,6 +140,6 @@ public final class MultiGolemStatusScreen extends Screen {
         return mouseX >= left
             && mouseX <= left + width
             && mouseY >= top - 2
-            && mouseY <= top + STATUS_SIZE + 2;
+            && mouseY <= top + STATUS_SQUARE_SIZE + 2;
     }
 }

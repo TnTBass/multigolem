@@ -53,7 +53,10 @@ class MultiGolemModMenuSourceTest {
         assertTrue(screen.contains("setComponentTooltipForNextFrame"), "hover should use the Minecraft tooltip surface");
         assertFalse(screen.contains("centeredText(font, Component.literal(display.helpText())"));
         assertTrue(screen.contains("guiGraphics.fill"), "status UI should use a filled square like Carry Baby Animals");
-        assertTrue(screen.contains("STATUS_SIZE"), "status UI should use stable status-square dimensions");
+        assertTrue(screen.contains("STATUS_SQUARE_SIZE"), "status UI should match MSK 0.1.8 square size naming");
+        assertTrue(screen.contains("STATUS_SQUARE_BORDER_COLOR"), "status square should use a named border color");
+        assertTrue(screen.contains("0xFF222222"), "status square should use the MSK 0.1.8 reference border color");
+        assertTrue(screen.contains("renderStatusSquare("), "status square rendering should be an explicit reusable UI hook");
         assertTrue(screen.contains("Button.builder(Component.literal(\"Cancel\")"), "screen should have a clear CarryBabyAnimals-style cancel affordance");
         assertTrue(screen.contains("button -> onClose()"), "cancel button should return to the parent screen");
         assertFalse(screen.contains("renderDetail(guiGraphics, \"Client:\""), "client version should stay in the tooltip, not as a visible row");
