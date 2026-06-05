@@ -20,7 +20,7 @@ public final class MultiGolemStatusClient {
         registered = true;
 
         ClientPlayNetworking.registerGlobalReceiver(MultiGolemStatusPayload.TYPE, (payload, context) ->
-            context.client().execute(() -> MultiGolemStatus.onServerVersion(payload.serverVersion(), payload.serverBuild()))
+            context.client().execute(() -> MultiGolemStatus.onServerStatus(payload.serverStatus()))
         );
 
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> MultiGolemStatus.onClientJoin());

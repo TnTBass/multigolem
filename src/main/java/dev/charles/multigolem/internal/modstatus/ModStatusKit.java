@@ -24,23 +24,28 @@ public final class ModStatusKit {
     }
 
     public static ModStatusSnapshot connected(ModStatusConfig config, String serverVersion) {
-        Objects.requireNonNull(config, "config");
-        ModStatusVersion serverVersionInfo = ModStatusVersion.of(serverVersion);
-        return connected(config, serverVersionInfo);
+        return connected(config, ModStatusServerStatus.of(serverVersion));
     }
 
     public static ModStatusSnapshot connected(ModStatusConfig config, String serverVersion, String serverBuild) {
-        Objects.requireNonNull(config, "config");
-        return connected(config, ModStatusVersion.of(serverVersion, serverBuild));
+        return connected(config, ModStatusServerStatus.of(serverVersion, serverBuild, VersionMismatchSeverity.WARN));
     }
 
     public static ModStatusSnapshot connected(ModStatusConfig config, ModStatusVersion serverVersionInfo) {
+        return connected(config, ModStatusServerStatus.of(serverVersionInfo, VersionMismatchSeverity.WARN));
+    }
+
+    public static ModStatusSnapshot connected(ModStatusConfig config, ModStatusServerStatus serverStatus) {
         Objects.requireNonNull(config, "config");
-        Objects.requireNonNull(serverVersionInfo, "serverVersionInfo");
-        VersionStatus status = config.clientVersionInfo().version().equals(serverVersionInfo.version())
+        Objects.requireNonNull(serverStatus, "serverStatus");
+        VersionStatus status = config.clientVersionInfo().version().equals(serverStatus.serverVersionInfo().version())
             ? VersionStatus.MATCHED
             : VersionStatus.DIFFERENT;
-        return ModStatusSnapshot.withServerVersion(serverVersionInfo, status);
+        return ModStatusSnapshot.withServerVersion(
+            serverStatus.serverVersionInfo(),
+            status,
+            serverStatus.versionMismatchSeverity()
+        );
     }
 
     public static ModStatusDisplay display(ModStatusConfig config, ModStatusSnapshot snapshot) {
@@ -59,8 +64,15 @@ public final class ModStatusKit {
             snapshot.serverBuild(),
             messages.labelFor(status),
             messages.helpFor(status),
-            status.tone(),
+            toneFor(status, snapshot.versionMismatchSeverity()),
             config.updateUrl()
         );
+    }
+
+    private static StatusTone toneFor(VersionStatus status, VersionMismatchSeverity severity) {
+        if (status == VersionStatus.DIFFERENT && severity == VersionMismatchSeverity.BREAKING) {
+            return StatusTone.RED;
+        }
+        return status.tone();
     }
 }

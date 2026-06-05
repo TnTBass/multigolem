@@ -44,11 +44,15 @@ public final class ModStatusClientState {
     }
 
     public synchronized void connected(String serverVersion) {
-        snapshot = ModStatusKit.connected(config, serverVersion);
+        connected(ModStatusServerStatus.of(serverVersion));
     }
 
     public synchronized void connected(String serverVersion, String serverBuild) {
-        snapshot = ModStatusKit.connected(config, serverVersion, serverBuild);
+        connected(ModStatusServerStatus.of(serverVersion, serverBuild, VersionMismatchSeverity.WARN));
+    }
+
+    public synchronized void connected(ModStatusServerStatus serverStatus) {
+        snapshot = ModStatusKit.connected(config, serverStatus);
     }
 
     public synchronized boolean markServerNotDetectedIfUnknown() {

@@ -1,8 +1,10 @@
 package dev.charles.multigolem.status;
 
 import dev.charles.multigolem.MultiGolem;
+import dev.charles.multigolem.internal.modstatus.ModStatusServerStatus;
 import dev.charles.multigolem.internal.modstatus.ModStatusVersion;
 import dev.charles.multigolem.internal.modstatus.ModStatusVersionPayload;
+import dev.charles.multigolem.internal.modstatus.VersionMismatchSeverity;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -20,7 +22,7 @@ public record MultiGolemStatusPayload(byte[] encodedVersion) implements CustomPa
     );
 
     public MultiGolemStatusPayload {
-        ModStatusVersionPayload.decodeServerVersion(encodedVersion);
+        ModStatusVersionPayload.decodeServerStatus(encodedVersion);
         encodedVersion = Arrays.copyOf(encodedVersion, encodedVersion.length);
     }
 
@@ -30,6 +32,16 @@ public record MultiGolemStatusPayload(byte[] encodedVersion) implements CustomPa
 
     public static MultiGolemStatusPayload fromServerVersion(String serverVersion, String serverBuild) {
         return new MultiGolemStatusPayload(ModStatusVersionPayload.encodeServerVersion(serverVersion, serverBuild));
+    }
+
+    public static MultiGolemStatusPayload fromServerStatus(
+        String serverVersion,
+        String serverBuild,
+        VersionMismatchSeverity versionMismatchSeverity
+    ) {
+        return new MultiGolemStatusPayload(
+            ModStatusVersionPayload.encodeServerStatus(serverVersion, serverBuild, versionMismatchSeverity)
+        );
     }
 
     public String serverVersion() {
@@ -42,6 +54,10 @@ public record MultiGolemStatusPayload(byte[] encodedVersion) implements CustomPa
 
     public ModStatusVersion serverVersionInfo() {
         return ModStatusVersionPayload.decodeServerVersionInfo(encodedVersion);
+    }
+
+    public ModStatusServerStatus serverStatus() {
+        return ModStatusVersionPayload.decodeServerStatus(encodedVersion);
     }
 
     @Override

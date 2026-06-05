@@ -16,7 +16,8 @@ class MultiGolemStatusIntegrationSourceTest {
 
         assertTrue(source.contains("ServerPlayConnectionEvents.JOIN"), "status must send from the server join lifecycle");
         assertTrue(source.contains("ServerPlayNetworking.canSend(player, MultiGolemStatusPayload.TYPE)"), "status send must be capability gated");
-        assertTrue(source.contains("ServerPlayNetworking.send(player, MultiGolemStatusPayload.fromServerVersion"), "status payload must be sent independently");
+        assertTrue(source.contains("ServerPlayNetworking.send(player, MultiGolemStatusPayload.fromServerStatus"), "status payload must be sent independently");
+        assertTrue(source.contains("VersionMismatchSeverity.WARN"), "MultiGolem should declare passive WARN mismatch severity");
         assertTrue(main.contains("MultiGolemStatusNetworking.registerServer();"), "main initializer must register status networking");
         assertFalse(source.contains("GolemVariant"), "status networking must not depend on gameplay variant packets/state");
     }
@@ -35,6 +36,7 @@ class MultiGolemStatusIntegrationSourceTest {
         assertTrue(status.contains("private static volatile int ticksSinceJoin"), "join timeout counter must be visible across networking and client tick callbacks");
         assertTrue(status.contains("private static volatile boolean waitingForServerStatus"), "server-status wait flag must be visible across networking and client tick callbacks");
         assertTrue(source.contains("ClientPlayNetworking.registerGlobalReceiver"), "client must receive the status payload");
+        assertTrue(source.contains("MultiGolemStatus.onServerStatus(payload.serverStatus())"), "client should preserve structured server status severity");
         assertTrue(client.contains("MultiGolemStatusClient.register();"), "client initializer must register status client");
     }
 }

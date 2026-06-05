@@ -5,6 +5,8 @@ import dev.charles.multigolem.internal.modstatus.ModStatusClientState;
 import dev.charles.multigolem.internal.modstatus.ModStatusConfig;
 import dev.charles.multigolem.internal.modstatus.ModStatusDisplay;
 import dev.charles.multigolem.internal.modstatus.ModStatusMessages;
+import dev.charles.multigolem.internal.modstatus.ModStatusServerStatus;
+import dev.charles.multigolem.internal.modstatus.VersionMismatchSeverity;
 import dev.charles.multigolem.internal.modstatus.VersionStatus;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -54,6 +56,10 @@ public final class MultiGolemStatus {
         return CLIENT_STATE.display();
     }
 
+    public static VersionMismatchSeverity versionMismatchSeverity() {
+        return VersionMismatchSeverity.WARN;
+    }
+
     public static void onClientJoin() {
         CLIENT_STATE.unknown();
         ticksSinceJoin = 0;
@@ -71,7 +77,11 @@ public final class MultiGolemStatus {
     }
 
     public static void onServerVersion(String serverVersion, String serverBuild) {
-        CLIENT_STATE.connected(serverVersion, serverBuild);
+        onServerStatus(ModStatusServerStatus.of(serverVersion, serverBuild, VersionMismatchSeverity.WARN));
+    }
+
+    public static void onServerStatus(ModStatusServerStatus serverStatus) {
+        CLIENT_STATE.connected(serverStatus);
         waitingForServerStatus = false;
     }
 

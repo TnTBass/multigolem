@@ -3,9 +3,11 @@ package dev.charles.multigolem.status;
 import dev.charles.multigolem.internal.modstatus.ModStatusClientState;
 import dev.charles.multigolem.internal.modstatus.ModStatusConfig;
 import dev.charles.multigolem.internal.modstatus.ModStatusDisplay;
+import dev.charles.multigolem.internal.modstatus.ModStatusServerStatus;
 import dev.charles.multigolem.internal.modstatus.ModStatusVersion;
 import dev.charles.multigolem.internal.modstatus.ModStatusVersionPayload;
 import dev.charles.multigolem.internal.modstatus.StatusTone;
+import dev.charles.multigolem.internal.modstatus.VersionMismatchSeverity;
 import dev.charles.multigolem.internal.modstatus.VersionStatus;
 import org.junit.jupiter.api.Test;
 
@@ -32,17 +34,30 @@ class MultiGolemStatusTest {
     @Test
     void displayCopyIsPassiveAndPlayerFacing() {
         ModStatusClientState state = ModStatusClientState.create(MultiGolemStatus.config());
-        state.connected("0.3.0+mc26.1.2");
+        state.connected(ModStatusServerStatus.of("0.3.0", "mc26.1.2", VersionMismatchSeverity.WARN));
 
         ModStatusDisplay display = state.display();
 
         assertEquals(VersionStatus.DIFFERENT, state.snapshot().status());
+        assertEquals(VersionMismatchSeverity.WARN, state.snapshot().versionMismatchSeverity());
         assertEquals(StatusTone.ORANGE, display.tone());
         assertEquals("Different versions", display.statusLabel());
         assertEquals(
             "Different versions may miss or hide new features. Gameplay remains compatible.",
             display.helpText()
         );
+    }
+
+    @Test
+    void breakingSeverityCanRenderRedButMultiGolemConfigUsesWarn() {
+        ModStatusClientState state = ModStatusClientState.create(MultiGolemStatus.config());
+
+        state.connected(ModStatusServerStatus.of("0.3.0", null, VersionMismatchSeverity.BREAKING));
+
+        assertEquals(VersionStatus.DIFFERENT, state.snapshot().status());
+        assertEquals(VersionMismatchSeverity.BREAKING, state.snapshot().versionMismatchSeverity());
+        assertEquals(StatusTone.RED, state.display().tone());
+        assertEquals(VersionMismatchSeverity.WARN, MultiGolemStatus.versionMismatchSeverity());
     }
 
     @Test
@@ -63,8 +78,9 @@ class MultiGolemStatusTest {
         AtomicReference<String> channel = new AtomicReference<>();
         AtomicReference<byte[]> payload = new AtomicReference<>();
 
-        assertFalse(ModStatusVersionPayload.sendServerVersionIfSupported(
+        assertFalse(ModStatusVersionPayload.sendServerStatusIfSupported(
             config,
+            MultiGolemStatus.versionMismatchSeverity(),
             ignored -> false,
             (sentChannel, sentPayload) -> {
                 channel.set(sentChannel);
@@ -74,8 +90,9 @@ class MultiGolemStatusTest {
         assertNull(channel.get());
         assertNull(payload.get());
 
-        assertTrue(ModStatusVersionPayload.sendServerVersionIfSupported(
+        assertTrue(ModStatusVersionPayload.sendServerStatusIfSupported(
             config,
+            MultiGolemStatus.versionMismatchSeverity(),
             config.payloadChannel()::equals,
             (sentChannel, sentPayload) -> {
                 channel.set(sentChannel);
@@ -86,6 +103,7 @@ class MultiGolemStatusTest {
         ModStatusVersion sentVersion = ModStatusVersionPayload.decodeServerVersionInfo(payload.get());
         assertEquals(config.clientVersion(), sentVersion.version());
         assertEquals(config.clientBuild(), sentVersion.build());
+        assertEquals(VersionMismatchSeverity.WARN, ModStatusVersionPayload.decodeServerStatus(payload.get()).versionMismatchSeverity());
         assertEquals(config.clientVersionInfo().toPayloadString(), ModStatusVersionPayload.decodeServerVersion(payload.get()));
     }
 

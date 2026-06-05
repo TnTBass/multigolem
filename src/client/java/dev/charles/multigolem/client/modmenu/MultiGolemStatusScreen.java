@@ -67,6 +67,7 @@ public final class MultiGolemStatusScreen extends Screen {
         return switch (tone) {
             case GREEN -> 0xFF55FF55;
             case ORANGE -> 0xFFFFAA00;
+            case RED -> 0xFFFF5555;
             case GRAY -> 0xFFAAAAAA;
         };
     }
@@ -75,6 +76,7 @@ public final class MultiGolemStatusScreen extends Screen {
         return switch (tone) {
             case GREEN -> ChatFormatting.GREEN;
             case ORANGE -> ChatFormatting.GOLD;
+            case RED -> ChatFormatting.RED;
             case GRAY -> ChatFormatting.GRAY;
         };
     }

@@ -1,6 +1,7 @@
 package dev.charles.multigolem.status;
 
 import dev.charles.multigolem.MultiGolem;
+import dev.charles.multigolem.internal.modstatus.VersionMismatchSeverity;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -28,9 +29,10 @@ public final class MultiGolemStatusNetworking {
             return false;
         }
 
-        ServerPlayNetworking.send(player, MultiGolemStatusPayload.fromServerVersion(
+        ServerPlayNetworking.send(player, MultiGolemStatusPayload.fromServerStatus(
             MultiGolemStatus.config().clientVersion(),
-            MultiGolemStatus.config().clientBuild()
+            MultiGolemStatus.config().clientBuild(),
+            VersionMismatchSeverity.WARN
         ));
         return true;
     }

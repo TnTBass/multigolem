@@ -1,6 +1,8 @@
 package dev.charles.multigolem.status;
 
+import dev.charles.multigolem.internal.modstatus.ModStatusServerStatus;
 import dev.charles.multigolem.internal.modstatus.ModStatusVersionPayload;
+import dev.charles.multigolem.internal.modstatus.VersionMismatchSeverity;
 import net.minecraft.resources.Identifier;
 import org.junit.jupiter.api.Test;
 
@@ -35,6 +37,22 @@ class MultiGolemStatusPayloadTest {
         assertNull(payload.serverBuild());
         assertEquals("0.4.0", ModStatusVersionPayload.decodeServerVersion(payload.encodedVersion()));
         assertNull(ModStatusVersionPayload.decodeServerVersionInfo(payload.encodedVersion()).build());
+    }
+
+    @Test
+    void payloadCarriesStructuredWarnServerStatus() {
+        MultiGolemStatusPayload payload = MultiGolemStatusPayload.fromServerStatus(
+            "0.5.1",
+            "server456",
+            VersionMismatchSeverity.WARN
+        );
+
+        ModStatusServerStatus status = payload.serverStatus();
+
+        assertEquals("0.5.1", payload.serverVersion());
+        assertEquals("server456", payload.serverBuild());
+        assertEquals(VersionMismatchSeverity.WARN, status.versionMismatchSeverity());
+        assertEquals("0.5.1+server456", ModStatusVersionPayload.decodeServerVersion(payload.encodedVersion()));
     }
 
     @Test
