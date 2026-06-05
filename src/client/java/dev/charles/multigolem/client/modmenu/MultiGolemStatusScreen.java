@@ -38,22 +38,10 @@ public final class MultiGolemStatusScreen extends Screen {
 
         ModStatusDisplay display = MultiGolemStatus.display();
         int statusWidth = STATUS_SIZE + GAP + font.width(statusLabel(display));
-        int detailWidth = Math.max(
-            font.width("Client: " + versionWithBuild(display.clientVersion(), display.clientBuild())),
-            font.width("Server: " + versionWithBuild(display.serverVersion(), display.serverBuild()))
-        );
-        int updateWidth = display.updateUrl() == null ? 0 : font.width("Updates: Modrinth");
-        int totalWidth = Math.max(statusWidth, Math.max(detailWidth, updateWidth));
-        int left = (width - totalWidth) / 2;
-        int top = Math.max(32, height / 2 - 18);
+        int left = (width - statusWidth) / 2;
+        int top = Math.max(32, height / 2 - 5);
 
         renderStatusRow(guiGraphics, display, left, top, statusWidth, mouseX, mouseY);
-        renderDetail(guiGraphics, "Client:", versionWithBuild(display.clientVersion(), display.clientBuild()), left, top + 14);
-        renderDetail(guiGraphics, "Server:", versionWithBuild(display.serverVersion(), display.serverBuild()), left, top + 26);
-
-        if (display.updateUrl() != null) {
-            guiGraphics.text(font, Component.literal("Updates: Modrinth"), left, top + 38, 0xFFAAAAAA);
-        }
     }
 
     @Override
@@ -105,10 +93,6 @@ public final class MultiGolemStatusScreen extends Screen {
         if (isHoveringStatus(left, top, rowWidth, mouseX, mouseY)) {
             guiGraphics.setComponentTooltipForNextFrame(font, tooltipLines(display), mouseX, mouseY);
         }
-    }
-
-    private void renderDetail(GuiGraphicsExtractor guiGraphics, String label, String value, int left, int top) {
-        guiGraphics.text(font, Component.literal(label + " " + value), left, top, 0xFFDDDDDD);
     }
 
     private static List<Component> tooltipLines(ModStatusDisplay display) {

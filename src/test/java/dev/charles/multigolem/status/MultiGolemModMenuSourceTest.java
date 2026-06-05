@@ -45,10 +45,7 @@ class MultiGolemModMenuSourceTest {
         assertTrue(screen.contains("\"Server: \" + versionWithBuild(display.serverVersion(), display.serverBuild())"));
         assertTrue(screen.contains("case TEAL -> 0xFF55FFFF"), "screen should map MSK teal build-mismatch tone");
         assertTrue(screen.contains("case TEAL -> ChatFormatting.AQUA"), "screen should format teal status labels");
-        assertTrue(screen.contains("renderDetail(guiGraphics, \"Client:\""), "screen should show the client version row");
-        assertTrue(screen.contains("renderDetail(guiGraphics, \"Server:\""), "screen should show the server version row");
         assertTrue(screen.contains("renderStatusRow(guiGraphics"), "screen should use an explicit reference-style status row");
-        assertTrue(screen.contains("display.updateUrl()"), "screen should honor the reference update URL hook");
         assertTrue(screen.contains("display.displayName()"));
         assertTrue(screen.contains("setComponentTooltipForNextFrame"), "hover should use the Minecraft tooltip surface");
         assertFalse(screen.contains("centeredText(font, Component.literal(display.helpText())"));
@@ -56,6 +53,9 @@ class MultiGolemModMenuSourceTest {
         assertTrue(screen.contains("STATUS_SIZE"), "status UI should use stable status-square dimensions");
         assertTrue(screen.contains("Button.builder(Component.literal(\"Cancel\")"), "screen should have a clear CarryBabyAnimals-style cancel affordance");
         assertTrue(screen.contains("button -> onClose()"), "cancel button should return to the parent screen");
+        assertFalse(screen.contains("renderDetail(guiGraphics, \"Client:\""), "client version should stay in the tooltip, not as a visible row");
+        assertFalse(screen.contains("renderDetail(guiGraphics, \"Server:\""), "server version should stay in the tooltip, not as a visible row");
+        assertFalse(screen.contains("\"Updates:\""), "update link should not render as a visible row on this compact status screen");
         assertFalse(screen.contains("\"Done\""));
     }
 }
