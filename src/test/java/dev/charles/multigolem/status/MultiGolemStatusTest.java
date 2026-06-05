@@ -61,6 +61,46 @@ class MultiGolemStatusTest {
     }
 
     @Test
+    void matchingPublicVersionWithDifferentBuildRendersTeal() {
+        ModStatusClientState state = ModStatusClientState.create(MultiGolemStatus.config());
+        ModStatusConfig config = state.config();
+
+        state.connected(ModStatusServerStatus.of(
+            config.clientVersion(),
+            "different-build",
+            VersionMismatchSeverity.BREAKING
+        ));
+
+        assertEquals(VersionStatus.MATCHED, state.snapshot().status());
+        assertEquals(StatusTone.TEAL, state.display().tone());
+    }
+
+    @Test
+    void matchingPublicVersionWithMissingOrDevBuildRendersGreen() {
+        ModStatusClientState state = ModStatusClientState.create(MultiGolemStatus.config());
+        ModStatusConfig config = state.config();
+
+        state.connected(ModStatusServerStatus.of(config.clientVersion(), null, VersionMismatchSeverity.BREAKING));
+
+        assertEquals(VersionStatus.MATCHED, state.snapshot().status());
+        assertEquals(StatusTone.GREEN, state.display().tone());
+
+        ModStatusConfig devConfig = ModStatusConfig.builder()
+            .modId("multigolem")
+            .displayName("MultiGolem")
+            .clientVersion(config.clientVersion())
+            .clientBuild("dev")
+            .payloadChannel(config.payloadNamespace(), config.payloadPath())
+            .build();
+        ModStatusClientState devState = ModStatusClientState.create(devConfig);
+
+        devState.connected(ModStatusServerStatus.of(config.clientVersion(), "server-build", VersionMismatchSeverity.WARN));
+
+        assertEquals(VersionStatus.MATCHED, devState.snapshot().status());
+        assertEquals(StatusTone.GREEN, devState.display().tone());
+    }
+
+    @Test
     void unknownJoinCanTimeoutToServerNotDetectedWithoutDisconnecting() {
         ModStatusClientState state = ModStatusClientState.create(MultiGolemStatus.config());
 

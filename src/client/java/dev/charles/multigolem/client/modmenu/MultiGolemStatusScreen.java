@@ -37,19 +37,22 @@ public final class MultiGolemStatusScreen extends Screen {
         super.extractRenderState(guiGraphics, mouseX, mouseY, tickDelta);
 
         ModStatusDisplay display = MultiGolemStatus.display();
-        MutableComponent label = statusLabel(display);
-        int labelWidth = font.width(label);
-        int totalWidth = STATUS_SIZE + GAP + labelWidth;
+        int statusWidth = STATUS_SIZE + GAP + font.width(statusLabel(display));
+        int detailWidth = Math.max(
+            font.width("Client: " + versionWithBuild(display.clientVersion(), display.clientBuild())),
+            font.width("Server: " + versionWithBuild(display.serverVersion(), display.serverBuild()))
+        );
+        int updateWidth = display.updateUrl() == null ? 0 : font.width("Updates: Modrinth");
+        int totalWidth = Math.max(statusWidth, Math.max(detailWidth, updateWidth));
         int left = (width - totalWidth) / 2;
-        int top = Math.max(32, height / 2 - 5);
-        int textLeft = left + STATUS_SIZE + GAP;
+        int top = Math.max(32, height / 2 - 18);
 
-        guiGraphics.fill(left, top, left + STATUS_SIZE, top + STATUS_SIZE, 0xAA000000);
-        guiGraphics.fill(left + 1, top + 1, left + STATUS_SIZE - 1, top + STATUS_SIZE - 1, toneColor(display.tone()));
-        guiGraphics.text(font, label, textLeft, top, 0xFFFFFFFF);
+        renderStatusRow(guiGraphics, display, left, top, statusWidth, mouseX, mouseY);
+        renderDetail(guiGraphics, "Client:", versionWithBuild(display.clientVersion(), display.clientBuild()), left, top + 14);
+        renderDetail(guiGraphics, "Server:", versionWithBuild(display.serverVersion(), display.serverBuild()), left, top + 26);
 
-        if (isHoveringStatus(left, top, totalWidth, mouseX, mouseY)) {
-            guiGraphics.setComponentTooltipForNextFrame(font, tooltipLines(display), mouseX, mouseY);
+        if (display.updateUrl() != null) {
+            guiGraphics.text(font, Component.literal("Updates: Modrinth"), left, top + 38, 0xFFAAAAAA);
         }
     }
 
@@ -66,6 +69,7 @@ public final class MultiGolemStatusScreen extends Screen {
     private static int toneColor(StatusTone tone) {
         return switch (tone) {
             case GREEN -> 0xFF55FF55;
+            case TEAL -> 0xFF55FFFF;
             case ORANGE -> 0xFFFFAA00;
             case RED -> 0xFFFF5555;
             case GRAY -> 0xFFAAAAAA;
@@ -75,10 +79,36 @@ public final class MultiGolemStatusScreen extends Screen {
     private static ChatFormatting formattingFor(StatusTone tone) {
         return switch (tone) {
             case GREEN -> ChatFormatting.GREEN;
+            case TEAL -> ChatFormatting.AQUA;
             case ORANGE -> ChatFormatting.GOLD;
             case RED -> ChatFormatting.RED;
             case GRAY -> ChatFormatting.GRAY;
         };
+    }
+
+    private void renderStatusRow(
+        GuiGraphicsExtractor guiGraphics,
+        ModStatusDisplay display,
+        int left,
+        int top,
+        int rowWidth,
+        int mouseX,
+        int mouseY
+    ) {
+        MutableComponent label = statusLabel(display);
+        int textLeft = left + STATUS_SIZE + GAP;
+
+        guiGraphics.fill(left, top, left + STATUS_SIZE, top + STATUS_SIZE, 0xAA000000);
+        guiGraphics.fill(left + 1, top + 1, left + STATUS_SIZE - 1, top + STATUS_SIZE - 1, toneColor(display.tone()));
+        guiGraphics.text(font, label, textLeft, top, 0xFFFFFFFF);
+
+        if (isHoveringStatus(left, top, rowWidth, mouseX, mouseY)) {
+            guiGraphics.setComponentTooltipForNextFrame(font, tooltipLines(display), mouseX, mouseY);
+        }
+    }
+
+    private void renderDetail(GuiGraphicsExtractor guiGraphics, String label, String value, int left, int top) {
+        guiGraphics.text(font, Component.literal(label + " " + value), left, top, 0xFFDDDDDD);
     }
 
     private static List<Component> tooltipLines(ModStatusDisplay display) {
@@ -100,7 +130,10 @@ public final class MultiGolemStatusScreen extends Screen {
     }
 
     private static String versionWithBuild(String version, String build) {
-        return build == null ? version : version + "+" + build;
+        if (version == null || version.isBlank()) {
+            return "Unknown";
+        }
+        return build == null || build.isBlank() || "dev".equalsIgnoreCase(build) ? version : version + "+" + build;
     }
 
     private static boolean isHoveringStatus(int left, int top, int width, int mouseX, int mouseY) {

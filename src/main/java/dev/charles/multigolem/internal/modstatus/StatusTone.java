@@ -5,6 +5,7 @@ package dev.charles.multigolem.internal.modstatus;
  */
 public enum StatusTone {
     GREEN,
+    TEAL,
     ORANGE,
     RED,
     GRAY

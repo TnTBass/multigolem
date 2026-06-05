@@ -64,15 +64,36 @@ public final class ModStatusKit {
             snapshot.serverBuild(),
             messages.labelFor(status),
             messages.helpFor(status),
-            toneFor(status, snapshot.versionMismatchSeverity()),
+            toneFor(status, snapshot.versionMismatchSeverity(), config.clientBuild(), snapshot.serverBuild()),
             config.updateUrl()
         );
     }
 
-    private static StatusTone toneFor(VersionStatus status, VersionMismatchSeverity severity) {
+    private static StatusTone toneFor(
+        VersionStatus status,
+        VersionMismatchSeverity severity,
+        String clientBuild,
+        String serverBuild
+    ) {
+        if (status == VersionStatus.MATCHED && buildsDiffer(clientBuild, serverBuild)) {
+            return StatusTone.TEAL;
+        }
         if (status == VersionStatus.DIFFERENT && severity == VersionMismatchSeverity.BREAKING) {
             return StatusTone.RED;
         }
         return status.tone();
+    }
+
+    private static boolean buildsDiffer(String clientBuild, String serverBuild) {
+        String normalizedClientBuild = diagnosticBuild(clientBuild);
+        String normalizedServerBuild = diagnosticBuild(serverBuild);
+        return normalizedClientBuild != null
+            && normalizedServerBuild != null
+            && !normalizedClientBuild.equals(normalizedServerBuild);
+    }
+
+    private static String diagnosticBuild(String build) {
+        String normalized = ModStatusStrings.optionalText(build);
+        return "dev".equalsIgnoreCase(normalized) ? null : normalized;
     }
 }
