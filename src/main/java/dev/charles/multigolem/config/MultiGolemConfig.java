@@ -61,6 +61,19 @@ public final class MultiGolemConfig {
     public VillageSpawnWeights villageSpawnWeights() { return villageSpawnWeights; }
     public ZombieVillageSpawningConfig zombieVillageSpawning() { return zombieVillageSpawning; }
 
+    Map<GolemVariant, TierStats> tiersForTesting() {
+        return new EnumMap<>(tiers);
+    }
+
+    static MultiGolemConfig forTesting(
+        boolean allowGolemHealing,
+        Map<GolemVariant, TierStats> tiers,
+        VillageSpawnWeights villageSpawnWeights,
+        ZombieVillageSpawningConfig zombieVillageSpawning
+    ) {
+        return new MultiGolemConfig(allowGolemHealing, tiers, villageSpawnWeights, zombieVillageSpawning);
+    }
+
     public static MultiGolemConfig defaults() {
         EnumMap<GolemVariant, TierStats> m = new EnumMap<>(GolemVariant.class);
         m.put(GolemVariant.COPPER, new TierStats(60, 8.5, true, List.of("CREEPERS"),

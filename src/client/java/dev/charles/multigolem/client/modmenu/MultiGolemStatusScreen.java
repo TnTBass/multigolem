@@ -1,23 +1,13 @@
 package dev.charles.multigolem.client.modmenu;
 
-import dev.charles.multigolem.internal.modstatus.ModStatusDisplay;
-import dev.charles.multigolem.internal.modstatus.StatusTone;
-import dev.charles.multigolem.status.MultiGolemStatus;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-
-import java.util.ArrayList;
-import java.util.List;
+import net.minecraft.util.Util;
 
 public final class MultiGolemStatusScreen extends Screen {
-    private static final int STATUS_SQUARE_SIZE = 8;
-    private static final int STATUS_SQUARE_BORDER_COLOR = 0xFF222222;
-    private static final int GAP = 6;
     private final Screen parent;
 
     public MultiGolemStatusScreen(Screen parent) {
@@ -27,119 +17,40 @@ public final class MultiGolemStatusScreen extends Screen {
 
     @Override
     protected void init() {
-        int buttonWidth = Math.min(200, width - 32);
-        addRenderableWidget(Button.builder(Component.literal("Cancel"), button -> onClose())
-            .bounds((width - buttonWidth) / 2, height - 28, buttonWidth, 20)
+        int buttonWidth = Math.min(220, width - 32);
+        int left = (width - buttonWidth) / 2;
+        int top = Math.max(36, height / 2 - 58);
+        int step = 24;
+
+        addRenderableWidget(Button.builder(Component.literal("Website"), button ->
+            Util.getPlatform().openUri("https://modrinth.com/mod/multigolem")
+        ).bounds(left, top, buttonWidth, 20).build());
+
+        addRenderableWidget(Button.builder(Component.literal("Issues"), button ->
+            Util.getPlatform().openUri("https://github.com/TnTBass/MultiGolem/issues")
+        ).bounds(left, top + step, buttonWidth, 20).build());
+
+        addRenderableWidget(Button.builder(Component.literal("Server Customizations"), button ->
+            Minecraft.getInstance().setScreen(new ServerCustomizationsScreen(this))
+        ).bounds(left, top + step * 2, buttonWidth, 20).build());
+
+        addRenderableWidget(Button.builder(Component.literal("Golempedia"), button ->
+            Minecraft.getInstance().setScreen(new GolempediaScreen(this))
+        ).bounds(left, top + step * 3, buttonWidth, 20).build());
+
+        addRenderableWidget(Button.builder(Component.literal("Done"), button -> onClose())
+            .bounds(left, top + step * 4, buttonWidth, 20)
             .build());
     }
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float tickDelta) {
         super.extractRenderState(guiGraphics, mouseX, mouseY, tickDelta);
-
-        ModStatusDisplay display = MultiGolemStatus.display();
-        int statusWidth = STATUS_SQUARE_SIZE + GAP + font.width(statusLabel(display));
-        int left = (width - statusWidth) / 2;
-        int top = Math.max(32, height / 2 - 5);
-
-        renderStatusRow(guiGraphics, display, left, top, statusWidth, mouseX, mouseY);
+        MultiGolemStatusWidget.renderTopRight(guiGraphics, font, width, 0, mouseX, mouseY);
     }
 
     @Override
     public void onClose() {
         Minecraft.getInstance().setScreen(parent);
-    }
-
-    private static MutableComponent statusLabel(ModStatusDisplay display) {
-        return Component.literal(display.statusLabel())
-            .withStyle(formattingFor(display.tone()));
-    }
-
-    private static int toneColor(StatusTone tone) {
-        return switch (tone) {
-            case GREEN -> 0xFF55FF55;
-            case TEAL -> 0xFF55FFFF;
-            case ORANGE -> 0xFFFFAA00;
-            case RED -> 0xFFFF5555;
-            case GRAY -> 0xFFAAAAAA;
-        };
-    }
-
-    private static ChatFormatting formattingFor(StatusTone tone) {
-        return switch (tone) {
-            case GREEN -> ChatFormatting.GREEN;
-            case TEAL -> ChatFormatting.AQUA;
-            case ORANGE -> ChatFormatting.GOLD;
-            case RED -> ChatFormatting.RED;
-            case GRAY -> ChatFormatting.GRAY;
-        };
-    }
-
-    private void renderStatusRow(
-        GuiGraphicsExtractor guiGraphics,
-        ModStatusDisplay display,
-        int left,
-        int top,
-        int rowWidth,
-        int mouseX,
-        int mouseY
-    ) {
-        MutableComponent label = statusLabel(display);
-        int textLeft = left + STATUS_SQUARE_SIZE + GAP;
-
-        renderStatusSquare(guiGraphics, display.tone(), left, top);
-        guiGraphics.text(font, label, textLeft, top, 0xFFFFFFFF);
-
-        if (isHoveringStatus(left, top, rowWidth, mouseX, mouseY)) {
-            guiGraphics.setComponentTooltipForNextFrame(font, tooltipLines(display), mouseX, mouseY);
-        }
-    }
-
-    private static void renderStatusSquare(GuiGraphicsExtractor guiGraphics, StatusTone tone, int left, int top) {
-        guiGraphics.fill(left, top, left + STATUS_SQUARE_SIZE, top + STATUS_SQUARE_SIZE, STATUS_SQUARE_BORDER_COLOR);
-        guiGraphics.fill(left + 1, top + 1, left + STATUS_SQUARE_SIZE - 1, top + STATUS_SQUARE_SIZE - 1, toneColor(tone));
-    }
-
-    private static List<Component> tooltipLines(ModStatusDisplay display) {
-        return tooltipText(display).stream()
-            .<Component>map(Component::literal)
-            .toList();
-    }
-
-    static List<String> tooltipText(ModStatusDisplay display) {
-        List<String> text = new ArrayList<>();
-        text.add(display.displayName());
-        text.add("Status: " + display.statusLabel());
-        text.add("Client: " + versionWithBuild(display.clientVersion(), display.clientBuild()));
-        text.add("Server: " + versionWithBuild(display.serverVersion(), display.serverBuild()));
-        addHelpTextLines(text, display.helpText());
-        return text;
-    }
-
-    private static void addHelpTextLines(List<String> text, String helpText) {
-        if (helpText == null || helpText.isBlank()) {
-            return;
-        }
-
-        for (String sentence : helpText.split("(?<=\\.)\\s+")) {
-            String trimmed = sentence.trim();
-            if (!trimmed.isEmpty()) {
-                text.add(trimmed);
-            }
-        }
-    }
-
-    private static String versionWithBuild(String version, String build) {
-        if (version == null || version.isBlank()) {
-            return "Unknown";
-        }
-        return build == null || build.isBlank() || "dev".equalsIgnoreCase(build) ? version : version + "+" + build;
-    }
-
-    private static boolean isHoveringStatus(int left, int top, int width, int mouseX, int mouseY) {
-        return mouseX >= left
-            && mouseX <= left + width
-            && mouseY >= top - 2
-            && mouseY <= top + STATUS_SQUARE_SIZE + 2;
     }
 }

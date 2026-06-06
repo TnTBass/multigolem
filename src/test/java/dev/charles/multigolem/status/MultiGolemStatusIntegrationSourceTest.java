@@ -39,4 +39,19 @@ class MultiGolemStatusIntegrationSourceTest {
         assertTrue(source.contains("MultiGolemStatus.onServerStatus(payload.serverStatus())"), "client should preserve structured server status severity");
         assertTrue(client.contains("MultiGolemStatusClient.register();"), "client initializer must register status client");
     }
+
+    @Test
+    void statusPayloadStaysVersionStatusOnlyAndDoesNotCarryServerCustomizations() throws IOException {
+        String statusPayload = Files.readString(Path.of("src/main/java/dev/charles/multigolem/status/MultiGolemStatusPayload.java"));
+        String status = Files.readString(Path.of("src/main/java/dev/charles/multigolem/status/MultiGolemStatus.java"));
+        String statusNetworking = Files.readString(Path.of("src/main/java/dev/charles/multigolem/status/MultiGolemStatusNetworking.java"));
+
+        assertTrue(statusPayload.contains("encodedVersion"));
+        assertTrue(statusPayload.contains("ModStatusVersionPayload"));
+        assertFalse(statusPayload.contains("healingEnabled"));
+        assertFalse(statusPayload.contains("villageSpawnWeights"));
+        assertFalse(statusPayload.contains("variantOverrides"));
+        assertFalse(status.contains("server_customizations"));
+        assertFalse(statusNetworking.contains("ServerCustomizationsPayload"));
+    }
 }

@@ -9,6 +9,7 @@ import dev.charles.multigolem.attribute.VariantAttributes;
 import dev.charles.multigolem.catalog.GolemVariantCatalog;
 import dev.charles.multigolem.catalog.GolemVariantSpec;
 import dev.charles.multigolem.config.MultiGolemConfig;
+import dev.charles.multigolem.customizations.ServerCustomizationsNetworking;
 import dev.charles.multigolem.loot.HasGolemVariantLootCondition;
 import dev.charles.multigolem.spawn.SpawnEggStacks;
 import dev.charles.multigolem.status.MultiGolemStatusNetworking;
@@ -59,6 +60,7 @@ public class MultiGolem implements ModInitializer {
 
         AbilityRegistry.register();
         MultiGolemStatusNetworking.registerServer();
+        ServerCustomizationsNetworking.registerServer();
 
         Registry.register(
             BuiltInRegistries.LOOT_CONDITION_TYPE,

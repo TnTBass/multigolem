@@ -29,39 +29,50 @@ class MultiGolemModMenuSourceTest {
     }
 
     @Test
-    void modMenuScreenRendersRichCarryBabyAnimalsStyleStatusDetails() throws IOException {
+    void modMenuHubShowsRequiredActionsAndTopRightStatusSquare() throws IOException {
         String api = Files.readString(Path.of("src/client/java/dev/charles/multigolem/client/modmenu/MultiGolemModMenu.java"));
         String screen = Files.readString(Path.of("src/client/java/dev/charles/multigolem/client/modmenu/MultiGolemStatusScreen.java"));
+        String widget = Files.readString(Path.of("src/client/java/dev/charles/multigolem/client/modmenu/MultiGolemStatusWidget.java"));
 
         assertTrue(api.contains("@Environment(EnvType.CLIENT)"));
         assertTrue(api.contains("implements ModMenuApi"));
         assertTrue(api.contains("MultiGolemStatusScreen::new"));
-        assertTrue(screen.contains("MultiGolemStatus.display()"));
-        assertTrue(screen.contains("display.statusLabel()"));
-        assertTrue(screen.contains("display.helpText()"));
-        assertTrue(screen.contains("tooltipText(ModStatusDisplay display)"), "screen should build a rich CBA-style status tooltip");
-        assertTrue(screen.contains("\"Status: \" + display.statusLabel()"));
-        assertTrue(screen.contains("\"Client: \" + versionWithBuild(display.clientVersion(), display.clientBuild())"));
-        assertTrue(screen.contains("\"Server: \" + versionWithBuild(display.serverVersion(), display.serverBuild())"));
-        assertTrue(screen.contains("addHelpTextLines(text, display.helpText())"), "tooltip help text should wrap into sentence-sized lines");
-        assertTrue(screen.contains("helpText.split(\"(?<=\\\\.)\\\\s+\")"), "sentence wrapping should split after periods");
-        assertFalse(screen.contains("text.add(display.helpText())"), "tooltip should not keep long help text on one line");
-        assertTrue(screen.contains("case TEAL -> 0xFF55FFFF"), "screen should map MSK teal build-mismatch tone");
-        assertTrue(screen.contains("case TEAL -> ChatFormatting.AQUA"), "screen should format teal status labels");
-        assertTrue(screen.contains("renderStatusRow(guiGraphics"), "screen should use an explicit reference-style status row");
-        assertTrue(screen.contains("display.displayName()"));
-        assertTrue(screen.contains("setComponentTooltipForNextFrame"), "hover should use the Minecraft tooltip surface");
-        assertFalse(screen.contains("centeredText(font, Component.literal(display.helpText())"));
-        assertTrue(screen.contains("guiGraphics.fill"), "status UI should use a filled square like Carry Baby Animals");
-        assertTrue(screen.contains("STATUS_SQUARE_SIZE"), "status UI should match MSK 0.1.8 square size naming");
-        assertTrue(screen.contains("STATUS_SQUARE_BORDER_COLOR"), "status square should use a named border color");
-        assertTrue(screen.contains("0xFF222222"), "status square should use the MSK 0.1.8 reference border color");
-        assertTrue(screen.contains("renderStatusSquare("), "status square rendering should be an explicit reusable UI hook");
-        assertTrue(screen.contains("Button.builder(Component.literal(\"Cancel\")"), "screen should have a clear CarryBabyAnimals-style cancel affordance");
-        assertTrue(screen.contains("button -> onClose()"), "cancel button should return to the parent screen");
+        assertTrue(screen.contains("Button.builder(Component.literal(\"Website\")"));
+        assertTrue(screen.contains("Button.builder(Component.literal(\"Issues\")"));
+        assertTrue(screen.contains("Button.builder(Component.literal(\"Server Customizations\")"));
+        assertTrue(screen.contains("Button.builder(Component.literal(\"Golempedia\")"));
+        assertTrue(screen.contains("Button.builder(Component.literal(\"Done\")"));
+        assertFalse(screen.contains("Button.builder(Component.literal(\"Cancel\")"));
+        assertTrue(screen.contains("MultiGolemStatusWidget.renderTopRight("));
+        assertFalse(screen.contains("renderStatusRow(guiGraphics"), "hub must not keep a centered permanent status row");
+        assertFalse(screen.contains("display.statusLabel()"), "status label belongs in tooltip only");
+        assertTrue(widget.contains("MultiGolemStatus.display()"));
+        assertTrue(widget.contains("right - STATUS_SQUARE_SIZE - RIGHT_MARGIN"));
+        assertTrue(widget.contains("top + TOP_MARGIN"));
+        assertTrue(widget.contains("tooltipText(ModStatusDisplay display)"));
+        assertTrue(widget.contains("\"Status: \" + display.statusLabel()"));
+        assertTrue(widget.contains("\"Client: \" + versionWithBuild(display.clientVersion(), display.clientBuild())"));
+        assertTrue(widget.contains("\"Server: \" + versionWithBuild(display.serverVersion(), display.serverBuild())"));
+        assertTrue(widget.contains("addHelpTextLines(text, display.helpText())"));
+        assertTrue(widget.contains("case TEAL -> 0xFF55FFFF"));
+        assertTrue(widget.contains("case TEAL -> ChatFormatting.AQUA"));
         assertFalse(screen.contains("renderDetail(guiGraphics, \"Client:\""), "client version should stay in the tooltip, not as a visible row");
         assertFalse(screen.contains("renderDetail(guiGraphics, \"Server:\""), "server version should stay in the tooltip, not as a visible row");
         assertFalse(screen.contains("\"Updates:\""), "update link should not render as a visible row on this compact status screen");
-        assertFalse(screen.contains("\"Done\""));
+    }
+
+    @Test
+    void serverCustomizationsScreenRendersUnavailableAndClearsPendingOnClose() throws IOException {
+        String screen = Files.readString(Path.of("src/client/java/dev/charles/multigolem/client/modmenu/ServerCustomizationsScreen.java"));
+
+        assertTrue(screen.contains("ServerCustomizationsClient.state()"));
+        assertTrue(screen.contains("No server customizations are available."));
+        assertTrue(screen.contains("Loading server customizations"));
+        assertTrue(screen.contains("ViewState.UNAVAILABLE"));
+        assertTrue(screen.contains("ViewState.PENDING"));
+        assertTrue(screen.contains("ViewState.AVAILABLE"));
+        assertTrue(screen.contains("onScreenClose()"));
+        assertFalse(screen.contains("configure MultiGolem"));
+        assertFalse(screen.contains("Button.builder(Component.literal(\"Copy"));
     }
 }
