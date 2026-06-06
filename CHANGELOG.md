@@ -4,7 +4,7 @@
 
 ## 0.5.1+mc26.1.2 — 2026-06-04
 
-- Added a ModMenu status indicator so players and server owners can quickly confirm they are running the same MultiGolem version, with client and server version/build details, build-only mismatch highlighting, and warning-level mismatch status that calls out possible differences without treating them as a connection break.
+- Added a ModMenu status indicator, powered by the open-source [ModStatusKit GitHub project](https://github.com/TnTBass/ModStatusKit), so players and server owners can quickly confirm they are running the same MultiGolem version, with client and server version/build details, build-only mismatch highlighting, and warning-level mismatch status that calls out possible differences without treating them as a connection break.
 
 ## 0.5.0+mc26.1.2 — 2026-06-02
 
