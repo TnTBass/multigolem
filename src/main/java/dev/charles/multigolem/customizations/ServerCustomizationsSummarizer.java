@@ -6,6 +6,7 @@ import dev.charles.multigolem.catalog.GolemVariantSpec;
 import dev.charles.multigolem.config.MultiGolemConfig;
 import dev.charles.multigolem.config.TierStats;
 import dev.charles.multigolem.golempedia.GolempediaStats;
+import dev.charles.multigolem.golempedia.GolempediaVillageSpawns;
 import dev.charles.multigolem.spawn.VillageSpawnWeights;
 
 import java.util.ArrayList;
@@ -50,7 +51,6 @@ public final class ServerCustomizationsSummarizer {
 
     public static ServerCustomizationsSummary summary(ServerCustomizationsSnapshot snapshot) {
         Objects.requireNonNull(snapshot, "snapshot");
-        MultiGolemConfig defaults = MultiGolemConfig.defaults();
         List<String> global = new ArrayList<>();
         List<String> village = new ArrayList<>();
         List<String> zombieVillage = new ArrayList<>();
@@ -58,24 +58,32 @@ public final class ServerCustomizationsSummarizer {
 
         global.add("Global healing: " + enabledText(snapshot.healingEnabled()));
 
-        if (!snapshot.villageSpawnsEnabled()) {
-            village.add("Village golem spawning: disabled");
-        }
         for (GolemVariant variant : VillageSpawnWeights.rollOrder()) {
-            int current = snapshot.villageSpawnWeights().getOrDefault(variant, 0);
-            int bundled = defaults.villageSpawnWeights().weight(variant);
-            if (current != bundled) {
-                village.add(variant.displayName() + " village spawning is customized by this server.");
+            village.add(variant.displayName() + ": " + GolempediaVillageSpawns.summary(
+                variant,
+                snapshot.villageSpawnsEnabled(),
+                snapshot.villageSpawnWeights(),
+                snapshot.zombieVillageSpawningEnabled()
+            ));
+        }
+
+        zombieVillage.add("Zombie village spawning: " + enabledText(snapshot.zombieVillageSpawningEnabled()));
+
+        for (GolemVariantSpec spec : GolemVariantCatalog.entries()) {
+            GolemVariant variant = spec.variant();
+            if (variant == GolemVariant.IRON) {
+                continue;
+            }
+            List<String> statLines = snapshot.golempediaStats().getOrDefault(variant, List.of());
+            if (!statLines.isEmpty()) {
+                variants.add(variant.displayName() + ": " + String.join(", ", statLines));
             }
         }
-
-        if (!snapshot.zombieVillageSpawningEnabled()) {
-            zombieVillage.add("Zombie village spawning: disabled");
-        }
-
         for (VariantCustomizationSummary override : snapshot.variantOverrides()) {
             for (String line : override.lines()) {
-                variants.add(line);
+                if (!variants.contains(line)) {
+                    variants.add(line);
+                }
             }
         }
 

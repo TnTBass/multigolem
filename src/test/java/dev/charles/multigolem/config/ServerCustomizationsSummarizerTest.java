@@ -34,6 +34,19 @@ class ServerCustomizationsSummarizerTest {
     }
 
     @Test
+    void defaultSummaryStillReportsActiveServerValues() {
+        ServerCustomizationsSummary summary = ServerCustomizationsSummarizer.summary(MultiGolemConfig.defaults());
+
+        assertTrue(summary.globalLines().stream().anyMatch(line -> line.contains("Global healing: enabled")));
+        assertTrue(summary.villageLines().stream().anyMatch(line -> line.contains("Copper")));
+        assertTrue(summary.villageLines().stream().anyMatch(line -> line.contains("roughly")));
+        assertTrue(summary.zombieVillageLines().stream().anyMatch(line -> line.contains("Zombie village spawning: enabled")));
+        assertTrue(summary.variantLines().stream().anyMatch(line -> line.contains("Copper")));
+        assertTrue(summary.variantLines().stream().anyMatch(line -> line.contains("Health:")));
+        assertTrue(summary.variantLines().stream().anyMatch(line -> line.contains("Attack:")));
+    }
+
+    @Test
     void nonDefaultVillageWeightIsReported() {
         EnumMap<GolemVariant, Integer> weights = VillageSpawnWeights.defaults().weights();
         weights.put(GolemVariant.COPPER, VillageSpawnWeights.defaults().weight(GolemVariant.COPPER) + 5);
@@ -47,9 +60,8 @@ class ServerCustomizationsSummarizerTest {
         ServerCustomizationsSummary summary = ServerCustomizationsSummarizer.summary(customized);
 
         assertTrue(summary.villageLines().stream().anyMatch(line -> line.contains("Copper")));
-        assertTrue(summary.villageLines().stream().anyMatch(line -> line.contains("customized")));
+        assertTrue(summary.villageLines().stream().anyMatch(line -> line.contains("roughly")));
         assertFalse(summary.villageLines().stream().anyMatch(line -> line.contains("weight")));
-        assertFalse(summary.villageLines().stream().anyMatch(line -> line.contains("24")));
     }
 
     @Test

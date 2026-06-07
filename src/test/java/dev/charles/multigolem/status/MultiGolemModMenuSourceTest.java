@@ -52,6 +52,8 @@ class MultiGolemModMenuSourceTest {
         assertTrue(widget.contains("MultiGolemStatus.display()"));
         assertTrue(widget.contains("right - STATUS_SQUARE_SIZE - RIGHT_MARGIN"));
         assertTrue(widget.contains("top + TOP_MARGIN"));
+        assertTrue(widget.contains("tooltipAnchorY(squareTop, mouseY)"));
+        assertTrue(widget.contains("Math.max(mouseY, MIN_TOOLTIP_ANCHOR_Y)"));
         assertTrue(widget.contains("tooltipText(ModStatusDisplay display)"));
         assertTrue(widget.contains("\"Status: \" + display.statusLabel()"));
         assertTrue(widget.contains("\"Client: \" + versionWithBuild(display.clientVersion(), display.clientBuild())"));
@@ -76,6 +78,8 @@ class MultiGolemModMenuSourceTest {
         assertTrue(screen.contains("ViewState.AVAILABLE"));
         assertTrue(screen.contains("onScreenClose()"));
         assertTrue(screen.contains("ModMenuWrappedText.render("));
+        assertTrue(screen.contains("mouseScrolled("));
+        assertTrue(screen.contains("scrollOffset"));
         assertFalse(screen.contains("guiGraphics.text(font, Component.literal(line), left + 8, y"));
         assertFalse(screen.contains("configure MultiGolem"));
         assertFalse(screen.contains("Button.builder(Component.literal(\"Copy"));

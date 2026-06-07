@@ -13,6 +13,7 @@ public final class ServerCustomizationsScreen extends Screen {
     private static final Component UNAVAILABLE = Component.literal("No server customizations are available.");
 
     private final Screen parent;
+    private int scrollOffset = 0;
 
     ServerCustomizationsScreen(Screen parent) {
         super(Component.literal("Server Customizations"));
@@ -49,6 +50,15 @@ public final class ServerCustomizationsScreen extends Screen {
         Minecraft.getInstance().setScreen(parent);
     }
 
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        if (ServerCustomizationsClient.state().viewState() != ServerCustomizationsClientState.ViewState.AVAILABLE) {
+            return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+        }
+        scrollOffset = Math.max(0, scrollOffset - (int) Math.signum(verticalAmount) * 18);
+        return true;
+    }
+
     private void renderCenteredLine(GuiGraphicsExtractor guiGraphics, Component text, int y, int color) {
         guiGraphics.text(font, text, (width - font.width(text)) / 2, y, color);
     }
@@ -56,7 +66,7 @@ public final class ServerCustomizationsScreen extends Screen {
     private void renderSummary(GuiGraphicsExtractor guiGraphics, ServerCustomizationsSummary summary) {
         int left = Math.max(16, width / 2 - 140);
         int maxWidth = Math.max(80, width - left - 24);
-        int y = 32;
+        int y = 32 - scrollOffset;
         y = renderGroup(guiGraphics, "Global", summary.globalLines(), left, y, maxWidth);
         y = renderGroup(guiGraphics, "Village Spawns", summary.villageLines(), left, y, maxWidth);
         y = renderGroup(guiGraphics, "Zombie Village Spawns", summary.zombieVillageLines(), left, y, maxWidth);

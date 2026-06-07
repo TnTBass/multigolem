@@ -2,9 +2,12 @@
 
 ## Unreleased
 
-## 0.5.1+mc26.1.2 — 2026-06-04
+## 0.5.1+mc26.1.2 — 2026-06-07
 
 - Added a ModMenu status indicator, powered by the open-source [ModStatusKit GitHub project](https://github.com/TnTBass/ModStatusKit), so players and server owners can quickly confirm they are running the same MultiGolem version, with client and server version/build details, build-only mismatch highlighting, and warning-level mismatch status that calls out possible differences without treating them as a connection break.
+- Added a ModMenu hub with quick access to server customizations and Golempedia when MultiGolem is installed on the client.
+- Added a server customizations screen that shows the connected server's active MultiGolem settings, including global healing, variant stats, ability settings, and village-spawn behavior. When disconnected, the client falls back to the mod's default values.
+- Added Golempedia, a client-side reference for each golem variant with creation blocks, healing items, drops, stats, spawn egg availability, village-spawn notes, and ability summaries.
 
 ## 0.5.0+mc26.1.2 — 2026-06-02
 

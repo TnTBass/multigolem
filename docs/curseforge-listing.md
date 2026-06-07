@@ -9,6 +9,7 @@
 - Stats scale by material; Copper is the weakest and Netherite is the strongest.
 - Heal each variant with its matching material.
 - Custom textures per variant on modded clients; vanilla clients still see regular iron golems.
+- Optional ModMenu screens show client/server MultiGolem version status, active server customization values, and a Golempedia reference for golem creation, stats, drops, village spawns, and abilities.
 
 ## Special Abilities
 
@@ -47,6 +48,10 @@ Edit `config/multigolem.json`, created on first server start. Server admins can 
 Server owners can optionally control who may create, heal, use marked spawn eggs for, or configure spawners for each MultiGolem tier with LuckPerms-compatible permission nodes. The same creation permission nodes cover marked spawn egg use and marked spawn egg spawner configuration. Permissions are permissive by default, so existing servers keep their current behavior unless a permissions plugin denies a node.
 
 Existing V1 config files migrate automatically to the V2 schema, and unknown fields are preserved where possible.
+
+## Client ModMenu Tools
+
+Players with ModMenu installed can open MultiGolem's client-side hub to check whether their client and server MultiGolem versions match. Server owners and players can also inspect the connected server's active customization values, including variant health, attack damage, healing, ability settings, and village-spawn behavior. When not connected to a server, Golempedia and customization screens show MultiGolem's default values.
 
 ## Requirements
 

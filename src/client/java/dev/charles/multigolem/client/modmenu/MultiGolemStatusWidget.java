@@ -16,6 +16,7 @@ final class MultiGolemStatusWidget {
     private static final int STATUS_SQUARE_BORDER_COLOR = 0xFF222222;
     private static final int TOP_MARGIN = 8;
     private static final int RIGHT_MARGIN = 8;
+    private static final int MIN_TOOLTIP_ANCHOR_Y = 72;
 
     private MultiGolemStatusWidget() {
     }
@@ -27,7 +28,7 @@ final class MultiGolemStatusWidget {
 
         renderStatusSquare(guiGraphics, display.tone(), left, squareTop);
         if (isHoveringStatus(left, squareTop, mouseX, mouseY)) {
-            guiGraphics.setComponentTooltipForNextFrame(font, tooltipLines(display), mouseX, mouseY);
+            guiGraphics.setComponentTooltipForNextFrame(font, tooltipLines(display), mouseX, tooltipAnchorY(squareTop, mouseY));
         }
     }
 
@@ -105,5 +106,9 @@ final class MultiGolemStatusWidget {
             && mouseX <= left + STATUS_SQUARE_SIZE
             && mouseY >= top
             && mouseY <= top + STATUS_SQUARE_SIZE;
+    }
+
+    private static int tooltipAnchorY(int squareTop, int mouseY) {
+        return Math.max(mouseY, MIN_TOOLTIP_ANCHOR_Y);
     }
 }
