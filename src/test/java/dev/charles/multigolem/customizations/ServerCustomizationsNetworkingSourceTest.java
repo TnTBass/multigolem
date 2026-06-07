@@ -25,12 +25,12 @@ class ServerCustomizationsNetworkingSourceTest {
     }
 
     @Test
-    void clientCustomizationsReceiverClearsLifecycleAndSummarizesPayloadSnapshots() throws IOException {
+    void clientCustomizationsReceiverClearsLifecycleAndStoresPayloadSnapshots() throws IOException {
         String source = Files.readString(Path.of("src/client/java/dev/charles/multigolem/client/customizations/ServerCustomizationsClient.java"));
         String client = Files.readString(Path.of("src/client/java/dev/charles/multigolem/client/MultiGolemClient.java"));
 
         assertTrue(source.contains("ClientPlayNetworking.registerGlobalReceiver(ServerCustomizationsPayload.TYPE"));
-        assertTrue(source.contains("ServerCustomizationsSummarizer.summary(payload.snapshot())"));
+        assertTrue(source.contains("STATE.onServerSnapshot(payload.snapshot())"));
         assertTrue(source.contains("ClientPlayConnectionEvents.JOIN"));
         assertTrue(source.contains("ClientPlayConnectionEvents.DISCONNECT"));
         assertTrue(source.contains("ClientTickEvents.END_CLIENT_TICK"));

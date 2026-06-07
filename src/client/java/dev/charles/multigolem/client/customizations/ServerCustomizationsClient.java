@@ -1,7 +1,6 @@
 package dev.charles.multigolem.client.customizations;
 
 import dev.charles.multigolem.customizations.ServerCustomizationsPayload;
-import dev.charles.multigolem.customizations.ServerCustomizationsSummarizer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -26,7 +25,7 @@ public final class ServerCustomizationsClient {
         registered = true;
 
         ClientPlayNetworking.registerGlobalReceiver(ServerCustomizationsPayload.TYPE, (payload, context) ->
-            context.client().execute(() -> STATE.onServerSummary(ServerCustomizationsSummarizer.summary(payload.snapshot())))
+            context.client().execute(() -> STATE.onServerSnapshot(payload.snapshot()))
         );
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> STATE.onJoin());
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> STATE.onDisconnect());

@@ -5,6 +5,7 @@ import dev.charles.multigolem.catalog.GolemVariantCatalog;
 import dev.charles.multigolem.catalog.GolemVariantSpec;
 import dev.charles.multigolem.config.MultiGolemConfig;
 import dev.charles.multigolem.config.TierStats;
+import dev.charles.multigolem.golempedia.GolempediaStats;
 import dev.charles.multigolem.spawn.VillageSpawnWeights;
 
 import java.util.ArrayList;
@@ -25,6 +26,12 @@ public final class ServerCustomizationsSummarizer {
         for (GolemVariant variant : VillageSpawnWeights.rollOrder()) {
             weights.put(variant, config.villageSpawnWeights().weight(variant));
         }
+        EnumMap<GolemVariant, List<String>> stats = new EnumMap<>(GolemVariant.class);
+        for (GolemVariantSpec spec : GolemVariantCatalog.entries()) {
+            if (spec.variant() != GolemVariant.IRON) {
+                stats.put(spec.variant(), GolempediaStats.linesFor(spec.variant(), config.tier(spec.variant())));
+            }
+        }
         List<VariantCustomizationSummary> overrides = variantOverrides(config, MultiGolemConfig.defaults());
         return new ServerCustomizationsSnapshot(
             config.allowGolemHealing(),
@@ -32,7 +39,8 @@ public final class ServerCustomizationsSummarizer {
             weights,
             config.zombieVillageSpawning().enabled(),
             PERMISSIONS_MODE,
-            overrides
+            overrides,
+            stats
         );
     }
 
@@ -49,7 +57,6 @@ public final class ServerCustomizationsSummarizer {
         List<String> variants = new ArrayList<>();
 
         global.add("Global healing: " + enabledText(snapshot.healingEnabled()));
-        global.add("Permissions: " + snapshot.permissionsMode());
 
         if (!snapshot.villageSpawnsEnabled()) {
             village.add("Village golem spawning: disabled");
@@ -58,7 +65,7 @@ public final class ServerCustomizationsSummarizer {
             int current = snapshot.villageSpawnWeights().getOrDefault(variant, 0);
             int bundled = defaults.villageSpawnWeights().weight(variant);
             if (current != bundled) {
-                village.add(variant.displayName() + " village spawn weight: " + current + " (bundled default " + bundled + ")");
+                village.add(variant.displayName() + " village spawning is customized by this server.");
             }
         }
 

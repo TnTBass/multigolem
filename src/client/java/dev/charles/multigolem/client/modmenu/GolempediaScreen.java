@@ -1,7 +1,10 @@
 package dev.charles.multigolem.client.modmenu;
 
+import dev.charles.multigolem.client.customizations.ServerCustomizationsClient;
+import dev.charles.multigolem.client.customizations.ServerCustomizationsClientState;
 import dev.charles.multigolem.golempedia.GolempediaCatalog;
 import dev.charles.multigolem.golempedia.GolempediaEntry;
+import dev.charles.multigolem.golempedia.GolempediaVillageSpawns;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
@@ -14,6 +17,7 @@ public final class GolempediaScreen extends Screen {
     private final List<GolempediaEntry> entries = GolempediaCatalog.entries();
     private final Screen parent;
     private int selectedIndex = 0;
+    private int scrollOffset = 0;
 
     GolempediaScreen(Screen parent) {
         super(Component.literal("Golempedia"));
@@ -28,7 +32,10 @@ public final class GolempediaScreen extends Screen {
         int visibleEntries = maxVisibleEntries();
         for (int i = 0; i < visibleEntries; i++) {
             int index = i;
-            addRenderableWidget(Button.builder(Component.literal(entries.get(i).displayName()), button -> selectedIndex = index)
+            addRenderableWidget(Button.builder(Component.literal(entries.get(i).displayName()), button -> {
+                selectedIndex = index;
+                scrollOffset = 0;
+            })
                 .bounds(12, top + i * 22, listWidth, 20)
                 .build());
         }
@@ -53,27 +60,75 @@ public final class GolempediaScreen extends Screen {
         Minecraft.getInstance().setScreen(parent);
     }
 
-    private void renderEntry(GuiGraphicsExtractor guiGraphics, GolempediaEntry entry) {
-        int left = Math.max(148, width / 3 + 16);
-        int y = 32;
-        guiGraphics.text(font, Component.literal(entry.displayName()), left, y, 0xFFFFFFFF);
-        y += 16;
-        y = renderSection(guiGraphics, "Creation", entry.creationSummary(), left, y);
-        y = renderSection(guiGraphics, "Healing", entry.healingItem(), left, y);
-        y = renderSection(guiGraphics, "Drops", entry.dropSummary(), left, y);
-        y = renderSection(guiGraphics, "Spawn Egg", entry.spawnEggSummary(), left, y);
-        y = renderSection(guiGraphics, "Village Spawns", entry.villageSpawnSummary(), left, y);
-        y = renderSection(guiGraphics, "Ability", entry.coreAbility(), left, y);
-        renderSection(guiGraphics, "Caveats", String.join(" ", entry.caveats()), left, y);
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        if (entries.isEmpty()) {
+            return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+        }
+        scrollOffset = Math.max(0, scrollOffset - (int) Math.signum(verticalAmount) * 18);
+        return true;
     }
 
-    private int renderSection(GuiGraphicsExtractor guiGraphics, String heading, String body, int left, int y) {
+    private void renderEntry(GuiGraphicsExtractor guiGraphics, GolempediaEntry entry) {
+        int left = Math.max(148, width / 3 + 16);
+        int maxWidth = detailWidth(left);
+        int y = 32 - scrollOffset;
+        guiGraphics.text(font, Component.literal(entry.displayName()), left, y, 0xFFFFFFFF);
+        y += 16;
+        y = renderSection(guiGraphics, "Creation", entry.creationSummary(), left, y, maxWidth);
+        y = renderSection(guiGraphics, "Healing", entry.healingItem(), left, y, maxWidth);
+        y = renderSection(guiGraphics, "Drops", entry.dropSummary(), left, y, maxWidth);
+        y = renderSection(guiGraphics, "Stats", String.join("\n", statsFor(entry)), left, y, maxWidth);
+        y = renderSection(guiGraphics, "Spawn Egg", entry.spawnEggSummary(), left, y, maxWidth);
+        y = renderSection(guiGraphics, "Village Spawns", villageSpawnFor(entry), left, y, maxWidth);
+        y = renderSection(guiGraphics, "Ability", entry.coreAbility(), left, y, maxWidth);
+        renderSection(guiGraphics, "Caveats", String.join(" ", entry.caveats()), left, y, maxWidth);
+    }
+
+    private int renderSection(GuiGraphicsExtractor guiGraphics, String heading, String body, int left, int y, int maxWidth) {
+        if (y >= height - 42) {
+            return y;
+        }
         guiGraphics.text(font, Component.literal(heading), left, y, 0xFFFFFFFF);
-        guiGraphics.text(font, Component.literal(body), left + 8, y + 10, 0xFFAAAAAA);
-        return y + 26;
+        int nextY = ModMenuWrappedText.renderBounded(guiGraphics, font, body, left + 8, y + 10, maxWidth - 8, contentBottom(), 0xFFAAAAAA);
+        return nextY + 6;
     }
 
     private int maxVisibleEntries() {
         return Math.min(entries.size(), Math.max(0, (height - 68) / 22));
+    }
+
+    private int detailWidth(int left) {
+        return Math.max(80, width - left - 24);
+    }
+
+    private int contentBottom() {
+        return height - 34;
+    }
+
+    private List<String> statsFor(GolempediaEntry entry) {
+        ServerCustomizationsClientState state = ServerCustomizationsClient.state();
+        if (state.viewState() == ServerCustomizationsClientState.ViewState.AVAILABLE) {
+            return state.snapshot()
+                .map(snapshot -> snapshot.golempediaStats().get(entry.variant()))
+                .filter(lines -> lines != null && !lines.isEmpty())
+                .orElse(entry.statLines());
+        }
+        return entry.statLines();
+    }
+
+    private String villageSpawnFor(GolempediaEntry entry) {
+        ServerCustomizationsClientState state = ServerCustomizationsClient.state();
+        if (state.viewState() == ServerCustomizationsClientState.ViewState.AVAILABLE) {
+            return state.snapshot()
+                .map(snapshot -> GolempediaVillageSpawns.summary(
+                    entry.variant(),
+                    snapshot.villageSpawnsEnabled(),
+                    snapshot.villageSpawnWeights(),
+                    snapshot.zombieVillageSpawningEnabled()
+                ))
+                .orElse(entry.villageSpawnSummary());
+        }
+        return entry.villageSpawnSummary();
     }
 }

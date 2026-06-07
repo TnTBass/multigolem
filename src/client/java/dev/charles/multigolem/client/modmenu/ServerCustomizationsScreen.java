@@ -55,22 +55,28 @@ public final class ServerCustomizationsScreen extends Screen {
 
     private void renderSummary(GuiGraphicsExtractor guiGraphics, ServerCustomizationsSummary summary) {
         int left = Math.max(16, width / 2 - 140);
+        int maxWidth = Math.max(80, width - left - 24);
         int y = 32;
-        y = renderGroup(guiGraphics, "Global", summary.globalLines(), left, y);
-        y = renderGroup(guiGraphics, "Village Spawns", summary.villageLines(), left, y);
-        y = renderGroup(guiGraphics, "Zombie Village Spawns", summary.zombieVillageLines(), left, y);
-        renderGroup(guiGraphics, "Variants", summary.variantLines(), left, y);
+        y = renderGroup(guiGraphics, "Global", summary.globalLines(), left, y, maxWidth);
+        y = renderGroup(guiGraphics, "Village Spawns", summary.villageLines(), left, y, maxWidth);
+        y = renderGroup(guiGraphics, "Zombie Village Spawns", summary.zombieVillageLines(), left, y, maxWidth);
+        renderGroup(guiGraphics, "Variants", summary.variantLines(), left, y, maxWidth);
     }
 
-    private int renderGroup(GuiGraphicsExtractor guiGraphics, String heading, java.util.List<String> lines, int left, int y) {
+    private int renderGroup(GuiGraphicsExtractor guiGraphics, String heading, java.util.List<String> lines, int left, int y, int maxWidth) {
         if (lines.isEmpty()) {
+            return y;
+        }
+        if (y >= height - 42) {
             return y;
         }
         guiGraphics.text(font, Component.literal(heading), left, y, 0xFFFFFFFF);
         y += 12;
         for (String line : lines) {
-            guiGraphics.text(font, Component.literal(line), left + 8, y, 0xFFAAAAAA);
-            y += 10;
+            if (y >= height - 42) {
+                return y;
+            }
+            y = ModMenuWrappedText.render(guiGraphics, font, line, left + 8, y, maxWidth - 8, 0xFFAAAAAA);
         }
         return y + 6;
     }

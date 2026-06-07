@@ -29,6 +29,8 @@ class ServerCustomizationsSummarizerTest {
         assertTrue(snapshot.villageSpawnsEnabled());
         assertTrue(snapshot.zombieVillageSpawningEnabled());
         assertTrue(snapshot.variantOverrides().isEmpty());
+        assertFalse(snapshot.golempediaStats().get(GolemVariant.COPPER).isEmpty());
+        assertTrue(snapshot.golempediaStats().get(GolemVariant.COPPER).stream().anyMatch(line -> line.startsWith("Health:")));
     }
 
     @Test
@@ -45,7 +47,17 @@ class ServerCustomizationsSummarizerTest {
         ServerCustomizationsSummary summary = ServerCustomizationsSummarizer.summary(customized);
 
         assertTrue(summary.villageLines().stream().anyMatch(line -> line.contains("Copper")));
-        assertTrue(summary.villageLines().stream().anyMatch(line -> line.contains("24")));
+        assertTrue(summary.villageLines().stream().anyMatch(line -> line.contains("customized")));
+        assertFalse(summary.villageLines().stream().anyMatch(line -> line.contains("weight")));
+        assertFalse(summary.villageLines().stream().anyMatch(line -> line.contains("24")));
+    }
+
+    @Test
+    void summaryOmitsPermissionProviderInternals() {
+        ServerCustomizationsSummary summary = ServerCustomizationsSummarizer.summary(MultiGolemConfig.defaults());
+
+        assertFalse(summary.globalLines().stream().anyMatch(line -> line.contains("Permissions")));
+        assertFalse(summary.globalLines().stream().anyMatch(line -> line.contains("permission provider")));
     }
 
     @Test
@@ -58,7 +70,8 @@ class ServerCustomizationsSummarizerTest {
             weights,
             true,
             "permission checks use the server's configured permission provider when present",
-            List.of(new VariantCustomizationSummary(GolemVariant.GOLD, List.of("Gold speed multiplier differs from defaults")))
+            List.of(new VariantCustomizationSummary(GolemVariant.GOLD, List.of("Gold speed multiplier differs from defaults"))),
+            new EnumMap<>(GolemVariant.class)
         );
 
         ServerCustomizationsSummary summary = ServerCustomizationsSummarizer.summary(snapshot);

@@ -11,6 +11,7 @@ public record GolempediaEntry(
     String creationSummary,
     String healingItem,
     String dropSummary,
+    List<String> statLines,
     String spawnEggSummary,
     String villageSpawnSummary,
     String coreAbility,
@@ -22,6 +23,11 @@ public record GolempediaEntry(
         creationSummary = requireText(creationSummary, "creationSummary");
         healingItem = requireText(healingItem, "healingItem");
         dropSummary = requireText(dropSummary, "dropSummary");
+        Objects.requireNonNull(statLines, "statLines");
+        statLines = List.copyOf(statLines);
+        if (statLines.isEmpty()) {
+            throw new IllegalArgumentException("statLines must not be empty");
+        }
         spawnEggSummary = requireText(spawnEggSummary, "spawnEggSummary");
         villageSpawnSummary = requireText(villageSpawnSummary, "villageSpawnSummary");
         coreAbility = requireText(coreAbility, "coreAbility");

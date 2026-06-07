@@ -25,6 +25,7 @@ public record ServerCustomizationsPayload(ServerCustomizationsSnapshot snapshot)
     private static final int MAX_WEIGHTS = 16;
     private static final int MAX_VARIANTS = 16;
     private static final int MAX_LINES = 64;
+    private static final int MAX_STATS = 16;
 
     public ServerCustomizationsPayload {
         Objects.requireNonNull(snapshot, "snapshot");
@@ -56,13 +57,25 @@ public record ServerCustomizationsPayload(ServerCustomizationsSnapshot snapshot)
             }
             variants.add(new VariantCustomizationSummary(variant, lines));
         }
+        int statCount = readLimitedCount(buf, MAX_VARIANTS, "golempedia stats");
+        EnumMap<GolemVariant, List<String>> stats = new EnumMap<>(GolemVariant.class);
+        for (int i = 0; i < statCount; i++) {
+            GolemVariant variant = readVariant(buf);
+            int lineCount = readLimitedCount(buf, MAX_STATS, "golempedia stat lines");
+            List<String> lines = new ArrayList<>();
+            for (int j = 0; j < lineCount; j++) {
+                lines.add(buf.readUtf(256));
+            }
+            stats.put(variant, lines);
+        }
         return new ServerCustomizationsPayload(new ServerCustomizationsSnapshot(
             healingEnabled,
             villageSpawnsEnabled,
             weights,
             zombieVillageSpawningEnabled,
             permissionsMode,
-            variants
+            variants,
+            stats
         ));
     }
 
@@ -83,6 +96,14 @@ public record ServerCustomizationsPayload(ServerCustomizationsSnapshot snapshot)
             buf.writeVarInt(variant.lines().size());
             for (String line : variant.lines()) {
                 buf.writeUtf(line, 512);
+            }
+        }
+        buf.writeVarInt(snapshot.golempediaStats().size());
+        for (Map.Entry<GolemVariant, List<String>> entry : snapshot.golempediaStats().entrySet()) {
+            buf.writeUtf(entry.getKey().id());
+            buf.writeVarInt(entry.getValue().size());
+            for (String line : entry.getValue()) {
+                buf.writeUtf(line, 256);
             }
         }
     }

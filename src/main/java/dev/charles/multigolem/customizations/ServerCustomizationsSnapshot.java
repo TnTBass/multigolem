@@ -14,7 +14,8 @@ public record ServerCustomizationsSnapshot(
     Map<GolemVariant, Integer> villageSpawnWeights,
     boolean zombieVillageSpawningEnabled,
     String permissionsMode,
-    List<VariantCustomizationSummary> variantOverrides
+    List<VariantCustomizationSummary> variantOverrides,
+    Map<GolemVariant, List<String>> golempediaStats
 ) {
     public ServerCustomizationsSnapshot {
         Objects.requireNonNull(villageSpawnWeights, "villageSpawnWeights");
@@ -22,5 +23,11 @@ public record ServerCustomizationsSnapshot(
         Objects.requireNonNull(variantOverrides, "variantOverrides");
         villageSpawnWeights = Collections.unmodifiableMap(new EnumMap<>(villageSpawnWeights));
         variantOverrides = List.copyOf(variantOverrides);
+        Objects.requireNonNull(golempediaStats, "golempediaStats");
+        EnumMap<GolemVariant, List<String>> statsCopy = new EnumMap<>(GolemVariant.class);
+        for (Map.Entry<GolemVariant, List<String>> entry : golempediaStats.entrySet()) {
+            statsCopy.put(entry.getKey(), List.copyOf(entry.getValue()));
+        }
+        golempediaStats = Collections.unmodifiableMap(statsCopy);
     }
 }

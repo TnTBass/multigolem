@@ -5,9 +5,10 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.Util;
 
 public final class MultiGolemStatusScreen extends Screen {
+    private static final int BOTTOM_BUTTON_MARGIN = 32;
+
     private final Screen parent;
 
     public MultiGolemStatusScreen(Screen parent) {
@@ -19,27 +20,19 @@ public final class MultiGolemStatusScreen extends Screen {
     protected void init() {
         int buttonWidth = Math.min(220, width - 32);
         int left = (width - buttonWidth) / 2;
-        int top = Math.max(36, height / 2 - 58);
-        int step = 24;
-
-        addRenderableWidget(Button.builder(Component.literal("Website"), button ->
-            Util.getPlatform().openUri("https://modrinth.com/mod/multigolem")
-        ).bounds(left, top, buttonWidth, 20).build());
-
-        addRenderableWidget(Button.builder(Component.literal("Issues"), button ->
-            Util.getPlatform().openUri("https://github.com/TnTBass/MultiGolem/issues")
-        ).bounds(left, top + step, buttonWidth, 20).build());
+        int actionStep = 24;
+        int primaryTop = Math.max(44, height / 2 - 28);
 
         addRenderableWidget(Button.builder(Component.literal("Server Customizations"), button ->
             Minecraft.getInstance().setScreen(new ServerCustomizationsScreen(this))
-        ).bounds(left, top + step * 2, buttonWidth, 20).build());
+        ).bounds(left, primaryTop, buttonWidth, 20).build());
 
         addRenderableWidget(Button.builder(Component.literal("Golempedia"), button ->
             Minecraft.getInstance().setScreen(new GolempediaScreen(this))
-        ).bounds(left, top + step * 3, buttonWidth, 20).build());
+        ).bounds(left, primaryTop + actionStep, buttonWidth, 20).build());
 
         addRenderableWidget(Button.builder(Component.literal("Done"), button -> onClose())
-            .bounds(left, top + step * 4, buttonWidth, 20)
+            .bounds(left, height - BOTTOM_BUTTON_MARGIN, buttonWidth, 20)
             .build());
     }
 

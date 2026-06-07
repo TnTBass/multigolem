@@ -29,6 +29,7 @@ public final class GolempediaCatalog {
             creationFor(variant),
             itemName(spec.healItem()),
             dropSummary(spec),
+            GolempediaStats.linesFor(variant, defaults.tier(variant)),
             spec.spawnEggEnabled() ? "Spawn egg available in creative tabs." : "No spawn egg in this build.",
             villageSpawnSummary(variant, defaults),
             abilityFor(variant),
@@ -73,23 +74,23 @@ public final class GolempediaCatalog {
     }
 
     private static String villageSpawnSummary(GolemVariant variant, MultiGolemConfig defaults) {
-        if (VillageSpawnWeights.rollOrder().contains(variant)) {
-            return "Bundled village spawn weight: " + defaults.villageSpawnWeights().weight(variant);
-        }
-        if (variant == GolemVariant.ZOMBIE) {
-            return "Zombie village spawning default: " + (defaults.zombieVillageSpawning().enabled() ? "enabled" : "disabled");
-        }
-        return "No bundled village spawn roll.";
+        return GolempediaVillageSpawns.summary(
+            variant,
+            defaults.villageSpawnWeights().enabled(),
+            defaults.villageSpawnWeights().weights(),
+            defaults.zombieVillageSpawning().enabled()
+        );
     }
 
     private static String abilityFor(GolemVariant variant) {
         return switch (variant) {
-            case COPPER -> "Copper golems are lightning-resistant and can recover from lightning interactions.";
+            case COPPER -> "Lightning does not hurt Copper golems; it heals them instead.";
             case GOLD -> "Gold golems move faster and can show sprint and sunlight shine behavior.";
-            case EMERALD -> "Emerald golems provide a nearby healing aura.";
-            case DIAMOND -> "Diamond golems can use a hostile-target aura with a cooldown.";
+            case EMERALD -> "Emerald golems heal themselves when villagers are nearby.";
+            case DIAMOND -> "Diamond golems call lightning onto nearby hostile mobs after a cooldown.";
             case NETHERITE -> "Netherite golems are fireproof and can ignite nearby attackers.";
-            case ZOMBIE -> "Zombie golems fight as an undead-flavored variant with zombie conversion effects.";
+            case ZOMBIE -> "Zombie golems attack players, villagers, wandering traders, and non-zombie golems. "
+                + "When they hit villagers or wandering traders, they can turn them into zombie villagers.";
             case IRON -> throw new IllegalArgumentException("Iron is not a Golempedia entry");
         };
     }

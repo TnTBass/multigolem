@@ -37,11 +37,14 @@ class MultiGolemModMenuSourceTest {
         assertTrue(api.contains("@Environment(EnvType.CLIENT)"));
         assertTrue(api.contains("implements ModMenuApi"));
         assertTrue(api.contains("MultiGolemStatusScreen::new"));
-        assertTrue(screen.contains("Button.builder(Component.literal(\"Website\")"));
-        assertTrue(screen.contains("Button.builder(Component.literal(\"Issues\")"));
+        assertFalse(screen.contains("Button.builder(Component.literal(\"Website\")"));
+        assertFalse(screen.contains("Button.builder(Component.literal(\"Issues\")"));
+        assertFalse(screen.contains("openUri("));
         assertTrue(screen.contains("Button.builder(Component.literal(\"Server Customizations\")"));
         assertTrue(screen.contains("Button.builder(Component.literal(\"Golempedia\")"));
         assertTrue(screen.contains("Button.builder(Component.literal(\"Done\")"));
+        assertTrue(screen.contains("primaryTop + actionStep"));
+        assertTrue(screen.contains("height - BOTTOM_BUTTON_MARGIN"));
         assertFalse(screen.contains("Button.builder(Component.literal(\"Cancel\")"));
         assertTrue(screen.contains("MultiGolemStatusWidget.renderTopRight("));
         assertFalse(screen.contains("renderStatusRow(guiGraphics"), "hub must not keep a centered permanent status row");
@@ -72,6 +75,8 @@ class MultiGolemModMenuSourceTest {
         assertTrue(screen.contains("ViewState.PENDING"));
         assertTrue(screen.contains("ViewState.AVAILABLE"));
         assertTrue(screen.contains("onScreenClose()"));
+        assertTrue(screen.contains("ModMenuWrappedText.render("));
+        assertFalse(screen.contains("guiGraphics.text(font, Component.literal(line), left + 8, y"));
         assertFalse(screen.contains("configure MultiGolem"));
         assertFalse(screen.contains("Button.builder(Component.literal(\"Copy"));
     }

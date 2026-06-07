@@ -33,13 +33,16 @@ class ServerCustomizationsPayloadTest {
         EnumMap<GolemVariant, Integer> weights = new EnumMap<>(GolemVariant.class);
         weights.put(GolemVariant.COPPER, 24);
         weights.put(GolemVariant.GOLD, 7);
+        EnumMap<GolemVariant, List<String>> stats = new EnumMap<>(GolemVariant.class);
+        stats.put(GolemVariant.COPPER, List.of("Health: 120", "Attack: 18"));
         ServerCustomizationsSnapshot snapshot = new ServerCustomizationsSnapshot(
             false,
             true,
             weights,
             false,
             "permission checks use the server's configured permission provider when present",
-            List.of(new VariantCustomizationSummary(GolemVariant.GOLD, List.of("Gold speed multiplier differs from defaults")))
+            List.of(new VariantCustomizationSummary(GolemVariant.GOLD, List.of("Gold speed multiplier differs from defaults"))),
+            stats
         );
         ServerCustomizationsPayload payload = new ServerCustomizationsPayload(snapshot);
         RegistryFriendlyByteBuf buf = new RegistryFriendlyByteBuf(Unpooled.buffer(), RegistryAccess.EMPTY);
@@ -62,7 +65,8 @@ class ServerCustomizationsPayloadTest {
             weights,
             true,
             "permissions unavailable",
-            List.of()
+            List.of(),
+            new EnumMap<>(GolemVariant.class)
         );
 
         weights.put(GolemVariant.COPPER, 99);
