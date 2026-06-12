@@ -3,7 +3,6 @@ package dev.charles.multigolem.ability;
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.animal.golem.IronGolem;
@@ -18,11 +17,7 @@ public final class EmeraldAbility {
 
     private EmeraldAbility() {}
 
-    public static void register() {
-        ServerTickEvents.START_LEVEL_TICK.register(EmeraldAbility::onTick);
-    }
-
-    private static void onTick(ServerLevel world) {
+    public static void onTick(ServerLevel world) {
         var stats = MultiGolem.config().tier(GolemVariant.EMERALD);
         long intervalTicks = (long) Math.max(1, stats.emeraldHealIntervalSeconds() * 20.0);
         if (world.getGameTime() % intervalTicks != 0) return;

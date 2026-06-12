@@ -3,6 +3,7 @@ package dev.charles.multigolem.fabric.event;
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
 import dev.charles.multigolem.attribute.VariantAttributes;
+import dev.charles.multigolem.fabric.ability.FabricAbilityEvents;
 import dev.charles.multigolem.loot.HasGolemVariantLootCondition;
 import dev.charles.multigolem.spawn.SpawnEggStacks;
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
@@ -23,6 +24,8 @@ public final class FabricMultiGolemEvents {
     private FabricMultiGolemEvents() {}
 
     public static void register() {
+        FabricAbilityEvents.register();
+
         Registry.register(
             BuiltInRegistries.LOOT_CONDITION_TYPE,
             Identifier.fromNamespaceAndPath(MultiGolem.MOD_ID, "has_golem_variant"),

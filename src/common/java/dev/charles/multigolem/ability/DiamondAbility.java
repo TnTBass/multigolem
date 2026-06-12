@@ -5,10 +5,9 @@ import dev.charles.multigolem.MultiGolem;
 import dev.charles.multigolem.attachment.GolemAbilityState;
 import dev.charles.multigolem.attachment.GolemAbilityStateAttachment;
 import dev.charles.multigolem.attachment.GolemVariantAttachment;
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -28,18 +27,15 @@ public final class DiamondAbility {
 
     private DiamondAbility() {}
 
-    public static void register() {
-        ServerTickEvents.START_LEVEL_TICK.register(DiamondAbility::onTick);
-        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
-            if (!(entity instanceof IronGolem golem)) return true;
-            if (GolemVariantAttachment.get(golem) != GolemVariant.DIAMOND) return true;
-            if (!MultiGolem.config().tier(GolemVariant.DIAMOND).diamondLightningProof()) return true;
-            if (source.is(DamageTypes.LIGHTNING_BOLT)) return false;
-            return true;
-        });
+    public static boolean allowDamage(Entity entity, DamageSource source, float amount) {
+        if (!(entity instanceof IronGolem golem)) return true;
+        if (GolemVariantAttachment.get(golem) != GolemVariant.DIAMOND) return true;
+        if (!MultiGolem.config().tier(GolemVariant.DIAMOND).diamondLightningProof()) return true;
+        if (source.is(DamageTypes.LIGHTNING_BOLT)) return false;
+        return true;
     }
 
-    private static void onTick(ServerLevel world) {
+    public static void onTick(ServerLevel world) {
         var stats = MultiGolem.config().tier(GolemVariant.DIAMOND);
         if ("NONE".equals(stats.diamondTargetMode())) return;
 
