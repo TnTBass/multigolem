@@ -12,13 +12,13 @@ class MultiGolemStatusIntegrationSourceTest {
     @Test
     void serverJoinSendIsCapabilityGatedAndSeparateFromGameplayPackets() throws IOException {
         String source = Files.readString(Path.of("src/common/java/dev/charles/multigolem/status/MultiGolemStatusNetworking.java"));
-        String main = Files.readString(Path.of("src/common/java/dev/charles/multigolem/MultiGolem.java"));
+        String fabricMain = Files.readString(Path.of("src/fabric/java/dev/charles/multigolem/fabric/MultiGolemFabric.java"));
 
         assertTrue(source.contains("ServerPlayConnectionEvents.JOIN"), "status must send from the server join lifecycle");
         assertTrue(source.contains("ServerPlayNetworking.canSend(player, MultiGolemStatusPayload.TYPE)"), "status send must be capability gated");
         assertTrue(source.contains("ServerPlayNetworking.send(player, MultiGolemStatusPayload.fromServerStatus"), "status payload must be sent independently");
         assertTrue(source.contains("VersionMismatchSeverity.WARN"), "MultiGolem should declare passive WARN mismatch severity");
-        assertTrue(main.contains("MultiGolemStatusNetworking.registerServer();"), "main initializer must register status networking");
+        assertTrue(fabricMain.contains("MultiGolemStatusNetworking.registerServer();"), "Fabric initializer must register status networking");
         assertFalse(source.contains("GolemVariant"), "status networking must not depend on gameplay variant packets/state");
     }
 

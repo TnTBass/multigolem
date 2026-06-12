@@ -12,7 +12,7 @@ class ServerCustomizationsNetworkingSourceTest {
     @Test
     void serverCustomizationsNetworkingUsesOwnPayloadAndCapabilityGate() throws IOException {
         String source = Files.readString(Path.of("src/common/java/dev/charles/multigolem/customizations/ServerCustomizationsNetworking.java"));
-        String main = Files.readString(Path.of("src/common/java/dev/charles/multigolem/MultiGolem.java"));
+        String fabricMain = Files.readString(Path.of("src/fabric/java/dev/charles/multigolem/fabric/MultiGolemFabric.java"));
 
         assertTrue(source.contains("PayloadTypeRegistry.clientboundPlay().register(ServerCustomizationsPayload.TYPE"));
         assertTrue(source.contains("ServerPlayConnectionEvents.JOIN"));
@@ -21,7 +21,7 @@ class ServerCustomizationsNetworkingSourceTest {
         assertTrue(source.contains("ServerCustomizationsSummarizer.snapshot(MultiGolem.config())"));
         assertFalse(source.contains("MultiGolemStatusPayload"));
         assertFalse(source.contains("MultiGolemStatus.PAYLOAD_PATH"));
-        assertTrue(main.contains("ServerCustomizationsNetworking.registerServer();"));
+        assertTrue(fabricMain.contains("ServerCustomizationsNetworking.registerServer();"));
     }
 
     @Test

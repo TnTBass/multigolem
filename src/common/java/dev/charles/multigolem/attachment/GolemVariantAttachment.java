@@ -1,26 +1,12 @@
 package dev.charles.multigolem.attachment;
 
 import dev.charles.multigolem.GolemVariant;
-import dev.charles.multigolem.MultiGolem;
 import dev.charles.multigolem.identity.GolemIdentity;
-import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
-import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
-import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import dev.charles.multigolem.attribute.VariantAttributes;
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.animal.golem.IronGolem;
 
 import java.util.Optional;
 
 public final class GolemVariantAttachment {
-
-    public static final AttachmentType<GolemVariant> TYPE = AttachmentRegistry
-        .<GolemVariant>builder()
-        .persistent(GolemVariant.CODEC)
-        .syncWith(GolemVariant.STREAM_CODEC, AttachmentSyncPredicate.all())
-        .buildAndRegister(Identifier.fromNamespaceAndPath(MultiGolem.MOD_ID, "variant"));
-
     private GolemVariantAttachment() {}
 
     public static GolemVariant get(Entity entity) {
@@ -28,7 +14,7 @@ public final class GolemVariantAttachment {
     }
 
     public static Optional<GolemVariant> getRaw(Entity entity) {
-        return Optional.ofNullable(entity.getAttached(TYPE));
+        return GolemStorage.adapter().rawVariant(entity);
     }
 
     public static void set(Entity entity, GolemVariant variant) {
@@ -36,18 +22,14 @@ public final class GolemVariantAttachment {
     }
 
     static Optional<GolemVariant> getRawOld(Entity entity) {
-        return Optional.ofNullable(entity.getAttached(TYPE));
+        return GolemStorage.adapter().rawVariant(entity);
     }
 
     static void setOldOnly(Entity entity, GolemVariant variant) {
-        entity.setAttached(TYPE, variant);
+        GolemStorage.adapter().setRawVariant(entity, variant);
     }
 
     static void clearOld(Entity entity) {
-        entity.removeAttached(TYPE);
-    }
-
-    public static void touch() {
-        // Calling this from MultiGolem.onInitialize forces class load and TYPE registration.
+        GolemStorage.adapter().clearRawVariant(entity);
     }
 }
