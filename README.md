@@ -143,9 +143,11 @@ These nodes affect player-built MultiGolem T-pattern creation, ingot-based golem
 - **V3** ✅: Village natural-spawn variant weighting.
 - **V3.1** ✅: LuckPerms-compatible permission nodes for creation and healing.
 - **V4** ✅: Spawn eggs for the Iron Golem variants.
-- **Zombie Golem** ✅: Hostile Mossy Cobblestone golems with Rotten Flesh healing, sickness effects, civilian conversion, marked eggs, and zombie-village maintenance.
-- **Redstone and Lapis Golems**: Planned lower-strength utility variants. Redstone is an emergency-control defender that overcharges below 25% health, gains attack/resistance without speed, and releases a Slowness X death overload pulse. Lapis is a fragile enchantment support golem with full immunity to magic damage and hostile magical status effects while remaining vulnerable to physical, projectile, explosion, fire, and melee damage.
-- **V5**: Copper Golem variants.
+- **V5** ✅: Zombie Golem, with hostile Mossy Cobblestone golems, Rotten Flesh healing, sickness effects, civilian conversion, marked eggs, and zombie-village maintenance.
+- **V6**: NeoForge support.
+- **V7**: Redstone Golem, a planned lower-strength emergency-control defender that overcharges below 25% health, gains attack/resistance without speed, and releases a Slowness X death overload pulse.
+- **V8**: Lapis Golem, a planned lower-strength enchantment support golem with full immunity to magic damage and hostile magical status effects while remaining vulnerable to physical, projectile, explosion, fire, and melee damage.
+- **V9**: Copper Golem variants.
 
 ## License
 
