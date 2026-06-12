@@ -1,5 +1,7 @@
 param(
     [string] $Slug = "multigolem",
+    [ValidateSet("fabric", "neoforge")]
+    [string] $Loader = "fabric",
     [string] $Version = "",
     [string] $JarPath = "",
     [string] $SourcesJarPath = "",
@@ -27,11 +29,11 @@ if ([string]::IsNullOrWhiteSpace($Version)) {
 }
 
 if ([string]::IsNullOrWhiteSpace($JarPath)) {
-    $JarPath = "build/libs/multigolem-$Version.jar"
+    $JarPath = "$Loader/build/libs/multigolem-$Version-$Loader.jar"
 }
 
 if ([string]::IsNullOrWhiteSpace($SourcesJarPath)) {
-    $SourcesJarPath = "build/libs/multigolem-$Version-sources.jar"
+    $SourcesJarPath = "$Loader/build/libs/multigolem-$Version-$Loader-sources.jar"
 }
 
 $minecraftVersion = $Version -replace "^.*\+mc", ""
@@ -136,21 +138,24 @@ if ($SyncDescriptionOnly) {
     return
 }
 
+$dependencies = @()
+if ($Loader -eq "fabric") {
+    $dependencies += @{
+        project_id = "P7dR8mSH"
+        version_id = $null
+        file_name = $null
+        dependency_type = "required"
+    }
+}
+
 $versionData = @{
     name = "MultiGolem $displayVersion for Minecraft $minecraftVersion"
     version_number = $Version
     changelog = Get-Changelog -Version $Version -Path $ChangelogPath
-    dependencies = @(
-        @{
-            project_id = "P7dR8mSH"
-            version_id = $null
-            file_name = $null
-            dependency_type = "required"
-        }
-    )
+    dependencies = $dependencies
     game_versions = @($minecraftVersion)
     version_type = "release"
-    loaders = @("fabric")
+    loaders = @($Loader)
     featured = $true
     status = "listed"
     project_id = $projectId

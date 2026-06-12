@@ -40,8 +40,10 @@ jobs:
       - name: verify release artifacts
         run: |
           version="${GITHUB_REF_NAME#v}"
-          test -f "build/libs/multigolem-${version}.jar"
-          test -f "build/libs/multigolem-${version}-sources.jar"
+          test -f "fabric/build/libs/multigolem-${version}-fabric.jar"
+          test -f "fabric/build/libs/multigolem-${version}-fabric-sources.jar"
+          test -f "neoforge/build/libs/multigolem-${version}-neoforge.jar"
+          test -f "neoforge/build/libs/multigolem-${version}-neoforge-sources.jar"
       - name: extract changelog notes
         run: |
           version="${GITHUB_REF_NAME#v}"
@@ -57,8 +59,10 @@ jobs:
           fi
 
           gh release create "${GITHUB_REF_NAME}" \
-            "build/libs/multigolem-${version}.jar" \
-            "build/libs/multigolem-${version}-sources.jar" \
+            "fabric/build/libs/multigolem-${version}-fabric.jar" \
+            "fabric/build/libs/multigolem-${version}-fabric-sources.jar" \
+            "neoforge/build/libs/multigolem-${version}-neoforge.jar" \
+            "neoforge/build/libs/multigolem-${version}-neoforge-sources.jar" \
             --title "${GITHUB_REF_NAME}" \
             "${notes_args[@]}"
       - name: publish modrinth release
@@ -69,9 +73,17 @@ jobs:
           $version = $env:GITHUB_REF_NAME.Substring(1)
           ./scripts/upload-modrinth.ps1 `
             -Slug "multigolem" `
+            -Loader "fabric" `
             -Version $version `
-            -JarPath "build/libs/multigolem-$version.jar" `
-            -SourcesJarPath "build/libs/multigolem-$version-sources.jar" `
+            -JarPath "fabric/build/libs/multigolem-$version-fabric.jar" `
+            -SourcesJarPath "fabric/build/libs/multigolem-$version-fabric-sources.jar" `
+            -ChangelogPath "release-notes.md"
+          ./scripts/upload-modrinth.ps1 `
+            -Slug "multigolem" `
+            -Loader "neoforge" `
+            -Version $version `
+            -JarPath "neoforge/build/libs/multigolem-$version-neoforge.jar" `
+            -SourcesJarPath "neoforge/build/libs/multigolem-$version-neoforge-sources.jar" `
             -ChangelogPath "release-notes.md"
       - name: publish curseforge release
         shell: pwsh
@@ -82,6 +94,13 @@ jobs:
           $version = $env:GITHUB_REF_NAME.Substring(1)
           ./scripts/upload-curseforge.ps1 `
             -Slug "multigolem" `
+            -Loader "fabric" `
             -Version $version `
-            -JarPath "build/libs/multigolem-$version.jar" `
+            -JarPath "fabric/build/libs/multigolem-$version-fabric.jar" `
+            -ChangelogPath "release-notes.md"
+          ./scripts/upload-curseforge.ps1 `
+            -Slug "multigolem" `
+            -Loader "neoforge" `
+            -Version $version `
+            -JarPath "neoforge/build/libs/multigolem-$version-neoforge.jar" `
             -ChangelogPath "release-notes.md"

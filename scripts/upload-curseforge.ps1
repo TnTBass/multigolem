@@ -1,6 +1,8 @@
 param(
     [string] $ProjectId = "",
     [string] $Slug = "multigolem",
+    [ValidateSet("fabric", "neoforge")]
+    [string] $Loader = "fabric",
     [string] $Version = "",
     [string] $JarPath = "",
     [string] $ChangelogPath = ""
@@ -32,7 +34,7 @@ if ([string]::IsNullOrWhiteSpace($Version)) {
 }
 
 if ([string]::IsNullOrWhiteSpace($JarPath)) {
-    $JarPath = "build/libs/multigolem-$Version.jar"
+    $JarPath = "$Loader/build/libs/multigolem-$Version-$Loader.jar"
 }
 
 $minecraftVersion = $Version -replace "^.*\+mc", ""
@@ -118,24 +120,31 @@ $gameVersions = Invoke-RestMethod `
     -Uri "https://minecraft.curseforge.com/api/game/versions" `
     -Headers $headers
 
+$loaderGameVersion = if ($Loader -eq "fabric") { "Fabric" } else { "NeoForge" }
+$relationsProjects = @()
+if ($Loader -eq "fabric") {
+    $relationsProjects += @{
+        slug = "fabric-api"
+        type = "requiredDependency"
+    }
+}
+
 $metadata = @{
     changelog = Get-Changelog -Version $Version -Path $ChangelogPath
     changelogType = "markdown"
     displayName = "MultiGolem $displayVersion for Minecraft $minecraftVersion"
     gameVersions = @(
         Get-CurseForgeGameVersionId -GameVersions $gameVersions -Name $minecraftVersion
-        Get-CurseForgeGameVersionId -GameVersions $gameVersions -Name "Fabric"
+        Get-CurseForgeGameVersionId -GameVersions $gameVersions -Name $loaderGameVersion
     )
     releaseType = "release"
-    relations = @{
-        projects = @(
-            @{
-                slug = "fabric-api"
-                type = "requiredDependency"
-            }
-        )
+}
+if ($relationsProjects.Count -gt 0) {
+    $metadata["relations"] = @{
+        projects = $relationsProjects
     }
-} | ConvertTo-Json -Depth 10
+}
+$metadata = $metadata | ConvertTo-Json -Depth 10
 $metadata | Set-Content -LiteralPath $metadataPath -Encoding UTF8
 
 $jar = Get-Item -LiteralPath (Join-Path $root $JarPath)
