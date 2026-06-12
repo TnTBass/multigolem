@@ -36,9 +36,10 @@ public final class NeoForgeAbilityEvents {
         Entity entity = event.getEntity();
         DamageSource source = event.getSource();
         float amount = event.getAmount();
-        if (!CopperAbility.allowDamage(entity, source, amount)
-            || !NetheriteAbility.allowDamage(entity, source, amount)
-            || !DiamondAbility.allowDamage(entity, source, amount)) {
+        boolean cancelDamage = !CopperAbility.allowDamage(entity, source, amount)
+            | !NetheriteAbility.allowDamage(entity, source, amount)
+            | !DiamondAbility.allowDamage(entity, source, amount);
+        if (cancelDamage) {
             event.setCanceled(true);
         }
     }

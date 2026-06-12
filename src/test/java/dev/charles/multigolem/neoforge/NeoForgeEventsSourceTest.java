@@ -23,6 +23,9 @@ class NeoForgeEventsSourceTest {
         assertTrue(source.contains("CopperAbility.allowDamage(entity, source, amount)"));
         assertTrue(source.contains("NetheriteAbility.allowDamage(entity, source, amount)"));
         assertTrue(source.contains("DiamondAbility.allowDamage(entity, source, amount)"));
+        assertTrue(source.contains("boolean cancelDamage = !CopperAbility.allowDamage(entity, source, amount)"));
+        assertTrue(source.contains("| !NetheriteAbility.allowDamage(entity, source, amount)"));
+        assertTrue(source.contains("| !DiamondAbility.allowDamage(entity, source, amount)"));
         assertFalse(source.contains("net.fabricmc"));
     }
 
