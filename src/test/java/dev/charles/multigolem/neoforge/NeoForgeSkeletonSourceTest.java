@@ -37,13 +37,12 @@ class NeoForgeSkeletonSourceTest {
     }
 
     @Test
-    void neoforgeEntrypointsStaySkeletonOnly() throws IOException {
+    void neoforgeEntrypointsStayGameplaySkeletonOnly() throws IOException {
         String mainEntrypoint = Files.readString(Path.of("src/neoforge/java/dev/charles/multigolem/neoforge/MultiGolemNeoForge.java"));
         String clientEntrypoint = Files.readString(Path.of("src/neoforgeClient/java/dev/charles/multigolem/neoforge/client/MultiGolemNeoForgeClient.java"));
 
         assertTrue(mainEntrypoint.contains("@Mod(MultiGolem.MOD_ID)"));
         assertTrue(mainEntrypoint.contains("MultiGolemStatus.initializeVersion"));
-        assertFalse(mainEntrypoint.contains("GolemStorage.register"));
         assertFalse(mainEntrypoint.contains("MultiGolem.initialize"));
         assertFalse(mainEntrypoint.contains("registerServer"));
         assertFalse(mainEntrypoint.contains("Fabric"));
