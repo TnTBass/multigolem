@@ -47,6 +47,14 @@ class MultiGolemStatusTest {
     }
 
     @Test
+    void initializeVersionRejectsMissingVersionMetadata() {
+        IllegalStateException missing = assertThrows(IllegalStateException.class,
+            () -> MultiGolemStatus.initializeVersion("", "build"));
+
+        assertEquals("Missing version metadata for multigolem", missing.getMessage());
+    }
+
+    @Test
     void displayCopyIsPassiveAndPlayerFacing() {
         ModStatusClientState state = ModStatusClientState.create(MultiGolemStatus.config());
         state.connected(ModStatusServerStatus.of("0.3.0", "mc26.1.2", VersionMismatchSeverity.WARN));

@@ -20,8 +20,7 @@ public final class MultiGolemStatus {
     private static final String BUILD_INFO_RESOURCE = "/multigolem-build.properties";
     private static final int SERVER_DETECTION_TICKS = 100;
 
-    private static volatile ModStatusConfig config = createConfig(version(), build());
-    private static volatile ModStatusClientState clientState = ModStatusClientState.create(config);
+    private static volatile StatusState state = StatusState.create(version(), build());
     private static volatile int ticksSinceJoin;
     private static volatile boolean waitingForServerStatus;
 
@@ -29,18 +28,20 @@ public final class MultiGolemStatus {
     }
 
     public static ModStatusConfig config() {
-        return config;
+        return state.config();
     }
 
-    public static synchronized void initializeVersion(String version, String build) {
-        config = createConfig(version, build);
-        clientState = ModStatusClientState.create(config);
+    public static void initializeVersion(String version, String build) {
+        if (version == null || version.isBlank()) {
+            throw new IllegalStateException("Missing version metadata for " + MultiGolem.MOD_ID);
+        }
+        state = StatusState.create(version, build);
         ticksSinceJoin = 0;
         waitingForServerStatus = false;
     }
 
     public static ModStatusDisplay display() {
-        return clientState.display();
+        return state.clientState().display();
     }
 
     public static VersionMismatchSeverity versionMismatchSeverity() {
@@ -48,13 +49,13 @@ public final class MultiGolemStatus {
     }
 
     public static void onClientJoin() {
-        clientState.unknown();
+        state.clientState().unknown();
         ticksSinceJoin = 0;
         waitingForServerStatus = true;
     }
 
     public static void onClientDisconnect() {
-        clientState.disconnected();
+        state.clientState().disconnected();
         ticksSinceJoin = 0;
         waitingForServerStatus = false;
     }
@@ -68,7 +69,7 @@ public final class MultiGolemStatus {
     }
 
     public static void onServerStatus(ModStatusServerStatus serverStatus) {
-        clientState.connected(serverStatus);
+        state.clientState().connected(serverStatus);
         waitingForServerStatus = false;
     }
 
@@ -79,7 +80,7 @@ public final class MultiGolemStatus {
 
         ticksSinceJoin++;
         if (ticksSinceJoin >= SERVER_DETECTION_TICKS) {
-            clientState.markServerNotDetectedIfUnknown();
+            state.clientState().markServerNotDetectedIfUnknown();
             waitingForServerStatus = false;
         }
     }
@@ -128,6 +129,13 @@ public final class MultiGolemStatus {
             return Optional.ofNullable(properties.getProperty("build"));
         } catch (IOException ignored) {
             return Optional.empty();
+        }
+    }
+
+    private record StatusState(ModStatusConfig config, ModStatusClientState clientState) {
+        static StatusState create(String version, String build) {
+            ModStatusConfig config = createConfig(version, build);
+            return new StatusState(config, ModStatusClientState.create(config));
         }
     }
 }

@@ -43,6 +43,8 @@ public final class FabricGolemAttachments {
 
     public static void register() {
         // Static field initialization registers Fabric attachment types.
+        // MultiGolemFabric intentionally creates and registers the common storage adapter before this call,
+        // matching the reviewed plan's loader/common initialization order.
     }
 
     public static GolemStorageAdapter storageAdapter() {

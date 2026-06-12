@@ -12,6 +12,9 @@ public final class MultiGolemPermissions {
 
     @FunctionalInterface
     public interface PermissionLookup {
+        /**
+         * Player is null only for package-private unit-test helpers that exercise node/default behavior.
+         */
         boolean check(ServerPlayer player, String node, boolean defaultValue);
     }
 

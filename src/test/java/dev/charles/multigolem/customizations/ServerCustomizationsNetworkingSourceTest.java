@@ -11,8 +11,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class ServerCustomizationsNetworkingSourceTest {
     @Test
     void serverCustomizationsNetworkingUsesOwnPayloadAndCapabilityGate() throws IOException {
-        String source = Files.readString(Path.of("src/fabric/java/dev/charles/multigolem/fabric/customizations/FabricServerCustomizationsNetworking.java"));
-        String fabricMain = Files.readString(Path.of("src/fabric/java/dev/charles/multigolem/fabric/MultiGolemFabric.java"));
+        String source = readSource("src/fabric/java/dev/charles/multigolem/fabric/customizations/FabricServerCustomizationsNetworking.java");
+        String fabricMain = readSource("src/fabric/java/dev/charles/multigolem/fabric/MultiGolemFabric.java");
 
         assertTrue(source.contains("PayloadTypeRegistry.clientboundPlay().register(ServerCustomizationsPayload.TYPE"));
         assertTrue(source.contains("ServerPlayConnectionEvents.JOIN"));
@@ -26,8 +26,8 @@ class ServerCustomizationsNetworkingSourceTest {
 
     @Test
     void clientCustomizationsReceiverClearsLifecycleAndStoresPayloadSnapshots() throws IOException {
-        String source = Files.readString(Path.of("src/fabricClient/java/dev/charles/multigolem/fabric/client/customizations/FabricServerCustomizationsClient.java"));
-        String client = Files.readString(Path.of("src/fabricClient/java/dev/charles/multigolem/fabric/client/MultiGolemFabricClient.java"));
+        String source = readSource("src/fabricClient/java/dev/charles/multigolem/fabric/client/customizations/FabricServerCustomizationsClient.java");
+        String client = readSource("src/fabricClient/java/dev/charles/multigolem/fabric/client/MultiGolemFabricClient.java");
 
         assertTrue(source.contains("ClientPlayNetworking.registerGlobalReceiver(ServerCustomizationsPayload.TYPE"));
         assertTrue(source.contains("ServerCustomizationsClient.state().onServerSnapshot(payload.snapshot())"));
@@ -38,5 +38,11 @@ class ServerCustomizationsNetworkingSourceTest {
         assertTrue(source.contains("ServerCustomizationsClient.state().onDisconnect()"));
         assertTrue(source.contains("ServerCustomizationsClient.state().tick()"));
         assertTrue(client.contains("FabricServerCustomizationsClient.register();"));
+    }
+
+    private static String readSource(String path) throws IOException {
+        Path source = Path.of(path);
+        assertTrue(Files.exists(source), "Expected source file missing: " + source);
+        return Files.readString(source);
     }
 }
