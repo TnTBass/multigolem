@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added NeoForge permission nodes and permission API checks for the multiloader NeoForge adapter.
 - Added a NeoForge Gradle skeleton with metadata-only entrypoints and loader-suffixed NeoForge artifacts.
 - Added a release-source gate for loader-suffixed Fabric and NeoForge artifacts across GitHub Release, Modrinth, and CurseForge paths.
 - Moved Fabric build ownership into a loader-specific Gradle project and renamed Fabric build artifacts with a loader suffix.
