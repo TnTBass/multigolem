@@ -1,15 +1,17 @@
-package dev.charles.multigolem.customizations;
+package dev.charles.multigolem.fabric.customizations;
 
 import dev.charles.multigolem.MultiGolem;
+import dev.charles.multigolem.customizations.ServerCustomizationsPayload;
+import dev.charles.multigolem.customizations.ServerCustomizationsSummarizer;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.level.ServerPlayer;
 
-public final class ServerCustomizationsNetworking {
+public final class FabricServerCustomizationsNetworking {
     private static boolean registered;
 
-    private ServerCustomizationsNetworking() {
+    private FabricServerCustomizationsNetworking() {
     }
 
     public static void registerServer() {

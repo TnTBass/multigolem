@@ -1,16 +1,18 @@
-package dev.charles.multigolem.status;
+package dev.charles.multigolem.fabric.status;
 
 import dev.charles.multigolem.MultiGolem;
 import dev.charles.multigolem.internal.modstatus.VersionMismatchSeverity;
+import dev.charles.multigolem.status.MultiGolemStatus;
+import dev.charles.multigolem.status.MultiGolemStatusPayload;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.level.ServerPlayer;
 
-public final class MultiGolemStatusNetworking {
+public final class FabricMultiGolemStatusNetworking {
     private static boolean registered;
 
-    private MultiGolemStatusNetworking() {
+    private FabricMultiGolemStatusNetworking() {
     }
 
     public static void registerServer() {

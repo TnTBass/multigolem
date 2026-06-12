@@ -1,15 +1,15 @@
 package dev.charles.multigolem.client;
 
 import dev.charles.multigolem.MultiGolem;
-import dev.charles.multigolem.client.customizations.ServerCustomizationsClient;
-import dev.charles.multigolem.client.status.MultiGolemStatusClient;
+import dev.charles.multigolem.fabric.client.customizations.FabricServerCustomizationsClient;
+import dev.charles.multigolem.fabric.client.status.FabricMultiGolemStatusClient;
 import net.fabricmc.api.ClientModInitializer;
 
 public class MultiGolemClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         MultiGolem.LOG.info("MultiGolem client initializing");
-        MultiGolemStatusClient.register();
-        ServerCustomizationsClient.register();
+        FabricMultiGolemStatusClient.register();
+        FabricServerCustomizationsClient.register();
     }
 }

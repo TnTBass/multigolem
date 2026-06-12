@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ServerCustomizationsNetworkingSourceTest {
     @Test
     void serverCustomizationsNetworkingUsesOwnPayloadAndCapabilityGate() throws IOException {
-        String source = Files.readString(Path.of("src/common/java/dev/charles/multigolem/customizations/ServerCustomizationsNetworking.java"));
+        String source = Files.readString(Path.of("src/fabric/java/dev/charles/multigolem/fabric/customizations/FabricServerCustomizationsNetworking.java"));
         String fabricMain = Files.readString(Path.of("src/fabric/java/dev/charles/multigolem/fabric/MultiGolemFabric.java"));
 
         assertTrue(source.contains("PayloadTypeRegistry.clientboundPlay().register(ServerCustomizationsPayload.TYPE"));
@@ -21,22 +21,22 @@ class ServerCustomizationsNetworkingSourceTest {
         assertTrue(source.contains("ServerCustomizationsSummarizer.snapshot(MultiGolem.config())"));
         assertFalse(source.contains("MultiGolemStatusPayload"));
         assertFalse(source.contains("MultiGolemStatus.PAYLOAD_PATH"));
-        assertTrue(fabricMain.contains("ServerCustomizationsNetworking.registerServer();"));
+        assertTrue(fabricMain.contains("FabricServerCustomizationsNetworking.registerServer();"));
     }
 
     @Test
     void clientCustomizationsReceiverClearsLifecycleAndStoresPayloadSnapshots() throws IOException {
-        String source = Files.readString(Path.of("src/commonClient/java/dev/charles/multigolem/client/customizations/ServerCustomizationsClient.java"));
+        String source = Files.readString(Path.of("src/fabricClient/java/dev/charles/multigolem/fabric/client/customizations/FabricServerCustomizationsClient.java"));
         String client = Files.readString(Path.of("src/commonClient/java/dev/charles/multigolem/client/MultiGolemClient.java"));
 
         assertTrue(source.contains("ClientPlayNetworking.registerGlobalReceiver(ServerCustomizationsPayload.TYPE"));
-        assertTrue(source.contains("STATE.onServerSnapshot(payload.snapshot())"));
+        assertTrue(source.contains("ServerCustomizationsClient.state().onServerSnapshot(payload.snapshot())"));
         assertTrue(source.contains("ClientPlayConnectionEvents.JOIN"));
         assertTrue(source.contains("ClientPlayConnectionEvents.DISCONNECT"));
         assertTrue(source.contains("ClientTickEvents.END_CLIENT_TICK"));
         assertTrue(source.contains("ClientLifecycleEvents.CLIENT_STOPPING"));
-        assertTrue(source.contains("STATE.onDisconnect()"));
-        assertTrue(source.contains("STATE.tick()"));
-        assertTrue(client.contains("ServerCustomizationsClient.register();"));
+        assertTrue(source.contains("ServerCustomizationsClient.state().onDisconnect()"));
+        assertTrue(source.contains("ServerCustomizationsClient.state().tick()"));
+        assertTrue(client.contains("FabricServerCustomizationsClient.register();"));
     }
 }

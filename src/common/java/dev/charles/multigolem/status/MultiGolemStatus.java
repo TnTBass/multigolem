@@ -8,7 +8,6 @@ import dev.charles.multigolem.internal.modstatus.ModStatusMessages;
 import dev.charles.multigolem.internal.modstatus.ModStatusServerStatus;
 import dev.charles.multigolem.internal.modstatus.VersionMismatchSeverity;
 import dev.charles.multigolem.internal.modstatus.VersionStatus;
-import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,27 +20,8 @@ public final class MultiGolemStatus {
     private static final String BUILD_INFO_RESOURCE = "/multigolem-build.properties";
     private static final int SERVER_DETECTION_TICKS = 100;
 
-    private static final ModStatusConfig CONFIG = ModStatusConfig.builder()
-        .modId(MultiGolem.MOD_ID)
-        .displayName("MultiGolem")
-        .clientVersion(version())
-        .clientBuild(build())
-        .updateUrl(UPDATE_URL)
-        .payloadChannel(MultiGolem.MOD_ID, PAYLOAD_PATH)
-        .messages(ModStatusMessages.builder()
-            .label(VersionStatus.MATCHED, "Matched")
-            .label(VersionStatus.DIFFERENT, "Different versions")
-            .label(VersionStatus.DISCONNECTED, "Disconnected")
-            .label(VersionStatus.SERVER_NOT_DETECTED, "Server not detected")
-            .label(VersionStatus.UNKNOWN, "Unknown")
-            .help(VersionStatus.MATCHED, "Client and server MultiGolem versions match.")
-            .help(VersionStatus.DIFFERENT, "Different versions may miss or hide new features. Gameplay remains compatible.")
-            .help(VersionStatus.DISCONNECTED, "Not connected to a server or world.")
-            .help(VersionStatus.SERVER_NOT_DETECTED, "This server does not appear to have MultiGolem installed.")
-            .help(VersionStatus.UNKNOWN, "Waiting for the server MultiGolem version.")
-            .build())
-        .build();
-    private static final ModStatusClientState CLIENT_STATE = ModStatusClientState.create(CONFIG);
+    private static volatile ModStatusConfig config = createConfig(version(), build());
+    private static volatile ModStatusClientState clientState = ModStatusClientState.create(config);
     private static volatile int ticksSinceJoin;
     private static volatile boolean waitingForServerStatus;
 
@@ -49,11 +29,18 @@ public final class MultiGolemStatus {
     }
 
     public static ModStatusConfig config() {
-        return CONFIG;
+        return config;
+    }
+
+    public static synchronized void initializeVersion(String version, String build) {
+        config = createConfig(version, build);
+        clientState = ModStatusClientState.create(config);
+        ticksSinceJoin = 0;
+        waitingForServerStatus = false;
     }
 
     public static ModStatusDisplay display() {
-        return CLIENT_STATE.display();
+        return clientState.display();
     }
 
     public static VersionMismatchSeverity versionMismatchSeverity() {
@@ -61,13 +48,13 @@ public final class MultiGolemStatus {
     }
 
     public static void onClientJoin() {
-        CLIENT_STATE.unknown();
+        clientState.unknown();
         ticksSinceJoin = 0;
         waitingForServerStatus = true;
     }
 
     public static void onClientDisconnect() {
-        CLIENT_STATE.disconnected();
+        clientState.disconnected();
         ticksSinceJoin = 0;
         waitingForServerStatus = false;
     }
@@ -81,7 +68,7 @@ public final class MultiGolemStatus {
     }
 
     public static void onServerStatus(ModStatusServerStatus serverStatus) {
-        CLIENT_STATE.connected(serverStatus);
+        clientState.connected(serverStatus);
         waitingForServerStatus = false;
     }
 
@@ -92,25 +79,37 @@ public final class MultiGolemStatus {
 
         ticksSinceJoin++;
         if (ticksSinceJoin >= SERVER_DETECTION_TICKS) {
-            CLIENT_STATE.markServerNotDetectedIfUnknown();
+            clientState.markServerNotDetectedIfUnknown();
             waitingForServerStatus = false;
         }
     }
 
-    private static String version() {
-        return versionFromFabric()
-            .or(() -> Optional.ofNullable(System.getProperty("multigolem.version")))
-            .orElseThrow(() -> new IllegalStateException("Missing version metadata for " + MultiGolem.MOD_ID));
+    private static ModStatusConfig createConfig(String version, String build) {
+        return ModStatusConfig.builder()
+            .modId(MultiGolem.MOD_ID)
+            .displayName("MultiGolem")
+            .clientVersion(version)
+            .clientBuild(build)
+            .updateUrl(UPDATE_URL)
+            .payloadChannel(MultiGolem.MOD_ID, PAYLOAD_PATH)
+            .messages(ModStatusMessages.builder()
+                .label(VersionStatus.MATCHED, "Matched")
+                .label(VersionStatus.DIFFERENT, "Different versions")
+                .label(VersionStatus.DISCONNECTED, "Disconnected")
+                .label(VersionStatus.SERVER_NOT_DETECTED, "Server not detected")
+                .label(VersionStatus.UNKNOWN, "Unknown")
+                .help(VersionStatus.MATCHED, "Client and server MultiGolem versions match.")
+                .help(VersionStatus.DIFFERENT, "Different versions may miss or hide new features. Gameplay remains compatible.")
+                .help(VersionStatus.DISCONNECTED, "Not connected to a server or world.")
+                .help(VersionStatus.SERVER_NOT_DETECTED, "This server does not appear to have MultiGolem installed.")
+                .help(VersionStatus.UNKNOWN, "Waiting for the server MultiGolem version.")
+                .build())
+            .build();
     }
 
-    private static Optional<String> versionFromFabric() {
-        try {
-            return FabricLoader.getInstance()
-                .getModContainer(MultiGolem.MOD_ID)
-                .map(container -> container.getMetadata().getVersion().getFriendlyString());
-        } catch (RuntimeException ignored) {
-            return Optional.empty();
-        }
+    private static String version() {
+        return Optional.ofNullable(System.getProperty("multigolem.version"))
+            .orElse("unknown");
     }
 
     private static String build() {

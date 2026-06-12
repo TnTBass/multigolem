@@ -1,4 +1,4 @@
-package dev.charles.multigolem.client.status;
+package dev.charles.multigolem.fabric.client.status;
 
 import dev.charles.multigolem.status.MultiGolemStatus;
 import dev.charles.multigolem.status.MultiGolemStatusPayload;
@@ -7,10 +7,10 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 
-public final class MultiGolemStatusClient {
+public final class FabricMultiGolemStatusClient {
     private static volatile boolean registered;
 
-    private MultiGolemStatusClient() {
+    private FabricMultiGolemStatusClient() {
     }
 
     public static void register() {

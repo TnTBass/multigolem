@@ -32,6 +32,21 @@ class MultiGolemStatusTest {
     }
 
     @Test
+    void initializeVersionUpdatesCommonStatusConfig() {
+        String originalVersion = MultiGolemStatus.config().clientVersion();
+        String originalBuild = MultiGolemStatus.config().clientBuild();
+
+        try {
+            MultiGolemStatus.initializeVersion("9.9.9-test", "boundary-build");
+
+            assertEquals("9.9.9-test", MultiGolemStatus.config().clientVersion());
+            assertEquals("boundary-build", MultiGolemStatus.config().clientBuild());
+        } finally {
+            MultiGolemStatus.initializeVersion(originalVersion, originalBuild);
+        }
+    }
+
+    @Test
     void displayCopyIsPassiveAndPlayerFacing() {
         ModStatusClientState state = ModStatusClientState.create(MultiGolemStatus.config());
         state.connected(ModStatusServerStatus.of("0.3.0", "mc26.1.2", VersionMismatchSeverity.WARN));

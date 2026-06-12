@@ -11,20 +11,20 @@ import static org.junit.jupiter.api.Assertions.*;
 class MultiGolemStatusIntegrationSourceTest {
     @Test
     void serverJoinSendIsCapabilityGatedAndSeparateFromGameplayPackets() throws IOException {
-        String source = Files.readString(Path.of("src/common/java/dev/charles/multigolem/status/MultiGolemStatusNetworking.java"));
+        String source = Files.readString(Path.of("src/fabric/java/dev/charles/multigolem/fabric/status/FabricMultiGolemStatusNetworking.java"));
         String fabricMain = Files.readString(Path.of("src/fabric/java/dev/charles/multigolem/fabric/MultiGolemFabric.java"));
 
         assertTrue(source.contains("ServerPlayConnectionEvents.JOIN"), "status must send from the server join lifecycle");
         assertTrue(source.contains("ServerPlayNetworking.canSend(player, MultiGolemStatusPayload.TYPE)"), "status send must be capability gated");
         assertTrue(source.contains("ServerPlayNetworking.send(player, MultiGolemStatusPayload.fromServerStatus"), "status payload must be sent independently");
         assertTrue(source.contains("VersionMismatchSeverity.WARN"), "MultiGolem should declare passive WARN mismatch severity");
-        assertTrue(fabricMain.contains("MultiGolemStatusNetworking.registerServer();"), "Fabric initializer must register status networking");
+        assertTrue(fabricMain.contains("FabricMultiGolemStatusNetworking.registerServer();"), "Fabric initializer must register status networking");
         assertFalse(source.contains("GolemVariant"), "status networking must not depend on gameplay variant packets/state");
     }
 
     @Test
     void clientJoinDisconnectAndTickTimeoutUpdateStatusState() throws IOException {
-        String source = Files.readString(Path.of("src/commonClient/java/dev/charles/multigolem/client/status/MultiGolemStatusClient.java"));
+        String source = Files.readString(Path.of("src/fabricClient/java/dev/charles/multigolem/fabric/client/status/FabricMultiGolemStatusClient.java"));
         String client = Files.readString(Path.of("src/commonClient/java/dev/charles/multigolem/client/MultiGolemClient.java"));
         String status = Files.readString(Path.of("src/common/java/dev/charles/multigolem/status/MultiGolemStatus.java"));
 
@@ -37,14 +37,14 @@ class MultiGolemStatusIntegrationSourceTest {
         assertTrue(status.contains("private static volatile boolean waitingForServerStatus"), "server-status wait flag must be visible across networking and client tick callbacks");
         assertTrue(source.contains("ClientPlayNetworking.registerGlobalReceiver"), "client must receive the status payload");
         assertTrue(source.contains("MultiGolemStatus.onServerStatus(payload.serverStatus())"), "client should preserve structured server status severity");
-        assertTrue(client.contains("MultiGolemStatusClient.register();"), "client initializer must register status client");
+        assertTrue(client.contains("FabricMultiGolemStatusClient.register();"), "client initializer must register status client");
     }
 
     @Test
     void statusPayloadStaysVersionStatusOnlyAndDoesNotCarryServerCustomizations() throws IOException {
         String statusPayload = Files.readString(Path.of("src/common/java/dev/charles/multigolem/status/MultiGolemStatusPayload.java"));
         String status = Files.readString(Path.of("src/common/java/dev/charles/multigolem/status/MultiGolemStatus.java"));
-        String statusNetworking = Files.readString(Path.of("src/common/java/dev/charles/multigolem/status/MultiGolemStatusNetworking.java"));
+        String statusNetworking = Files.readString(Path.of("src/fabric/java/dev/charles/multigolem/fabric/status/FabricMultiGolemStatusNetworking.java"));
 
         assertTrue(statusPayload.contains("encodedVersion"));
         assertTrue(statusPayload.contains("ModStatusVersionPayload"));

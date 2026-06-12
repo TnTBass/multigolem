@@ -4,6 +4,8 @@ import dev.charles.multigolem.client.customizations.ServerCustomizationsClientSt
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.customizations.ServerCustomizationsSnapshot;
 import dev.charles.multigolem.customizations.VariantCustomizationSummary;
+import dev.charles.multigolem.test.MinecraftBootstrap;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.EnumMap;
@@ -12,6 +14,11 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ServerCustomizationsClientStateTest {
+    @BeforeAll
+    static void bootstrap() {
+        MinecraftBootstrap.ensure();
+    }
+
     @Test
     void disconnectedStartsUnavailable() {
         ServerCustomizationsClientState state = new ServerCustomizationsClientState(100);
