@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GolemTargetingMixinTest {
     private static final Path SOURCE = Path.of(
-        "src/main/java/dev/charles/multigolem/mixin/GolemTargetingMixin.java");
+        "src/common/java/dev/charles/multigolem/mixin/GolemTargetingMixin.java");
 
     @BeforeAll
     static void bootstrap() {

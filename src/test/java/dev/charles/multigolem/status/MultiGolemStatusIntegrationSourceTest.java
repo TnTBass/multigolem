@@ -11,8 +11,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class MultiGolemStatusIntegrationSourceTest {
     @Test
     void serverJoinSendIsCapabilityGatedAndSeparateFromGameplayPackets() throws IOException {
-        String source = Files.readString(Path.of("src/main/java/dev/charles/multigolem/status/MultiGolemStatusNetworking.java"));
-        String main = Files.readString(Path.of("src/main/java/dev/charles/multigolem/MultiGolem.java"));
+        String source = Files.readString(Path.of("src/common/java/dev/charles/multigolem/status/MultiGolemStatusNetworking.java"));
+        String main = Files.readString(Path.of("src/common/java/dev/charles/multigolem/MultiGolem.java"));
 
         assertTrue(source.contains("ServerPlayConnectionEvents.JOIN"), "status must send from the server join lifecycle");
         assertTrue(source.contains("ServerPlayNetworking.canSend(player, MultiGolemStatusPayload.TYPE)"), "status send must be capability gated");
@@ -24,9 +24,9 @@ class MultiGolemStatusIntegrationSourceTest {
 
     @Test
     void clientJoinDisconnectAndTickTimeoutUpdateStatusState() throws IOException {
-        String source = Files.readString(Path.of("src/client/java/dev/charles/multigolem/client/status/MultiGolemStatusClient.java"));
-        String client = Files.readString(Path.of("src/client/java/dev/charles/multigolem/client/MultiGolemClient.java"));
-        String status = Files.readString(Path.of("src/main/java/dev/charles/multigolem/status/MultiGolemStatus.java"));
+        String source = Files.readString(Path.of("src/commonClient/java/dev/charles/multigolem/client/status/MultiGolemStatusClient.java"));
+        String client = Files.readString(Path.of("src/commonClient/java/dev/charles/multigolem/client/MultiGolemClient.java"));
+        String status = Files.readString(Path.of("src/common/java/dev/charles/multigolem/status/MultiGolemStatus.java"));
 
         assertTrue(source.contains("ClientPlayConnectionEvents.JOIN"), "client join should enter unknown status");
         assertTrue(source.contains("ClientPlayConnectionEvents.DISCONNECT"), "client disconnect should enter disconnected status");
@@ -42,9 +42,9 @@ class MultiGolemStatusIntegrationSourceTest {
 
     @Test
     void statusPayloadStaysVersionStatusOnlyAndDoesNotCarryServerCustomizations() throws IOException {
-        String statusPayload = Files.readString(Path.of("src/main/java/dev/charles/multigolem/status/MultiGolemStatusPayload.java"));
-        String status = Files.readString(Path.of("src/main/java/dev/charles/multigolem/status/MultiGolemStatus.java"));
-        String statusNetworking = Files.readString(Path.of("src/main/java/dev/charles/multigolem/status/MultiGolemStatusNetworking.java"));
+        String statusPayload = Files.readString(Path.of("src/common/java/dev/charles/multigolem/status/MultiGolemStatusPayload.java"));
+        String status = Files.readString(Path.of("src/common/java/dev/charles/multigolem/status/MultiGolemStatus.java"));
+        String statusNetworking = Files.readString(Path.of("src/common/java/dev/charles/multigolem/status/MultiGolemStatusNetworking.java"));
 
         assertTrue(statusPayload.contains("encodedVersion"));
         assertTrue(statusPayload.contains("ModStatusVersionPayload"));

@@ -74,11 +74,11 @@ class CheckReleaseDocsTest(unittest.TestCase):
         checker = load_checker()
         with tempfile.TemporaryDirectory() as tmp:
             root = self.write_good_repo(Path(tmp) / "MultiGolem")
-            (root / "src/main/resources/fabric.mod.json").write_text(
+            (root / "src/fabric/resources/fabric.mod.json").write_text(
                 json.dumps({"schemaVersion": 1, "id": "multigolem"}),
                 encoding="utf-8",
             )
-            (root / "src/main/resources/assets/multigolem/icon.png").unlink()
+            (root / "src/common/resources/assets/multigolem/icon.png").unlink()
 
             errors = checker.check(root)
 
@@ -93,7 +93,7 @@ class CheckReleaseDocsTest(unittest.TestCase):
         checker = load_checker()
         with tempfile.TemporaryDirectory() as tmp:
             root = self.write_good_repo(Path(tmp) / "MultiGolem")
-            (root / "src/main/resources/assets/multigolem/icon.png").write_bytes(b"x" * (256 * 1024 + 1))
+            (root / "src/common/resources/assets/multigolem/icon.png").write_bytes(b"x" * (256 * 1024 + 1))
 
             errors = checker.check(root)
 
@@ -103,7 +103,7 @@ class CheckReleaseDocsTest(unittest.TestCase):
         checker = load_checker()
         with tempfile.TemporaryDirectory() as tmp:
             root = self.write_good_repo(Path(tmp) / "MultiGolem")
-            mod_json_path = root / "src/main/resources/fabric.mod.json"
+            mod_json_path = root / "src/fabric/resources/fabric.mod.json"
             mod_json = json.loads(mod_json_path.read_text(encoding="utf-8"))
             mod_json["contact"]["homepage"] = "https://modrinth.com/mod/multi-golem"
             mod_json_path.write_text(json.dumps(mod_json), encoding="utf-8")
@@ -121,14 +121,15 @@ class CheckReleaseDocsTest(unittest.TestCase):
 
     def write_good_repo(self, root: Path) -> Path:
         (root / "docs").mkdir(parents=True)
-        (root / "src/main/resources/assets/multigolem/lang").mkdir(parents=True)
+        (root / "src/fabric/resources").mkdir(parents=True)
+        (root / "src/common/resources/assets/multigolem/lang").mkdir(parents=True)
 
         for relative, markers in load_checker().REQUIRED_DOC_MARKERS.items():
             path = root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text("\n".join(markers), encoding="utf-8")
 
-        (root / "src/main/resources/fabric.mod.json").write_text(
+        (root / "src/fabric/resources/fabric.mod.json").write_text(
             json.dumps(
                 {
                     "schemaVersion": 1,
@@ -143,7 +144,7 @@ class CheckReleaseDocsTest(unittest.TestCase):
             ),
             encoding="utf-8",
         )
-        (root / "src/main/resources/assets/multigolem/lang/en_us.json").write_text(
+        (root / "src/common/resources/assets/multigolem/lang/en_us.json").write_text(
             json.dumps(
                 {
                     "modmenu.nameTranslation.multigolem": "MultiGolem",
@@ -155,7 +156,7 @@ class CheckReleaseDocsTest(unittest.TestCase):
         )
         shutil.copyfile(
             Path(__file__).resolve(),
-            root / "src/main/resources/assets/multigolem/icon.png",
+            root / "src/common/resources/assets/multigolem/icon.png",
         )
         return root
 

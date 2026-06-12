@@ -12,7 +12,7 @@ class MultiGolemModMenuSourceTest {
     @Test
     void modMenuIsOptionalAndClientOnly() throws IOException {
         String build = Files.readString(Path.of("build.gradle"));
-        String metadata = Files.readString(Path.of("src/main/resources/fabric.mod.json"));
+        String metadata = Files.readString(Path.of("src/fabric/resources/fabric.mod.json"));
 
         assertTrue(build.contains("compileOnly \"com.terraformersmc:modmenu:${project.modmenu_version}\""));
         int dependsStart = metadata.indexOf("\"depends\"");
@@ -30,9 +30,9 @@ class MultiGolemModMenuSourceTest {
 
     @Test
     void modMenuHubShowsRequiredActionsAndTopRightStatusSquare() throws IOException {
-        String api = Files.readString(Path.of("src/client/java/dev/charles/multigolem/client/modmenu/MultiGolemModMenu.java"));
-        String screen = Files.readString(Path.of("src/client/java/dev/charles/multigolem/client/modmenu/MultiGolemStatusScreen.java"));
-        String widget = Files.readString(Path.of("src/client/java/dev/charles/multigolem/client/modmenu/MultiGolemStatusWidget.java"));
+        String api = Files.readString(Path.of("src/commonClient/java/dev/charles/multigolem/client/modmenu/MultiGolemModMenu.java"));
+        String screen = Files.readString(Path.of("src/commonClient/java/dev/charles/multigolem/client/modmenu/MultiGolemStatusScreen.java"));
+        String widget = Files.readString(Path.of("src/commonClient/java/dev/charles/multigolem/client/modmenu/MultiGolemStatusWidget.java"));
 
         assertTrue(api.contains("@Environment(EnvType.CLIENT)"));
         assertTrue(api.contains("implements ModMenuApi"));
@@ -68,7 +68,7 @@ class MultiGolemModMenuSourceTest {
 
     @Test
     void serverCustomizationsScreenRendersUnavailableAndClearsPendingOnClose() throws IOException {
-        String screen = Files.readString(Path.of("src/client/java/dev/charles/multigolem/client/modmenu/ServerCustomizationsScreen.java"));
+        String screen = Files.readString(Path.of("src/commonClient/java/dev/charles/multigolem/client/modmenu/ServerCustomizationsScreen.java"));
 
         assertTrue(screen.contains("ServerCustomizationsClient.state()"));
         assertTrue(screen.contains("No server customizations are available."));

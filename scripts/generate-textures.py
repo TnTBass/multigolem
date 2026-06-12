@@ -9,8 +9,8 @@ import colorsys
 REPO = Path(__file__).resolve().parent.parent
 TEMPLATE = REPO / "build-inputs" / "textures" / "iron_golem.template.png"
 SPAWN_EGG_TEMPLATE = REPO / "build-inputs" / "textures" / "spawn_egg" / "iron_golem_spawn_egg.template.png"
-OUT_DIR = REPO / "src" / "main" / "resources" / "assets" / "multigolem" / "textures" / "entity"
-SPAWN_EGG_OUT_DIR = REPO / "src" / "main" / "resources" / "assets" / "multigolem" / "textures" / "item"
+OUT_DIR = REPO / "src" / "common" / "resources" / "assets" / "multigolem" / "textures" / "entity"
+SPAWN_EGG_OUT_DIR = REPO / "src" / "common" / "resources" / "assets" / "multigolem" / "textures" / "item"
 
 TIERS = {
     "copper":    {"hue_shift": -10, "saturation": 1.25, "lightness": 0.95},

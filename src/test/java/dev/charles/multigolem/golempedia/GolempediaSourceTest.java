@@ -11,9 +11,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class GolempediaSourceTest {
     @Test
     void golempediaScreenUsesStaticCatalogAndExpectedSections() throws IOException {
-        String screen = Files.readString(Path.of("src/client/java/dev/charles/multigolem/client/modmenu/GolempediaScreen.java"));
-        String wrappedText = Files.readString(Path.of("src/client/java/dev/charles/multigolem/client/modmenu/ModMenuWrappedText.java"));
-        String catalog = Files.readString(Path.of("src/main/java/dev/charles/multigolem/golempedia/GolempediaCatalog.java"));
+        String screen = Files.readString(Path.of("src/commonClient/java/dev/charles/multigolem/client/modmenu/GolempediaScreen.java"));
+        String wrappedText = Files.readString(Path.of("src/commonClient/java/dev/charles/multigolem/client/modmenu/ModMenuWrappedText.java"));
+        String catalog = Files.readString(Path.of("src/common/java/dev/charles/multigolem/golempedia/GolempediaCatalog.java"));
 
         assertTrue(screen.contains("GolempediaCatalog.entries()"));
         assertTrue(screen.contains("selectedIndex"));

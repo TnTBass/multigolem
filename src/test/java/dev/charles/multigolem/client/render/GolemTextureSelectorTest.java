@@ -66,7 +66,7 @@ class GolemTextureSelectorTest {
             "copper_golem_waxed_oxidized.png"
         )) {
             assertTrue(Files.exists(Path.of(
-                "src/main/resources/assets/multigolem/textures/entity/iron_golem", fileName)), fileName);
+                "src/common/resources/assets/multigolem/textures/entity/iron_golem", fileName)), fileName);
         }
     }
 

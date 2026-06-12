@@ -11,8 +11,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class ServerCustomizationsNetworkingSourceTest {
     @Test
     void serverCustomizationsNetworkingUsesOwnPayloadAndCapabilityGate() throws IOException {
-        String source = Files.readString(Path.of("src/main/java/dev/charles/multigolem/customizations/ServerCustomizationsNetworking.java"));
-        String main = Files.readString(Path.of("src/main/java/dev/charles/multigolem/MultiGolem.java"));
+        String source = Files.readString(Path.of("src/common/java/dev/charles/multigolem/customizations/ServerCustomizationsNetworking.java"));
+        String main = Files.readString(Path.of("src/common/java/dev/charles/multigolem/MultiGolem.java"));
 
         assertTrue(source.contains("PayloadTypeRegistry.clientboundPlay().register(ServerCustomizationsPayload.TYPE"));
         assertTrue(source.contains("ServerPlayConnectionEvents.JOIN"));
@@ -26,8 +26,8 @@ class ServerCustomizationsNetworkingSourceTest {
 
     @Test
     void clientCustomizationsReceiverClearsLifecycleAndStoresPayloadSnapshots() throws IOException {
-        String source = Files.readString(Path.of("src/client/java/dev/charles/multigolem/client/customizations/ServerCustomizationsClient.java"));
-        String client = Files.readString(Path.of("src/client/java/dev/charles/multigolem/client/MultiGolemClient.java"));
+        String source = Files.readString(Path.of("src/commonClient/java/dev/charles/multigolem/client/customizations/ServerCustomizationsClient.java"));
+        String client = Files.readString(Path.of("src/commonClient/java/dev/charles/multigolem/client/MultiGolemClient.java"));
 
         assertTrue(source.contains("ClientPlayNetworking.registerGlobalReceiver(ServerCustomizationsPayload.TYPE"));
         assertTrue(source.contains("STATE.onServerSnapshot(payload.snapshot())"));

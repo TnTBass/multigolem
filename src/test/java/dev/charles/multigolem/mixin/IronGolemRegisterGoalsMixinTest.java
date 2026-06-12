@@ -17,10 +17,10 @@ class IronGolemRegisterGoalsMixinTest {
     @Test
     void targetSelectorComesFromMobAccessorNotIronGolemShadow() throws Exception {
         String mixin = Files.readString(PROJECT_ROOT.resolve(
-            "src/main/java/dev/charles/multigolem/mixin/IronGolemRegisterGoalsMixin.java"));
+            "src/common/java/dev/charles/multigolem/mixin/IronGolemRegisterGoalsMixin.java"));
         String accessor = Files.readString(PROJECT_ROOT.resolve(
-            "src/main/java/dev/charles/multigolem/mixin/MobTargetSelectorAccessor.java"));
-        String mixinsJson = Files.readString(PROJECT_ROOT.resolve("src/main/resources/multigolem.mixins.json"));
+            "src/common/java/dev/charles/multigolem/mixin/MobTargetSelectorAccessor.java"));
+        String mixinsJson = Files.readString(PROJECT_ROOT.resolve("src/fabric/resources/multigolem.mixins.json"));
 
         assertFalse(TARGET_SELECTOR_SHADOW.matcher(mixin).find(),
             "IronGolem does not declare targetSelector in Minecraft 26.1.2; it is inherited from Mob.");

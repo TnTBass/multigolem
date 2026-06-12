@@ -29,8 +29,8 @@ class MultiGolemRegistrationTest {
 
     @Test
     void productionRegistrationUsesCatalogDerivedVariantSets() throws Exception {
-        String multiGolem = Files.readString(Path.of("src/main/java/dev/charles/multigolem/MultiGolem.java"));
-        String creation = Files.readString(Path.of("src/main/java/dev/charles/multigolem/spawn/GolemCreationHandler.java"));
+        String multiGolem = Files.readString(Path.of("src/common/java/dev/charles/multigolem/MultiGolem.java"));
+        String creation = Files.readString(Path.of("src/common/java/dev/charles/multigolem/spawn/GolemCreationHandler.java"));
 
         assertTrue(multiGolem.contains("GolemVariant.spawnEggVariants()"));
         assertTrue(multiGolem.contains("GolemVariant.lootVariants()"));

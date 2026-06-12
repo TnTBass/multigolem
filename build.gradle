@@ -67,7 +67,12 @@ def generatedBuildInfoDir = layout.buildDirectory.dir("generated/resources/build
 
 sourceSets {
 	main {
-		resources.srcDir(generatedBuildInfoDir)
+		java.srcDirs = ["src/common/java", "src/fabric/java"]
+		resources.srcDirs = ["src/common/resources", "src/fabric/resources", generatedBuildInfoDir]
+	}
+	client {
+		java.srcDirs = ["src/commonClient/java", "src/fabricClient/java"]
+		resources.srcDirs = ["src/commonClient/resources", "src/fabricClient/resources"]
 	}
 }
 
@@ -151,7 +156,7 @@ tasks.register("checkChangelog") {
 			mergeBase = gitOutput(["rev-list", "--max-parents=0", "HEAD"]).readLines().first()
 		}
 
-		def generatedTextureOutputPattern = ~/^src\/main\/resources\/assets\/multigolem\/textures\/(entity|item)\/.*\.png$/
+		def generatedTextureOutputPattern = ~/^src\/common\/resources\/assets\/multigolem\/textures\/(entity|item)\/.*\.png$/
 		def changedFiles = new TreeSet<String>()
 		[
 			[args: ["diff", "--name-only", "${mergeBase}...HEAD"], ignoreGeneratedOutputs: false],
@@ -177,7 +182,7 @@ tasks.register("checkChangelog") {
 			return
 		}
 
-		def releasablePattern = ~/^(src\/main\/|build\.gradle|settings\.gradle|gradle\.properties|gradle\/|\.github\/workflows\/|README\.md$)/
+		def releasablePattern = ~/^(src\/(common|commonClient|fabric|fabricClient)\/|build\.gradle|settings\.gradle|gradle\.properties|gradle\/|\.github\/workflows\/|README\.md$)/
 		def releasableFiles = changedFiles.findAll { it ==~ releasablePattern || it.find(releasablePattern) }
 
 		if (releasableFiles.isEmpty()) {
@@ -191,7 +196,7 @@ tasks.register("checkChangelog") {
 			throw new GradleException("Releasable or release-process changes require a CHANGELOG.md or INTERNAL_CHANGELOG.md update under Unreleased.\n\nReleasable files:\n${releasableFiles.join("\n")}")
 		}
 
-		def publicFacingPattern = ~/^(src\/main\/|README\.md$)/
+		def publicFacingPattern = ~/^(src\/(common|commonClient|fabric|fabricClient)\/|README\.md$)/
 		def publicFacingFiles = releasableFiles.findAll { it ==~ publicFacingPattern || it.find(publicFacingPattern) }
 		if (!publicFacingFiles.isEmpty() && !changedFiles.contains("CHANGELOG.md")) {
 			throw new GradleException("Player/server-admin-facing changes require a CHANGELOG.md update, not only INTERNAL_CHANGELOG.md.\n\nPublic-facing files:\n${publicFacingFiles.join("\n")}")
@@ -312,9 +317,9 @@ tasks.register("checkReleaseDocs") {
 	inputs.file("docs/curseforge-listing.md")
 	inputs.file("docs/playtest-checklist.md")
 	inputs.file("docs/playtest.html")
-	inputs.file("src/main/resources/fabric.mod.json")
-	inputs.file("src/main/resources/assets/multigolem/lang/en_us.json")
-	inputs.file("src/main/resources/assets/multigolem/icon.png")
+	inputs.file("src/fabric/resources/fabric.mod.json")
+	inputs.file("src/common/resources/assets/multigolem/lang/en_us.json")
+	inputs.file("src/common/resources/assets/multigolem/icon.png")
 
 	doLast {
 		def python = providers.environmentVariable("PYTHON").getOrElse("python")
@@ -341,13 +346,13 @@ tasks.register("checkUnitTestCompanions") {
 	description = "Requires unit-test companions for pure helper/state classes."
 
 	doLast {
-		def requiredTestFiles = fileTree("src/main/java").matching {
+		def requiredTestFiles = fileTree("src/common/java").matching {
 			include "**/*Config.java"
 			include "**/*Resolver.java"
 		}.files.collect { mainFile ->
 			def relativePath = projectDir.toPath().relativize(mainFile.toPath()).toString().replace(File.separatorChar, '/' as char)
 			def testPath = relativePath
-					.replace("src/main/java/", "src/test/java/")
+					.replace("src/common/java/", "src/test/java/")
 					.replace(".java", "Test.java")
 			file(testPath)
 		}
@@ -458,7 +463,7 @@ tasks.register("genTextures") {
 
     inputs.file("build-inputs/textures/iron_golem.template.png")
     inputs.file("scripts/generate-textures.py")
-    outputs.dir("src/main/resources/assets/multigolem/textures/entity")
+    outputs.dir("src/common/resources/assets/multigolem/textures/entity")
 
     doLast {
         def python = providers.environmentVariable("PYTHON").getOrElse("python")

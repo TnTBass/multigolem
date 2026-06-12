@@ -16,7 +16,7 @@ class MixinRuntimeSafetyTest {
 
     @Test
     void mixinClassesDoNotDeclareNonPrivateStaticHelpers() throws Exception {
-        Path mixinRoot = PROJECT_ROOT.resolve("src/main/java/dev/charles/multigolem/mixin");
+        Path mixinRoot = PROJECT_ROOT.resolve("src/common/java/dev/charles/multigolem/mixin");
         assertTrue(Files.isDirectory(mixinRoot), "mixin source root not found: " + mixinRoot);
         int scanned = 0;
         try (var files = Files.walk(mixinRoot)) {
@@ -32,7 +32,7 @@ class MixinRuntimeSafetyTest {
 
     @Test
     void mixinPackageContainsOnlyMixinEntrypoints() throws Exception {
-        Path mixinRoot = PROJECT_ROOT.resolve("src/main/java/dev/charles/multigolem/mixin");
+        Path mixinRoot = PROJECT_ROOT.resolve("src/common/java/dev/charles/multigolem/mixin");
         assertTrue(Files.isDirectory(mixinRoot), "mixin source root not found: " + mixinRoot);
         int scanned = 0;
         try (var files = Files.walk(mixinRoot)) {
@@ -48,7 +48,7 @@ class MixinRuntimeSafetyTest {
 
     @Test
     void ironGolemHealClientPredictionRunsBeforePermissionDenialSideEffects() throws Exception {
-        Path mixin = PROJECT_ROOT.resolve("src/main/java/dev/charles/multigolem/mixin/IronGolemMixin.java");
+        Path mixin = PROJECT_ROOT.resolve("src/common/java/dev/charles/multigolem/mixin/IronGolemMixin.java");
         String source = Files.readString(mixin);
         int clientGuard = source.indexOf("if (self.level().isClientSide())");
         int denialSideEffect = source.indexOf("if (!permissionAllowed)");

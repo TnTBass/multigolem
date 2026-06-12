@@ -83,9 +83,9 @@ def check(root: Path = ROOT) -> list[str]:
         if missing:
             errors.append(f"{relative} is missing release-doc markers: {', '.join(missing)}")
 
-    mod_json_path = root / "src/main/resources/fabric.mod.json"
+    mod_json_path = root / "src/fabric/resources/fabric.mod.json"
     if not mod_json_path.exists():
-        errors.append("src/main/resources/fabric.mod.json does not exist")
+        errors.append("src/fabric/resources/fabric.mod.json does not exist")
     else:
         mod_json = json.loads(mod_json_path.read_text(encoding="utf-8"))
         icon = mod_json.get("icon")
@@ -100,15 +100,15 @@ def check(root: Path = ROOT) -> list[str]:
             if contact.get(key) != expected:
                 errors.append(f"fabric.mod.json contact.{key} must be {expected}")
 
-    icon_path = root / "src/main/resources/assets/multigolem/icon.png"
+    icon_path = root / "src/common/resources/assets/multigolem/icon.png"
     if not icon_path.exists():
-        errors.append("src/main/resources/assets/multigolem/icon.png does not exist")
+        errors.append("src/common/resources/assets/multigolem/icon.png does not exist")
     elif icon_path.stat().st_size > 256 * 1024:
-        errors.append("src/main/resources/assets/multigolem/icon.png must stay under 256 KiB")
+        errors.append("src/common/resources/assets/multigolem/icon.png must stay under 256 KiB")
 
-    lang_path = root / "src/main/resources/assets/multigolem/lang/en_us.json"
+    lang_path = root / "src/common/resources/assets/multigolem/lang/en_us.json"
     if not lang_path.exists():
-        errors.append("src/main/resources/assets/multigolem/lang/en_us.json does not exist")
+        errors.append("src/common/resources/assets/multigolem/lang/en_us.json does not exist")
     else:
         lang = json.loads(lang_path.read_text(encoding="utf-8"))
         missing_lang = sorted(REQUIRED_LANG_KEYS - set(lang.keys()))

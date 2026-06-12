@@ -30,7 +30,7 @@ class SpawnEggItemDefinitionTest {
 
     @Test
     void ironGolemSpawnEggItemDefinitionMapsEveryMarkedVariantToCustomModel() throws Exception {
-        Path definition = Path.of("src/main/resources/assets/minecraft/items/iron_golem_spawn_egg.json");
+        Path definition = Path.of("src/common/resources/assets/minecraft/items/iron_golem_spawn_egg.json");
         var root = JsonParser.parseString(Files.readString(definition)).getAsJsonObject();
         var cases = root.getAsJsonObject("model").getAsJsonArray("cases");
 
@@ -77,9 +77,9 @@ class SpawnEggItemDefinitionTest {
         for (GolemVariant variant : GolemVariant.spawnEggVariants()) {
             GolemVariantSpec spec = GolemVariantCatalog.require(variant);
 
-            assertTrue(Files.isRegularFile(Path.of("src/main/resources/assets/multigolem/models/item").resolve(spec.spawnEggModelPath())));
-            assertTrue(Files.isRegularFile(Path.of("src/main/resources/assets/multigolem/textures/item").resolve(spec.spawnEggTexturePath())));
-            assertTrue(Files.isRegularFile(Path.of("src/main/resources/assets/multigolem/textures/entity").resolve(spec.entityTexturePath())));
+            assertTrue(Files.isRegularFile(Path.of("src/common/resources/assets/multigolem/models/item").resolve(spec.spawnEggModelPath())));
+            assertTrue(Files.isRegularFile(Path.of("src/common/resources/assets/multigolem/textures/item").resolve(spec.spawnEggTexturePath())));
+            assertTrue(Files.isRegularFile(Path.of("src/common/resources/assets/multigolem/textures/entity").resolve(spec.entityTexturePath())));
         }
     }
 
@@ -88,6 +88,6 @@ class SpawnEggItemDefinitionTest {
         if (parts.length != 2) {
             return Optional.empty();
         }
-        return Optional.of(Path.of("src/main/resources/assets", parts[0], assetKind, parts[1] + extension));
+        return Optional.of(Path.of("src/common/resources/assets", parts[0], assetKind, parts[1] + extension));
     }
 }

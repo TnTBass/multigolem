@@ -100,7 +100,7 @@ class GolempediaCatalogTest {
 
     @Test
     void golempediaDoesNotDependOnServerCustomizationsState() throws IOException {
-        String source = Files.readString(Path.of("src/main/java/dev/charles/multigolem/golempedia/GolempediaCatalog.java"));
+        String source = Files.readString(Path.of("src/common/java/dev/charles/multigolem/golempedia/GolempediaCatalog.java"));
 
         assertTrue(source.contains("GolemVariantCatalog.entries()"));
         assertTrue(source.contains("MultiGolemConfig.defaults()"));
