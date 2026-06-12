@@ -8,4 +8,6 @@
 - Fabric permissions use Fabric API's current permission API.
 - NeoForge permissions use NeoForge's built-in permission API and registered nodes.
 - OP/game-master fallback is not an implicit provider-granted bypass.
+- Fabric fallback: tier create/heal nodes default to allowed, admin bypass defaults to false, and OP is not an implicit provider-granted bypass.
+- NeoForge fallback: match Fabric defaults through registered NeoForge permission nodes unless implementation-time API evidence requires a documented exception.
 - Build outputs are loader-specific jars, never a universal jar.

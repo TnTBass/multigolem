@@ -45,7 +45,7 @@ class MultiGolemPermissionsTest {
     @Test
     void adminBypass_isCheckedBeforeTierNode() {
         List<Call> calls = new ArrayList<>();
-        MultiGolemPermissions.PermissionLookup lookup = (node, defaultValue) -> {
+        MultiGolemPermissions.PermissionLookup lookup = (player, node, defaultValue) -> {
             calls.add(new Call(node, defaultValue));
             return node.equals(MultiGolemPermissions.ADMIN_BYPASS_NODE);
         };
@@ -57,7 +57,7 @@ class MultiGolemPermissionsTest {
     @Test
     void missingProviderOrMissingNode_defaultsToAllow() {
         List<Call> calls = new ArrayList<>();
-        MultiGolemPermissions.PermissionLookup lookup = (node, defaultValue) -> {
+        MultiGolemPermissions.PermissionLookup lookup = (player, node, defaultValue) -> {
             calls.add(new Call(node, defaultValue));
             return defaultValue;
         };
@@ -72,7 +72,7 @@ class MultiGolemPermissionsTest {
 
     @Test
     void zombiePermissionNodesArePermissiveByDefault() {
-        MultiGolemPermissions.PermissionLookup lookup = (node, defaultValue) -> defaultValue;
+        MultiGolemPermissions.PermissionLookup lookup = (player, node, defaultValue) -> defaultValue;
 
         assertTrue(MultiGolemPermissions.canCreate(GolemVariant.ZOMBIE, lookup));
         assertTrue(MultiGolemPermissions.canHeal(GolemVariant.ZOMBIE, lookup));
@@ -82,7 +82,7 @@ class MultiGolemPermissionsTest {
 
     @Test
     void explicitTierDenial_returnsFalseWhenBypassAbsent() {
-        MultiGolemPermissions.PermissionLookup lookup = (node, defaultValue) ->
+        MultiGolemPermissions.PermissionLookup lookup = (player, node, defaultValue) ->
             node.equals(MultiGolemPermissions.ADMIN_BYPASS_NODE) ? false : !node.equals("multigolem.create.diamond");
 
         assertFalse(MultiGolemPermissions.canCreate(GolemVariant.DIAMOND, lookup));
@@ -90,7 +90,7 @@ class MultiGolemPermissionsTest {
 
     @Test
     void clientSideHealPredictionDoesNotCallPermissionProvider() {
-        MultiGolemPermissions.PermissionLookup throwingLookup = (node, defaultValue) -> {
+        MultiGolemPermissions.PermissionLookup throwingLookup = (player, node, defaultValue) -> {
             throw new AssertionError("Client-side prediction must not call Fabric Permissions");
         };
 
