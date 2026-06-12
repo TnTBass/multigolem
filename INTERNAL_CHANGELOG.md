@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Moved Fabric build ownership into a loader-specific Gradle project and renamed Fabric build artifacts with a loader suffix.
 - Reshaped the current Fabric source layout into common, common-client, Fabric, and Fabric-client roots while preserving the existing Fabric build.
 - Added multiloader planning documents and a loader-neutral common source scan for the upcoming Fabric-preserving NeoForge port.
 - Fixed the release workflow changelog extractor so version sections with `+mc...` metadata and dated headings publish explicit release notes instead of GitHub's generated fallback notes.

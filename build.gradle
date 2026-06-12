@@ -1,11 +1,10 @@
 plugins {
-	id 'net.fabricmc.fabric-loom' version "${loom_version}"
-	id 'maven-publish'
+	id 'base'
 }
-
-version = project.mod_version
-group = project.maven_group
-base.archivesName = project.archives_base_name
+allprojects {
+	version = rootProject.mod_version
+	group = rootProject.maven_group
+}
 
 def gitShortCommit = {
 	try {
@@ -20,100 +19,7 @@ def gitShortCommit = {
 		return null
 	}
 }
-
-repositories {
-	// Add repositories to retrieve artifacts from in here.
-	// You should only use this when depending on other mods because
-	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
-	// for more information about repositories.
-	mavenCentral()
-	maven {
-		name = "Terraformers"
-		url = "https://maven.terraformersmc.com/"
-	}
-}
-
-loom {
-	splitEnvironmentSourceSets()
-
-	mods {
-		"multigolem" {
-			sourceSet sourceSets.main
-			sourceSet sourceSets.client
-		}
-	}
-
-}
-
-dependencies {
-	// To change the versions see the gradle.properties file
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	
-	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-	// Fabric API. This is technically optional, but you probably want it anyway.
-	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-	implementation include("me.lucko:fabric-permissions-api:0.7.0")
-	compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
-
-	testImplementation "org.junit.jupiter:junit-jupiter:6.0.3"
-	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
-	testImplementation "org.mockito:mockito-core:5.14.2"
-	testImplementation "net.bytebuddy:byte-buddy-agent:1.14.18"
-}
-
-def generatedBuildInfoDir = layout.buildDirectory.dir("generated/resources/buildInfo")
-
-sourceSets {
-	main {
-		java.srcDirs = ["src/common/java", "src/fabric/java"]
-		resources.srcDirs = ["src/common/resources", "src/fabric/resources", generatedBuildInfoDir]
-	}
-	client {
-		java.srcDirs = ["src/commonClient/java", "src/fabricClient/java"]
-		resources.srcDirs = ["src/commonClient/resources", "src/fabricClient/resources"]
-	}
-}
-
-tasks.register("generateBuildInfo") {
-	inputs.property("build", providers.provider { gitShortCommit() ?: "" })
-	outputs.dir(generatedBuildInfoDir)
-
-	doLast {
-		def buildId = gitShortCommit()
-		def outputFile = generatedBuildInfoDir.get().file("multigolem-build.properties").asFile
-		outputFile.parentFile.mkdirs()
-		if (buildId == null) {
-			outputFile.text = "# Build metadata unavailable.${System.lineSeparator()}"
-		} else {
-			outputFile.text = "build=${buildId}${System.lineSeparator()}"
-		}
-	}
-}
-
-processResources {
-	def version = project.version
-	inputs.property "version", version
-
-	filesMatching("fabric.mod.json") {
-		expand "version": version
-	}
-}
-
-tasks.withType(JavaCompile).configureEach {
-	it.options.release = 25
-}
-
-tasks.withType(Test).configureEach {
-    useJUnitPlatform()
-    systemProperty "multigolem.version", project.version.toString()
-    doFirst {
-        systemProperty "multigolem.build", gitShortCommit() ?: ""
-        def agentJar = configurations.testRuntimeClasspath.find { it.name.contains('byte-buddy-agent') }
-        if (agentJar) jvmArgs "-javaagent:${agentJar}"
-    }
-}
+ext.gitShortCommit = gitShortCommit
 
 tasks.register("checkChangelog") {
 	group = "verification"
@@ -431,30 +337,12 @@ tasks.register("releaseReminder") {
 
 tasks.named("check") {
 	// V4-specific guard: keep reviewed handoff artifacts intact through the V4 branch lifecycle.
-	dependsOn("checkChangelog", "checkWrapperChecksum", "checkReleaseNotesStyle", "checkV4PlanningHandoff", "checkReleaseDocs", "checkUnitTestCompanions", "checkCommonSourceSetsLoaderNeutral")
+	dependsOn(":fabric:test", ":fabric:build", "checkChangelog", "checkWrapperChecksum", "checkReleaseNotesStyle", "checkV4PlanningHandoff", "checkReleaseDocs", "checkUnitTestCompanions", "checkCommonSourceSetsLoaderNeutral")
 }
 
 tasks.named("build") {
+	dependsOn(":fabric:build")
 	finalizedBy("releaseReminder")
-}
-
-java {
-	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-	// if it is present.
-	// If you remove this line, sources will not be generated.
-	withSourcesJar()
-
-	sourceCompatibility = JavaVersion.VERSION_25
-	targetCompatibility = JavaVersion.VERSION_25
-}
-
-jar {
-	def projectName = project.name
-	inputs.property "projectName", projectName
-
-	from("LICENSE") {
-		rename { "${it}_$projectName"}
-	}
 }
 
 tasks.register("genTextures") {
@@ -483,24 +371,4 @@ tasks.register("genTextures") {
             throw new GradleException("genTextures: scripts/generate-textures.py failed with exit ${result.result.get().exitValue}")
         }
     }
-}
-
-processResources.dependsOn("genTextures", "generateBuildInfo")
-tasks.named("sourcesJar") { dependsOn("genTextures", "generateBuildInfo") }
-
-// configure the maven publication
-publishing {
-	publications {
-		create("mavenJava", MavenPublication) {
-			from components.java
-		}
-	}
-
-	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-	repositories {
-		// Add repositories to publish to here.
-		// Notice: This block does NOT have the same function as the block in the top level.
-		// The repositories here will be used for publishing your artifact, not for
-		// retrieving dependencies.
-	}
 }

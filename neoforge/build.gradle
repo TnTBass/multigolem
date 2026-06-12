@@ -1,0 +1,12 @@
+plugins {
+	id 'base'
+}
+
+base.archivesName = "multigolem-${project.version}-neoforge"
+
+ext.neoforgeSourceRoots = [
+	mainJava: "../src/common/java;../src/neoforge/java",
+	mainResources: "../src/common/resources;../src/neoforge/resources",
+	clientJava: "../src/commonClient/java;../src/neoforgeClient/java",
+	clientResources: "../src/commonClient/resources;../src/neoforgeClient/resources"
+]

@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class MultiGolemModMenuSourceTest {
     @Test
     void modMenuIsOptionalAndClientOnly() throws IOException {
-        String build = Files.readString(Path.of("build.gradle"));
+        String build = Files.readString(Path.of("fabric/build.gradle"));
         String metadata = Files.readString(Path.of("src/fabric/resources/fabric.mod.json"));
 
         assertTrue(build.contains("compileOnly \"com.terraformersmc:modmenu:${project.modmenu_version}\""));
