@@ -19,7 +19,7 @@ def gitShortCommit = {
 		return null
 	}
 }
-ext.gitShortCommit = gitShortCommit
+ext.gitShortCommit = { -> gitShortCommit() }
 
 tasks.register("checkChangelog") {
 	group = "verification"
