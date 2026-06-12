@@ -1,0 +1,27 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="MIT"
+issueTrackerURL="https://github.com/Explosive-Cloud/MultiGolem/issues"
+
+[[mods]]
+modId="multigolem"
+version="${version}"
+displayName="MultiGolem"
+displayURL="https://modrinth.com/mod/multigolem"
+logoFile="assets/multigolem/icon.png"
+authors="Charles"
+description='''Adds Copper, Gold, Emerald, Diamond, Netherite, and zombie golem variants.'''
+
+[[dependencies.multigolem]]
+modId="neoforge"
+type="required"
+versionRange="[26.1.2.75,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.multigolem]]
+modId="minecraft"
+type="required"
+versionRange="[26.1.2,26.2)"
+ordering="NONE"
+side="BOTH"

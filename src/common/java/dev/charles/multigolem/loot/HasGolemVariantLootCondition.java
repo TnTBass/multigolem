@@ -20,6 +20,10 @@ public record HasGolemVariantLootCondition(GolemVariant variant) implements Loot
     @Override
     public MapCodec<HasGolemVariantLootCondition> codec() { return MAP_CODEC; }
 
+    public static LootItemCondition.Builder builder(GolemVariant variant) {
+        return () -> new HasGolemVariantLootCondition(variant);
+    }
+
     @Override
     public boolean test(LootContext ctx) {
         Entity e = ctx.getOptionalParameter(LootContextParams.THIS_ENTITY);

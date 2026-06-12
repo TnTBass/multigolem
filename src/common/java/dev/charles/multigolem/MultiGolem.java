@@ -51,7 +51,7 @@ public final class MultiGolem {
 
     public static void addVariantPool(LootTable.Builder builder, GolemVariant variant, Item drop, int min, int max) {
         builder.withPool(LootPool.lootPool()
-            .when(new HasGolemVariantLootCondition(variant))
+            .when(HasGolemVariantLootCondition.builder(variant))
             .add(LootItem.lootTableItem(drop)
                 .apply(SetItemCountFunction.setCount(UniformGenerator.between(min, max)))));
     }

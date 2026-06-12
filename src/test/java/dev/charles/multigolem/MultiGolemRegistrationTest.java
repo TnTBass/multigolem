@@ -34,6 +34,7 @@ class MultiGolemRegistrationTest {
 
         assertTrue(multiGolem.contains("GolemVariant.spawnEggVariants()"));
         assertTrue(multiGolem.contains("GolemVariant.lootVariants()"));
+        assertTrue(multiGolem.contains("HasGolemVariantLootCondition.builder(variant)"));
         assertTrue(creation.contains("GolemVariant.multiGolemPlayerBuildableVariants()"));
     }
 

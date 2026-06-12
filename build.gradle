@@ -88,7 +88,7 @@ tasks.register("checkChangelog") {
 			return
 		}
 
-		def releasablePattern = ~/^(src\/(common|commonClient|fabric|fabricClient)\/|build\.gradle|settings\.gradle|gradle\.properties|gradle\/|\.github\/workflows\/|README\.md$)/
+		def releasablePattern = ~/^(src\/(common|commonClient|fabric|fabricClient|neoforge|neoforgeClient)\/|build\.gradle|settings\.gradle|gradle\.properties|gradle\/|\.github\/workflows\/|README\.md$)/
 		def releasableFiles = changedFiles.findAll { it ==~ releasablePattern || it.find(releasablePattern) }
 
 		if (releasableFiles.isEmpty()) {
@@ -361,11 +361,11 @@ tasks.register("releaseReminder") {
 
 tasks.named("check") {
 	// V4-specific guard: keep reviewed handoff artifacts intact through the V4 branch lifecycle.
-	dependsOn(":fabric:test", ":fabric:build", "checkChangelog", "checkWrapperChecksum", "checkReleaseNotesStyle", "checkV4PlanningHandoff", "checkReleaseDocs", "checkMultiloaderReleaseSources", "checkUnitTestCompanions", "checkCommonSourceSetsLoaderNeutral")
+	dependsOn(":fabric:test", ":fabric:build", ":neoforge:build", "checkChangelog", "checkWrapperChecksum", "checkReleaseNotesStyle", "checkV4PlanningHandoff", "checkReleaseDocs", "checkMultiloaderReleaseSources", "checkUnitTestCompanions", "checkCommonSourceSetsLoaderNeutral")
 }
 
 tasks.named("build") {
-	dependsOn(":fabric:build")
+	dependsOn(":fabric:build", ":neoforge:build")
 	finalizedBy("releaseReminder")
 }
 

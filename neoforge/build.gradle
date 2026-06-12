@@ -1,12 +1,105 @@
 plugins {
-	id 'base'
+	id 'net.neoforged.moddev' version "${moddevgradle_version}"
+	id 'maven-publish'
 }
 
 base.archivesName = "multigolem-${project.version}-neoforge"
 
-ext.neoforgeSourceRoots = [
-	mainJava: "../src/common/java;../src/neoforge/java",
-	mainResources: "../src/common/resources;../src/neoforge/resources",
-	clientJava: "../src/commonClient/java;../src/neoforgeClient/java",
-	clientResources: "../src/commonClient/resources;../src/neoforgeClient/resources"
-]
+repositories {
+	mavenCentral()
+}
+
+def generatedBuildInfoDir = layout.buildDirectory.dir("generated/resources/buildInfo")
+
+sourceSets {
+	main {
+		java.srcDirs = ["../src/common/java", "../src/neoforge/java"]
+		resources.srcDirs = ["../src/common/resources", "../src/neoforge/resources", generatedBuildInfoDir]
+	}
+	client {
+		java.srcDirs = ["../src/commonClient/java", "../src/neoforgeClient/java"]
+		resources.srcDirs = ["../src/commonClient/resources", "../src/neoforgeClient/resources"]
+		compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+		runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+	}
+}
+
+neoForge {
+	version = project.neoforge_version
+
+	mods {
+		"multigolem" {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+}
+
+tasks.register("generateBuildInfo") {
+	inputs.property("build", providers.provider { rootProject.ext.gitShortCommit() ?: "" })
+	outputs.dir(generatedBuildInfoDir)
+
+	doLast {
+		def buildId = rootProject.ext.gitShortCommit()
+		def outputFile = generatedBuildInfoDir.get().file("multigolem-build.properties").asFile
+		outputFile.parentFile.mkdirs()
+		if (buildId == null) {
+			outputFile.text = "# Build metadata unavailable.${System.lineSeparator()}"
+		} else {
+			outputFile.text = "build=${buildId}${System.lineSeparator()}"
+		}
+	}
+}
+
+processResources {
+	def version = project.version
+	inputs.property "version", version
+
+	filesMatching("META-INF/neoforge.mods.toml") {
+		expand "version": version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 25
+}
+
+java {
+	withSourcesJar()
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}
+
+jar {
+	def projectName = project.name
+	inputs.property "projectName", projectName
+
+	from(sourceSets.client.output)
+	from(rootProject.file("LICENSE")) {
+		rename { "${it}_${projectName}"}
+	}
+}
+
+tasks.withType(AbstractArchiveTask).configureEach {
+	archiveVersion = ""
+}
+
+tasks.named("processResources") {
+	dependsOn(rootProject.tasks.named("genTextures"), "generateBuildInfo")
+}
+
+tasks.named("sourcesJar") {
+	dependsOn(rootProject.tasks.named("genTextures"), "generateBuildInfo")
+	from(sourceSets.client.allSource)
+}
+
+publishing {
+	publications {
+		create("mavenJava", MavenPublication) {
+			from components.java
+		}
+	}
+
+	repositories {
+	}
+}

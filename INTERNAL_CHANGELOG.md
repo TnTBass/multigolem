@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added a NeoForge Gradle skeleton with metadata-only entrypoints and loader-suffixed NeoForge artifacts.
 - Added a release-source gate for loader-suffixed Fabric and NeoForge artifacts across GitHub Release, Modrinth, and CurseForge paths.
 - Moved Fabric build ownership into a loader-specific Gradle project and renamed Fabric build artifacts with a loader suffix.
 - Reshaped the current Fabric source layout into common, common-client, Fabric, and Fabric-client roots while preserving the existing Fabric build.
