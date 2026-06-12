@@ -10,6 +10,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NeoForgeSkeletonSourceTest {
+    // The Fabric test task sets workingDir to rootProject.projectDir; keep these
+    // paths repo-root relative to match the existing source-text tests.
     @Test
     void neoforgeCoordinatesAreRecordedForMinecraft2612() throws IOException {
         String properties = Files.readString(Path.of("gradle.properties"));
