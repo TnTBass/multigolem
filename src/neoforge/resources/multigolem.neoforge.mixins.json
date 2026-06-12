@@ -1,0 +1,23 @@
+{
+  "required": true,
+  "package": "dev.charles.multigolem.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "mixins": [
+    "EntityMixin",
+    "IronGolemMixin",
+    "CarvedPumpkinBlockMixin",
+    "BlockItemMixin",
+    "LivingEntityMixin",
+    "GolemTargetingMixin",
+    "MobTargetSelectorAccessor",
+    "IronGolemRegisterGoalsMixin",
+    "IronGolemAttackMixin",
+    "VillagerMixin",
+    "BaseSpawnerAccessor",
+    "BaseSpawnerMixin",
+    "SpawnEggItemMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
