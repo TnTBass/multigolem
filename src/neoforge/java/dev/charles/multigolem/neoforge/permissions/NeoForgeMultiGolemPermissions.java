@@ -13,23 +13,30 @@ import net.neoforged.neoforge.server.permission.nodes.PermissionTypes;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class NeoForgeMultiGolemPermissions {
     private static final Map<String, PermissionNode<Boolean>> NODE_MAP = createNodes();
     private static final List<PermissionNode<?>> NODES = List.copyOf(NODE_MAP.values());
-    private static volatile boolean registered;
+    private static final AtomicBoolean registered = new AtomicBoolean();
 
     private NeoForgeMultiGolemPermissions() {}
 
     public static void register() {
-        if (registered) {
+        if (!registered.compareAndSet(false, true)) {
             return;
         }
-        registered = true;
         NeoForge.EVENT_BUS.addListener(NeoForgeMultiGolemPermissions::registerNodes);
         MultiGolemPermissions.registerLookup((player, node, defaultValue) -> {
             PermissionNode<Boolean> permissionNode = nodeFor(node);
-            return permissionNode == null ? defaultValue : PermissionAPI.getPermission(player, permissionNode);
+            if (permissionNode == null || PermissionAPI.getActivePermissionHandler() == null) {
+                return defaultValue;
+            }
+            try {
+                return PermissionAPI.getPermission(player, permissionNode);
+            } catch (RuntimeException ignored) {
+                return defaultValue;
+            }
         });
     }
 

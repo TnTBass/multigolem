@@ -30,7 +30,9 @@ class NeoForgePermissionsSourceTest {
         assertTrue(source.contains("net.neoforged.neoforge.server.permission.nodes.PermissionNode"));
         assertTrue(source.contains("net.neoforged.neoforge.server.permission.nodes.PermissionTypes"));
         assertTrue(source.contains("event.addNodes(NODES);"));
+        assertTrue(source.contains("PermissionAPI.getActivePermissionHandler() == null"));
         assertTrue(source.contains("PermissionAPI.getPermission(player, permissionNode)"));
+        assertTrue(source.contains("catch (RuntimeException ignored)"));
         assertTrue(source.contains("MultiGolemPermissions.registerLookup"));
         assertFalse(source.contains("net.fabricmc"));
         assertFalse(source.contains("me.lucko.fabric"));
@@ -44,6 +46,8 @@ class NeoForgePermissionsSourceTest {
         assertTrue(source.contains("MultiGolemPermissionNodes.ADMIN_BYPASS"));
         assertTrue(source.contains("MultiGolemPermissionNodes.defaultAllowed(nodeName)"));
         assertTrue(source.contains("Map<String, PermissionNode<Boolean>>"));
+        assertTrue(source.contains("AtomicBoolean"));
+        assertTrue(source.contains("registered.compareAndSet(false, true)"));
 
         for (String variant : VARIANTS) {
             assertTrue(source.contains("MultiGolemPermissionNodes.create(GolemVariant." + variant + ")"));
