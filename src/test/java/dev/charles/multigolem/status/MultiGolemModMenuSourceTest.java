@@ -25,12 +25,12 @@ class MultiGolemModMenuSourceTest {
         String entrypointsBlock = metadata.substring(entrypointsStart, dependsStart);
         assertFalse(dependsBlock.contains("\"modmenu\""), "ModMenu must not be a runtime dependency");
         assertTrue(entrypointsBlock.contains("\"modmenu\""));
-        assertTrue(metadata.contains("dev.charles.multigolem.client.modmenu.MultiGolemModMenu"));
+        assertTrue(metadata.contains("dev.charles.multigolem.fabric.client.modmenu.FabricMultiGolemModMenu"));
     }
 
     @Test
     void modMenuHubShowsRequiredActionsAndTopRightStatusSquare() throws IOException {
-        String api = Files.readString(Path.of("src/commonClient/java/dev/charles/multigolem/client/modmenu/MultiGolemModMenu.java"));
+        String api = Files.readString(Path.of("src/fabricClient/java/dev/charles/multigolem/fabric/client/modmenu/FabricMultiGolemModMenu.java"));
         String screen = Files.readString(Path.of("src/commonClient/java/dev/charles/multigolem/client/modmenu/MultiGolemStatusScreen.java"));
         String widget = Files.readString(Path.of("src/commonClient/java/dev/charles/multigolem/client/modmenu/MultiGolemStatusWidget.java"));
 

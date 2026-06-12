@@ -431,7 +431,7 @@ tasks.register("releaseReminder") {
 
 tasks.named("check") {
 	// V4-specific guard: keep reviewed handoff artifacts intact through the V4 branch lifecycle.
-	dependsOn("checkChangelog", "checkWrapperChecksum", "checkReleaseNotesStyle", "checkV4PlanningHandoff", "checkReleaseDocs", "checkUnitTestCompanions")
+	dependsOn("checkChangelog", "checkWrapperChecksum", "checkReleaseNotesStyle", "checkV4PlanningHandoff", "checkReleaseDocs", "checkUnitTestCompanions", "checkCommonSourceSetsLoaderNeutral")
 }
 
 tasks.named("build") {

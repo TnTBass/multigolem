@@ -25,7 +25,7 @@ class MultiGolemStatusIntegrationSourceTest {
     @Test
     void clientJoinDisconnectAndTickTimeoutUpdateStatusState() throws IOException {
         String source = Files.readString(Path.of("src/fabricClient/java/dev/charles/multigolem/fabric/client/status/FabricMultiGolemStatusClient.java"));
-        String client = Files.readString(Path.of("src/commonClient/java/dev/charles/multigolem/client/MultiGolemClient.java"));
+        String client = Files.readString(Path.of("src/fabricClient/java/dev/charles/multigolem/fabric/client/MultiGolemFabricClient.java"));
         String status = Files.readString(Path.of("src/common/java/dev/charles/multigolem/status/MultiGolemStatus.java"));
 
         assertTrue(source.contains("ClientPlayConnectionEvents.JOIN"), "client join should enter unknown status");

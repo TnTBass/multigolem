@@ -27,7 +27,7 @@ class ServerCustomizationsNetworkingSourceTest {
     @Test
     void clientCustomizationsReceiverClearsLifecycleAndStoresPayloadSnapshots() throws IOException {
         String source = Files.readString(Path.of("src/fabricClient/java/dev/charles/multigolem/fabric/client/customizations/FabricServerCustomizationsClient.java"));
-        String client = Files.readString(Path.of("src/commonClient/java/dev/charles/multigolem/client/MultiGolemClient.java"));
+        String client = Files.readString(Path.of("src/fabricClient/java/dev/charles/multigolem/fabric/client/MultiGolemFabricClient.java"));
 
         assertTrue(source.contains("ClientPlayNetworking.registerGlobalReceiver(ServerCustomizationsPayload.TYPE"));
         assertTrue(source.contains("ServerCustomizationsClient.state().onServerSnapshot(payload.snapshot())"));

@@ -21,10 +21,10 @@
       "dev.charles.multigolem.fabric.MultiGolemFabric"
     ],
     "client": [
-      "dev.charles.multigolem.client.MultiGolemClient"
+      "dev.charles.multigolem.fabric.client.MultiGolemFabricClient"
     ],
     "modmenu": [
-      "dev.charles.multigolem.client.modmenu.MultiGolemModMenu"
+      "dev.charles.multigolem.fabric.client.modmenu.FabricMultiGolemModMenu"
     ]
   },
   "mixins": [
