@@ -104,6 +104,10 @@ gh release create "${GITHUB_REF_NAME}" "build/libs/multigolem-${version}.jar" "b
         curseforge = """
 param([string] $Loader = "fabric", [string] $JarPath = "")
 $JarPath = "$Loader/build/libs/multigolem-$Version-$Loader.jar"
+$relationsProjects = @()
+if ($relationsProjects.Count -gt 0) {
+    $metadata["relations"] = @{ projects = $relationsProjects }
+}
 $metadata = @{
     relations = @{
         projects = @()
@@ -114,6 +118,21 @@ $metadata = @{
         errors = checker.check(self.write_repo(curseforge=curseforge))
 
         self.assertIn("empty CurseForge relations.projects", "\n".join(errors))
+
+    def test_fails_when_modrinth_script_missing_loader_param(self):
+        checker = load_checker()
+        modrinth = """
+param(
+    [string] $JarPath = "",
+    [string] $SourcesJarPath = ""
+)
+$JarPath = "fabric/build/libs/multigolem-$Version-fabric.jar"
+$SourcesJarPath = "fabric/build/libs/multigolem-$Version-fabric-sources.jar"
+"""
+
+        errors = checker.check(self.write_repo(modrinth=modrinth))
+
+        self.assertIn("Modrinth upload script must accept a loader argument", "\n".join(errors))
 
     def test_passes_on_separate_fabric_and_neoforge_upload_metadata(self):
         checker = load_checker()
