@@ -37,6 +37,8 @@ class NeoForgeAttachmentSourceTest {
         assertTrue(source.contains("GolemVariant.STREAM_CODEC"));
         assertTrue(source.contains("GolemSpawnOrigin.CODEC.fieldOf(\"value\")"));
         assertTrue(source.contains("GolemAbilityState.CODEC.fieldOf(\"value\")"));
+        assertTrue(source.contains("private static final GolemAbilityState FRESH_ABILITY_STATE = GolemAbilityState.fresh();"));
+        assertTrue(source.contains("state -> !FRESH_ABILITY_STATE.equals(state)"));
         assertTrue(source.contains("entity.syncData(IDENTITY);"));
         assertTrue(source.contains("entity.syncData(VARIANT);"));
     }

@@ -17,6 +17,8 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import java.util.Optional;
 
 public final class NeoForgeGolemAttachments {
+    private static final GolemAbilityState FRESH_ABILITY_STATE = GolemAbilityState.fresh();
+
     private static final DeferredRegister<AttachmentType<?>> ATTACHMENTS =
         DeferredRegister.create(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, MultiGolem.MOD_ID);
 
@@ -39,7 +41,7 @@ public final class NeoForgeGolemAttachments {
 
     private static final DeferredHolder<AttachmentType<?>, AttachmentType<GolemAbilityState>> ABILITY_STATE =
         ATTACHMENTS.register("ability_state", () -> AttachmentType.builder(GolemAbilityState::fresh)
-            .serialize(GolemAbilityState.CODEC.fieldOf("value"), state -> !GolemAbilityState.fresh().equals(state))
+            .serialize(GolemAbilityState.CODEC.fieldOf("value"), state -> !FRESH_ABILITY_STATE.equals(state))
             .build());
 
     private NeoForgeGolemAttachments() {}
