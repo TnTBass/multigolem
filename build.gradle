@@ -361,6 +361,33 @@ tasks.register("checkUnitTestCompanions") {
 	}
 }
 
+tasks.register("checkCommonSourceSetsLoaderNeutral") {
+	group = "verification"
+	description = "Prevents loader APIs from leaking into common multiloader source roots."
+
+	doLast {
+		def roots = ["src/common", "src/commonClient"].collect { file(it) }.findAll { it.exists() }
+		if (roots.isEmpty()) {
+			logger.lifecycle("No multiloader common roots yet; loader-neutral scan skipped.")
+			return
+		}
+		def forbidden = ~/(?m)^\s*import\s+(net\.fabricmc|net\.neoforged|com\.terraformersmc\.modmenu|me\.lucko\.fabric)\./
+		def offenders = []
+		roots.each { root ->
+			fileTree(root).matching { include "**/*.java" }.files.each { source ->
+				def text = source.getText("UTF-8")
+				if ((text =~ forbidden).find()) {
+					offenders.add(projectDir.toPath().relativize(source.toPath()).toString().replace(File.separatorChar, '/' as char))
+				}
+			}
+		}
+		if (!offenders.isEmpty()) {
+			throw new GradleException("Common source roots contain loader-specific imports:\n${offenders.join("\n")}")
+		}
+		logger.lifecycle("Common source-set loader-neutral scan passed.")
+	}
+}
+
 tasks.register("releaseReminder") {
 	group = "verification"
 	description = "Prints a release reminder when Unreleased changelog entries exist."

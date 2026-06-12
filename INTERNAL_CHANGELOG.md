@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added multiloader planning documents and a loader-neutral common source scan for the upcoming Fabric-preserving NeoForge port.
 - Fixed the release workflow changelog extractor so version sections with `+mc...` metadata and dated headings publish explicit release notes instead of GitHub's generated fallback notes.
 - Implemented the reviewed Zombie Golem design without starting Redstone/Lapis or unrelated golem work.
 - Fixed the release changelog gate so CI ignores regenerated item texture outputs from the spawn egg texture generator.
