@@ -51,7 +51,8 @@ class NeoForgeEventsSourceTest {
         String metadata = Files.readString(Path.of("src/neoforge/resources/META-INF/neoforge.mods.toml"));
         String mixins = Files.readString(Path.of("src/neoforge/resources/multigolem.neoforge.mixins.json"));
 
-        assertTrue(metadata.contains("mixins=[\"multigolem.neoforge.mixins.json\"]"));
+        assertTrue(metadata.contains("\"multigolem.neoforge.mixins.json\""));
+        assertTrue(metadata.contains("\"multigolem.neoforge.client.mixins.json\""));
         assertTrue(mixins.contains("\"package\": \"dev.charles.multigolem.mixin\""));
         assertTrue(mixins.contains("\"EntityMixin\""));
         assertTrue(mixins.contains("\"IronGolemMixin\""));

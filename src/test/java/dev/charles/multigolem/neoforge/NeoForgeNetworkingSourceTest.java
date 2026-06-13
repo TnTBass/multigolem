@@ -40,21 +40,44 @@ class NeoForgeNetworkingSourceTest {
     }
 
     @Test
-    void neoforgeClientRegistersPayloadReceiversWithoutRenderHooks() throws IOException {
+    void neoforgeClientRegistersPayloadReceiversAndLifecycleHooks() throws IOException {
         String source = readSource(
             "src/neoforgeClient/java/dev/charles/multigolem/neoforge/client/network/NeoForgeMultiGolemClientNetworking.java");
         String client = readSource(
             "src/neoforgeClient/java/dev/charles/multigolem/neoforge/client/MultiGolemNeoForgeClient.java");
 
         assertTrue(source.contains("RegisterClientPayloadHandlersEvent"));
+        assertTrue(source.contains("NeoForge.EVENT_BUS.addListener(NeoForgeMultiGolemClientNetworking::onClientJoin);"));
+        assertTrue(source.contains("NeoForge.EVENT_BUS.addListener(NeoForgeMultiGolemClientNetworking::onClientDisconnect);"));
+        assertTrue(source.contains("NeoForge.EVENT_BUS.addListener(NeoForgeMultiGolemClientNetworking::onClientTick);"));
+        assertTrue(source.contains("NeoForge.EVENT_BUS.addListener(NeoForgeMultiGolemClientNetworking::onClientStopping);"));
         assertTrue(source.contains("event.register(MultiGolemStatusPayload.TYPE"));
         assertTrue(source.contains("event.register(ServerCustomizationsPayload.TYPE"));
+        assertTrue(source.contains("context.enqueueWork(() -> MultiGolemStatus.onServerStatus(payload.serverStatus()))"));
+        assertTrue(source.contains("context.enqueueWork(() -> ServerCustomizationsClient.state().onServerSnapshot(payload.snapshot()))"));
         assertTrue(source.contains("MultiGolemStatus.onServerStatus(payload.serverStatus())"));
         assertTrue(source.contains("ServerCustomizationsClient.state().onServerSnapshot(payload.snapshot())"));
+        assertTrue(source.contains("MultiGolemStatus.onClientJoin()"));
+        assertTrue(source.contains("MultiGolemStatus.onClientDisconnect()"));
+        assertTrue(source.contains("MultiGolemStatus.tickClientStatus()"));
+        assertTrue(source.contains("ServerCustomizationsClient.state().onJoin()"));
+        assertTrue(source.contains("ServerCustomizationsClient.state().onDisconnect()"));
+        assertTrue(source.contains("ServerCustomizationsClient.state().tick()"));
         assertTrue(client.contains("NeoForgeMultiGolemClientNetworking.register(modBus);"));
         assertFalse(source.contains("net.fabricmc"));
-        assertFalse(source.contains("render"));
-        assertFalse(source.contains("mixin"));
+    }
+
+    @Test
+    void neoforgeClientRegistersRenderStateMixins() throws IOException {
+        String metadata = readSource("src/neoforge/resources/META-INF/neoforge.mods.toml");
+        String clientMixins = readSource("src/neoforgeClient/resources/multigolem.neoforge.client.mixins.json");
+
+        assertTrue(metadata.contains("mixins=[\"multigolem.neoforge.mixins.json\", \"multigolem.neoforge.client.mixins.json\"]"));
+        assertTrue(clientMixins.contains("\"package\": \"dev.charles.multigolem.client.mixin\""));
+        assertTrue(clientMixins.contains("\"environment\": \"client\""));
+        assertTrue(clientMixins.contains("\"IronGolemRenderStateExtensionMixin\""));
+        assertTrue(clientMixins.contains("\"IronGolemRenderStateMixin\""));
+        assertTrue(clientMixins.contains("\"IronGolemRendererMixin\""));
     }
 
     private static String readSource(String path) throws IOException {

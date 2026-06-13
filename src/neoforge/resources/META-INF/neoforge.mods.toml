@@ -2,7 +2,7 @@ modLoader="javafml"
 loaderVersion="[1,)"
 license="MIT"
 issueTrackerURL="https://github.com/Explosive-Cloud/MultiGolem/issues"
-mixins=["multigolem.neoforge.mixins.json"]
+mixins=["multigolem.neoforge.mixins.json", "multigolem.neoforge.client.mixins.json"]
 
 [[mods]]
 modId="multigolem"
