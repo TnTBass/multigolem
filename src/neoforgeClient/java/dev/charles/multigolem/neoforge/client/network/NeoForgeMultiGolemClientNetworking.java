@@ -12,6 +12,8 @@ import net.neoforged.neoforge.client.network.event.RegisterClientPayloadHandlers
 import net.neoforged.neoforge.common.NeoForge;
 
 public final class NeoForgeMultiGolemClientNetworking {
+    private static volatile boolean connected;
+
     private NeoForgeMultiGolemClientNetworking() {
     }
 
@@ -33,13 +35,13 @@ public final class NeoForgeMultiGolemClientNetworking {
     }
 
     private static void onClientJoin(ClientPlayerNetworkEvent.LoggingIn event) {
+        connected = true;
         MultiGolemStatus.onClientJoin();
         ServerCustomizationsClient.state().onJoin();
     }
 
     private static void onClientDisconnect(ClientPlayerNetworkEvent.LoggingOut event) {
-        MultiGolemStatus.onClientDisconnect();
-        ServerCustomizationsClient.state().onDisconnect();
+        disconnectClientState();
     }
 
     private static void onClientTick(ClientTickEvent.Post event) {
@@ -48,6 +50,14 @@ public final class NeoForgeMultiGolemClientNetworking {
     }
 
     private static void onClientStopping(ClientStoppingEvent event) {
+        disconnectClientState();
+    }
+
+    private static void disconnectClientState() {
+        if (!connected) {
+            return;
+        }
+        connected = false;
         MultiGolemStatus.onClientDisconnect();
         ServerCustomizationsClient.state().onDisconnect();
     }

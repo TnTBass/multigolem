@@ -55,8 +55,10 @@ class NeoForgeNetworkingSourceTest {
         assertTrue(source.contains("event.register(ServerCustomizationsPayload.TYPE"));
         assertTrue(source.contains("context.enqueueWork(() -> MultiGolemStatus.onServerStatus(payload.serverStatus()))"));
         assertTrue(source.contains("context.enqueueWork(() -> ServerCustomizationsClient.state().onServerSnapshot(payload.snapshot()))"));
-        assertTrue(source.contains("MultiGolemStatus.onServerStatus(payload.serverStatus())"));
-        assertTrue(source.contains("ServerCustomizationsClient.state().onServerSnapshot(payload.snapshot())"));
+        assertTrue(source.contains("private static volatile boolean connected;"));
+        assertTrue(source.contains("connected = true;"));
+        assertTrue(source.contains("disconnectClientState();"));
+        assertTrue(source.contains("if (!connected)"));
         assertTrue(source.contains("MultiGolemStatus.onClientJoin()"));
         assertTrue(source.contains("MultiGolemStatus.onClientDisconnect()"));
         assertTrue(source.contains("MultiGolemStatus.tickClientStatus()"));
@@ -74,7 +76,7 @@ class NeoForgeNetworkingSourceTest {
 
         assertTrue(metadata.contains("mixins=[\"multigolem.neoforge.mixins.json\", \"multigolem.neoforge.client.mixins.json\"]"));
         assertTrue(clientMixins.contains("\"package\": \"dev.charles.multigolem.client.mixin\""));
-        assertTrue(clientMixins.contains("\"environment\": \"client\""));
+        assertTopLevelEnvironmentPrecedesMixinArrays(clientMixins);
         assertTrue(clientMixins.contains("\"IronGolemRenderStateExtensionMixin\""));
         assertTrue(clientMixins.contains("\"IronGolemRenderStateMixin\""));
         assertTrue(clientMixins.contains("\"IronGolemRendererMixin\""));
@@ -84,5 +86,15 @@ class NeoForgeNetworkingSourceTest {
         Path source = Path.of(path);
         assertTrue(Files.exists(source), "Expected source file missing: " + source);
         return Files.readString(source);
+    }
+
+    private static void assertTopLevelEnvironmentPrecedesMixinArrays(String clientMixins) {
+        int environment = clientMixins.indexOf("\"environment\": \"client\"");
+        int mixins = clientMixins.indexOf("\"mixins\"");
+        int client = clientMixins.indexOf("\"client\"");
+
+        assertTrue(environment >= 0, "client mixin config must declare a client-only environment");
+        assertTrue(mixins > environment, "client-only environment must be a top-level config field before mixin arrays");
+        assertTrue(client > environment, "client-only environment must be a top-level config field before client mixin array");
     }
 }
