@@ -91,7 +91,7 @@ class NeoForgeNetworkingSourceTest {
     private static void assertTopLevelEnvironmentPrecedesMixinArrays(String clientMixins) {
         int environment = clientMixins.indexOf("\"environment\": \"client\"");
         int mixins = clientMixins.indexOf("\"mixins\"");
-        int client = clientMixins.indexOf("\"client\"");
+        int client = clientMixins.indexOf("\"client\": [");
 
         assertTrue(environment >= 0, "client mixin config must declare a client-only environment");
         assertTrue(mixins > environment, "client-only environment must be a top-level config field before mixin arrays");
