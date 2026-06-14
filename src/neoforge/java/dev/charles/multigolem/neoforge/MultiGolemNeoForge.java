@@ -18,7 +18,7 @@ public final class MultiGolemNeoForge {
     public MultiGolemNeoForge(IEventBus modBus, ModContainer container) {
         NeoForgeGolemAttachments.register(modBus);
         GolemStorage.register(NeoForgeGolemAttachments.storageAdapter());
-        MultiGolemStatus.initializeVersion(container.getModInfo().getVersion().toString(), System.getProperty("multigolem.build"));
+        MultiGolemStatus.initializeVersion(container.getModInfo().getVersion().toString(), MultiGolemStatus.config().clientBuild());
         MultiGolem.initialize(FMLPaths.CONFIGDIR.get().resolve(MultiGolem.MOD_ID + ".json"));
         NeoForgeMultiGolemPermissions.register();
         NeoForgeMultiGolemNetworking.register(modBus);
