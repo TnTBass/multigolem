@@ -74,7 +74,8 @@ class NeoForgeNetworkingSourceTest {
         String metadata = readSource("src/neoforge/resources/META-INF/neoforge.mods.toml");
         String clientMixins = readSource("src/neoforgeClient/resources/multigolem.neoforge.client.mixins.json");
 
-        assertTrue(metadata.contains("mixins=[\"multigolem.neoforge.mixins.json\", \"multigolem.neoforge.client.mixins.json\"]"));
+        assertTrue(metadata.contains("[[mixins]]\nconfig=\"multigolem.neoforge.mixins.json\""));
+        assertTrue(metadata.contains("[[mixins]]\nconfig=\"multigolem.neoforge.client.mixins.json\""));
         assertTrue(clientMixins.contains("\"package\": \"dev.charles.multigolem.client.mixin\""));
         assertTopLevelEnvironmentPrecedesMixinArrays(clientMixins);
         assertTrue(clientMixins.contains("\"IronGolemRenderStateExtensionMixin\""));
