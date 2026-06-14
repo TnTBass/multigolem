@@ -38,4 +38,8 @@ public final class FabricMultiGolemStatusNetworking {
         ));
         return true;
     }
+
+    static void resetForTesting() {
+        registered = false;
+    }
 }

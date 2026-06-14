@@ -55,6 +55,14 @@ class MultiGolemStatusIntegrationSourceTest {
         assertFalse(statusNetworking.contains("ServerCustomizationsPayload"));
     }
 
+    @Test
+    void statusNetworkingRegistrationCanBeResetForIsolatedTests() throws IOException {
+        String source = readSource("src/fabric/java/dev/charles/multigolem/fabric/status/FabricMultiGolemStatusNetworking.java");
+
+        assertTrue(source.contains("static void resetForTesting()"), "tests need a package-private registration reset hook");
+        assertTrue(source.contains("registered = false;"), "reset hook must clear the registration guard");
+    }
+
     private static String readSource(String path) throws IOException {
         Path source = Path.of(path);
         assertTrue(Files.exists(source), "Expected source file missing: " + source);
