@@ -47,6 +47,21 @@ class MultiGolemStatusTest {
     }
 
     @Test
+    void initializeVersionWithOnlyVersionPreservesDetectedBuild() {
+        String originalVersion = MultiGolemStatus.config().clientVersion();
+        String originalBuild = MultiGolemStatus.config().clientBuild();
+
+        try {
+            MultiGolemStatus.initializeVersion("9.9.9-version-only");
+
+            assertEquals("9.9.9-version-only", MultiGolemStatus.config().clientVersion());
+            assertEquals(originalBuild, MultiGolemStatus.config().clientBuild());
+        } finally {
+            MultiGolemStatus.initializeVersion(originalVersion, originalBuild);
+        }
+    }
+
+    @Test
     void initializeVersionRejectsMissingVersionMetadata() {
         IllegalStateException missing = assertThrows(IllegalStateException.class,
             () -> MultiGolemStatus.initializeVersion("", "build"));

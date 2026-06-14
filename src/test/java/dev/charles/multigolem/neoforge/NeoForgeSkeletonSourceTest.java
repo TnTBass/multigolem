@@ -43,9 +43,8 @@ class NeoForgeSkeletonSourceTest {
 
         assertTrue(mainEntrypoint.contains("@Mod(MultiGolem.MOD_ID)"));
         assertTrue(mainEntrypoint.contains("MultiGolemStatus.initializeVersion"));
-        assertTrue(mainEntrypoint.contains(
-            "MultiGolemStatus.initializeVersion(container.getModInfo().getVersion().toString(), MultiGolemStatus.config().clientBuild());"
-        ));
+        assertTrue(mainEntrypoint.contains("MultiGolemStatus.initializeVersion(container.getModInfo().getVersion().toString())"));
+        assertFalse(mainEntrypoint.contains("MultiGolemStatus.config().clientBuild()"));
         assertFalse(mainEntrypoint.contains("System.getProperty(\"multigolem.build\")"));
         assertTrue(mainEntrypoint.contains("MultiGolem.initialize(FMLPaths.CONFIGDIR.get().resolve(MultiGolem.MOD_ID + \".json\"));"));
         assertTrue(mainEntrypoint.contains("NeoForgeMultiGolemEvents.register(modBus);"));

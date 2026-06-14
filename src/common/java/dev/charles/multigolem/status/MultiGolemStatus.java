@@ -31,6 +31,10 @@ public final class MultiGolemStatus {
         return state.config();
     }
 
+    public static void initializeVersion(String version) {
+        initializeVersion(version, state.config().clientBuild());
+    }
+
     public static void initializeVersion(String version, String build) {
         if (version == null || version.isBlank()) {
             throw new IllegalStateException("Missing version metadata for " + MultiGolem.MOD_ID);
