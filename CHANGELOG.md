@@ -4,6 +4,12 @@
 
 - Documented the Redstone and Lapis Golem roadmap and renumbered future roadmap phases.
 
+## 0.6.0+mc26.1.2 — 2026-06-14
+
+- Added NeoForge support for Minecraft 26.1.2, including golem creation, variant stats, abilities, permissions, networking, marked spawn eggs, spawners, rendering, Mod Menu configuration, server customizations, and Golempedia parity with Fabric.
+- Changed release artifacts to use loader-first jar names such as `multigolem-fabric-0.6.0+mc26.1.2.jar` and `multigolem-neoforge-0.6.0+mc26.1.2.jar`.
+- Kept loader metadata version display focused on the MultiGolem version, while build metadata remains available for client/server mismatch diagnostics.
+
 ## 0.5.1+mc26.1.2 — 2026-06-07
 
 - Added a ModMenu status indicator, powered by the open-source [ModStatusKit GitHub project](https://github.com/TnTBass/ModStatusKit), so players and server owners can quickly confirm they are running the same MultiGolem version, with client and server version/build details, build-only mismatch highlighting, and warning-level mismatch status that calls out possible differences without treating them as a connection break.

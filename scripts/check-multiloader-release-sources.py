@@ -7,10 +7,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 REQUIRED_RELEASE_MARKERS = {
-    "fabric primary jar": "fabric/build/libs/multigolem-${version}-fabric.jar",
-    "fabric sources jar": "fabric/build/libs/multigolem-${version}-fabric-sources.jar",
-    "neoforge primary jar": "neoforge/build/libs/multigolem-${version}-neoforge.jar",
-    "neoforge sources jar": "neoforge/build/libs/multigolem-${version}-neoforge-sources.jar",
+    "fabric primary jar": "fabric/build/libs/multigolem-fabric-${version}.jar",
+    "fabric sources jar": "fabric/build/libs/multigolem-fabric-${version}-sources.jar",
+    "neoforge primary jar": "neoforge/build/libs/multigolem-neoforge-${version}.jar",
+    "neoforge sources jar": "neoforge/build/libs/multigolem-neoforge-${version}-sources.jar",
 }
 
 UNSUFFIXED_ARTIFACT_PATTERNS = [
@@ -18,6 +18,10 @@ UNSUFFIXED_ARTIFACT_PATTERNS = [
     r"build/libs/multigolem-\$version\.jar",
     r"build/libs/multigolem-\$\{version\}-sources\.jar",
     r"build/libs/multigolem-\$version-sources\.jar",
+    r"build/libs/multigolem-\$\{version\}-(fabric|neoforge)\.jar",
+    r"build/libs/multigolem-\$version-(fabric|neoforge)\.jar",
+    r"build/libs/multigolem-\$\{version\}-(fabric|neoforge)-sources\.jar",
+    r"build/libs/multigolem-\$version-(fabric|neoforge)-sources\.jar",
 ]
 
 
@@ -52,7 +56,7 @@ def check(root: Path = ROOT) -> list[str]:
             break
 
     release_asset_block = github_release_asset_block(release)
-    sources_assets = re.findall(r'"([^"]*multigolem-\$\{version\}-[^"]*-sources\.jar)"', release_asset_block)
+    sources_assets = re.findall(r'"([^"]*multigolem-[^"]*\$\{version\}[^"]*-sources\.jar)"', release_asset_block)
     duplicate_sources = sorted({asset for asset in sources_assets if sources_assets.count(asset) > 1})
     for asset in duplicate_sources:
         errors.append(f"duplicate GitHub Release sources artifact: {asset}")
@@ -60,19 +64,19 @@ def check(root: Path = ROOT) -> list[str]:
     for loader in ("fabric", "neoforge"):
         if f'-Loader "{loader}"' not in release and f"-Loader '{loader}'" not in release:
             errors.append(f"release workflow must call upload scripts with -Loader \"{loader}\".")
-        if f"{loader}/build/libs/multigolem-$version-{loader}.jar" not in release:
+        if f"{loader}/build/libs/multigolem-{loader}-$version.jar" not in release:
             errors.append(f"release workflow must pass explicit {loader} jar path to upload scripts.")
 
     if "$Loader" not in modrinth:
         errors.append("Modrinth upload script must accept a loader argument.")
-    if "fabric/build/libs" not in modrinth and "$Loader/build/libs/multigolem-$Version-$Loader.jar" not in modrinth:
+    if "fabric/build/libs" not in modrinth and "$Loader/build/libs/multigolem-$Loader-$Version.jar" not in modrinth:
         errors.append("Modrinth upload script must support loader-suffixed primary jar paths.")
-    if "neoforge/build/libs" not in modrinth and "$Loader/build/libs/multigolem-$Version-$Loader-sources.jar" not in modrinth:
+    if "neoforge/build/libs" not in modrinth and "$Loader/build/libs/multigolem-$Loader-$Version-sources.jar" not in modrinth:
         errors.append("Modrinth upload script must support loader-suffixed sources jar paths.")
 
     if "$Loader" not in curseforge:
         errors.append("CurseForge upload script must accept a loader argument.")
-    if "fabric/build/libs" not in curseforge and "$Loader/build/libs/multigolem-$Version-$Loader.jar" not in curseforge:
+    if "fabric/build/libs" not in curseforge and "$Loader/build/libs/multigolem-$Loader-$Version.jar" not in curseforge:
         errors.append("CurseForge upload script must support loader-suffixed primary jar paths.")
     if re.search(r"relations\s*=\s*@\{\s*projects\s*=\s*@\(\s*\)\s*\}", curseforge, re.DOTALL):
         errors.append("CurseForge upload script must omit empty CurseForge relations.projects.")

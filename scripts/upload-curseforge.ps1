@@ -34,7 +34,7 @@ if ([string]::IsNullOrWhiteSpace($Version)) {
 }
 
 if ([string]::IsNullOrWhiteSpace($JarPath)) {
-    $JarPath = "$Loader/build/libs/multigolem-$Version-$Loader.jar"
+    $JarPath = "$Loader/build/libs/multigolem-$Loader-$Version.jar"
 }
 
 $minecraftVersion = $Version -replace "^.*\+mc", ""

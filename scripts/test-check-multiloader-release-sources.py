@@ -16,19 +16,19 @@ def load_checker():
 
 VALID_RELEASE = """
 version="${GITHUB_REF_NAME#v}"
-test -f "fabric/build/libs/multigolem-${version}-fabric.jar"
-test -f "fabric/build/libs/multigolem-${version}-fabric-sources.jar"
-test -f "neoforge/build/libs/multigolem-${version}-neoforge.jar"
-test -f "neoforge/build/libs/multigolem-${version}-neoforge-sources.jar"
+test -f "fabric/build/libs/multigolem-fabric-${version}.jar"
+test -f "fabric/build/libs/multigolem-fabric-${version}-sources.jar"
+test -f "neoforge/build/libs/multigolem-neoforge-${version}.jar"
+test -f "neoforge/build/libs/multigolem-neoforge-${version}-sources.jar"
 gh release create "${GITHUB_REF_NAME}" \\
-  "fabric/build/libs/multigolem-${version}-fabric.jar" \\
-  "fabric/build/libs/multigolem-${version}-fabric-sources.jar" \\
-  "neoforge/build/libs/multigolem-${version}-neoforge.jar" \\
-  "neoforge/build/libs/multigolem-${version}-neoforge-sources.jar"
-./scripts/upload-modrinth.ps1 -Loader "fabric" -JarPath "fabric/build/libs/multigolem-$version-fabric.jar" -SourcesJarPath "fabric/build/libs/multigolem-$version-fabric-sources.jar"
-./scripts/upload-modrinth.ps1 -Loader "neoforge" -JarPath "neoforge/build/libs/multigolem-$version-neoforge.jar" -SourcesJarPath "neoforge/build/libs/multigolem-$version-neoforge-sources.jar"
-./scripts/upload-curseforge.ps1 -Loader "fabric" -JarPath "fabric/build/libs/multigolem-$version-fabric.jar"
-./scripts/upload-curseforge.ps1 -Loader "neoforge" -JarPath "neoforge/build/libs/multigolem-$version-neoforge.jar"
+  "fabric/build/libs/multigolem-fabric-${version}.jar" \\
+  "fabric/build/libs/multigolem-fabric-${version}-sources.jar" \\
+  "neoforge/build/libs/multigolem-neoforge-${version}.jar" \\
+  "neoforge/build/libs/multigolem-neoforge-${version}-sources.jar"
+./scripts/upload-modrinth.ps1 -Loader "fabric" -JarPath "fabric/build/libs/multigolem-fabric-$version.jar" -SourcesJarPath "fabric/build/libs/multigolem-fabric-$version-sources.jar"
+./scripts/upload-modrinth.ps1 -Loader "neoforge" -JarPath "neoforge/build/libs/multigolem-neoforge-$version.jar" -SourcesJarPath "neoforge/build/libs/multigolem-neoforge-$version-sources.jar"
+./scripts/upload-curseforge.ps1 -Loader "fabric" -JarPath "fabric/build/libs/multigolem-fabric-$version.jar"
+./scripts/upload-curseforge.ps1 -Loader "neoforge" -JarPath "neoforge/build/libs/multigolem-neoforge-$version.jar"
 """
 
 
@@ -39,8 +39,8 @@ param(
     [string] $JarPath = "",
     [string] $SourcesJarPath = ""
 )
-$JarPath = "$Loader/build/libs/multigolem-$Version-$Loader.jar"
-$SourcesJarPath = "$Loader/build/libs/multigolem-$Version-$Loader-sources.jar"
+$JarPath = "$Loader/build/libs/multigolem-$Loader-$Version.jar"
+$SourcesJarPath = "$Loader/build/libs/multigolem-$Loader-$Version-sources.jar"
 $loaders = @($Loader)
 """
 
@@ -51,7 +51,7 @@ param(
     [string] $Loader = "fabric",
     [string] $JarPath = ""
 )
-$JarPath = "$Loader/build/libs/multigolem-$Version-$Loader.jar"
+$JarPath = "$Loader/build/libs/multigolem-$Loader-$Version.jar"
 $relationsProjects = @()
 if ($Loader -eq "fabric") {
     $relationsProjects += @{ slug = "fabric-api"; type = "requiredDependency" }
@@ -91,8 +91,8 @@ gh release create "${GITHUB_REF_NAME}" "build/libs/multigolem-${version}.jar" "b
     def test_fails_on_duplicate_sources_jar_names(self):
         checker = load_checker()
         release = VALID_RELEASE.replace(
-            "neoforge/build/libs/multigolem-${version}-neoforge-sources.jar",
-            "fabric/build/libs/multigolem-${version}-fabric-sources.jar",
+            "neoforge/build/libs/multigolem-neoforge-${version}-sources.jar",
+            "fabric/build/libs/multigolem-fabric-${version}-sources.jar",
         )
 
         errors = checker.check(self.write_repo(release=release))
@@ -103,7 +103,7 @@ gh release create "${GITHUB_REF_NAME}" "build/libs/multigolem-${version}.jar" "b
         checker = load_checker()
         curseforge = """
 param([string] $Loader = "fabric", [string] $JarPath = "")
-$JarPath = "$Loader/build/libs/multigolem-$Version-$Loader.jar"
+$JarPath = "$Loader/build/libs/multigolem-$Loader-$Version.jar"
 $relationsProjects = @()
 if ($relationsProjects.Count -gt 0) {
     $metadata["relations"] = @{ projects = $relationsProjects }
