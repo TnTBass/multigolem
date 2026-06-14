@@ -7,6 +7,7 @@ import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.catalog.GolemVariantCatalog;
 import dev.charles.multigolem.catalog.GolemVariantSpec;
 import dev.charles.multigolem.test.MinecraftBootstrap;
+import net.minecraft.nbt.TagParser;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -45,7 +46,8 @@ class SpawnEggItemDefinitionTest {
             boolean found = false;
             for (var element : cases) {
                 var entry = element.getAsJsonObject();
-                if (expectedWhen.equals(entry.get("when").getAsString())) {
+                if (TagParser.parseCompoundFully(expectedWhen)
+                    .equals(TagParser.parseCompoundFully(entry.get("when").getAsString()))) {
                     assertFalse(found, "duplicate item-model case for " + variant.id() + ": " + expectedWhen);
                     assertEquals(expectedModel, entry.getAsJsonObject("model").get("model").getAsString());
                     assertSpawnEggModelAssetsExist(expectedModel);

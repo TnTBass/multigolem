@@ -13,7 +13,7 @@ import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 public final class MultiGolemNeoForgeClient {
     public MultiGolemNeoForgeClient(IEventBus modBus, ModContainer modContainer) {
         modContainer.registerExtensionPoint(IConfigScreenFactory.class,
-            (container, parent) -> new MultiGolemStatusScreen(parent));
+            (ignoredContainer, parent) -> new MultiGolemStatusScreen(parent));
         NeoForgeMultiGolemClientNetworking.register(modBus);
         MultiGolem.LOG.info("MultiGolem NeoForge client skeleton initializing");
     }
