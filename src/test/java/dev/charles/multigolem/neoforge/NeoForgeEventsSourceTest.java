@@ -48,8 +48,8 @@ class NeoForgeEventsSourceTest {
 
     @Test
     void neoforgeMetadataDeclaresCommonGameplayMixins() throws IOException {
-        String metadata = Files.readString(Path.of("src/neoforge/resources/META-INF/neoforge.mods.toml"));
-        String mixins = Files.readString(Path.of("src/neoforge/resources/multigolem.neoforge.mixins.json"));
+        String metadata = readSource("src/neoforge/resources/META-INF/neoforge.mods.toml");
+        String mixins = readSource("src/neoforge/resources/multigolem.neoforge.mixins.json");
 
         assertTrue(metadata.contains("[[mixins]]\nconfig=\"multigolem.neoforge.mixins.json\""));
         assertTrue(metadata.contains("[[mixins]]\nconfig=\"multigolem.neoforge.client.mixins.json\""));
@@ -66,5 +66,9 @@ class NeoForgeEventsSourceTest {
         assertTrue(mixins.contains("\"BaseSpawnerAccessor\""));
         assertTrue(mixins.contains("\"BaseSpawnerMixin\""));
         assertTrue(mixins.contains("\"SpawnEggItemMixin\""));
+    }
+
+    private static String readSource(String path) throws IOException {
+        return Files.readString(Path.of(path)).replace("\r\n", "\n");
     }
 }

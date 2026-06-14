@@ -86,7 +86,7 @@ class NeoForgeNetworkingSourceTest {
     private static String readSource(String path) throws IOException {
         Path source = Path.of(path);
         assertTrue(Files.exists(source), "Expected source file missing: " + source);
-        return Files.readString(source);
+        return Files.readString(source).replace("\r\n", "\n");
     }
 
     private static void assertTopLevelEnvironmentPrecedesMixinArrays(String clientMixins) {
