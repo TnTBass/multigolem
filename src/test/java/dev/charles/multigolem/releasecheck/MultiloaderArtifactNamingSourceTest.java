@@ -21,4 +21,18 @@ class MultiloaderArtifactNamingSourceTest {
         assertFalse(fabricBuild.contains("base.archivesName = \"multigolem-${project.version}-fabric\""));
         assertFalse(neoforgeBuild.contains("base.archivesName = \"multigolem-${project.version}-neoforge\""));
     }
+
+    @Test
+    void loaderMetadataDisplaysOnlyModVersion() throws IOException {
+        String fabricBuild = Files.readString(Path.of("fabric/build.gradle"));
+        String neoforgeBuild = Files.readString(Path.of("neoforge/build.gradle"));
+
+        assertTrue(fabricBuild.contains("def displayVersion = project.version.toString().replaceFirst(/\\+mc.*$/, \"\")"));
+        assertTrue(neoforgeBuild.contains("def displayVersion = project.version.toString().replaceFirst(/\\+mc.*$/, \"\")"));
+        assertTrue(fabricBuild.contains("expand \"version\": displayVersion"));
+        assertTrue(neoforgeBuild.contains("expand \"version\": displayVersion"));
+
+        assertFalse(fabricBuild.contains("expand \"version\": version"));
+        assertFalse(neoforgeBuild.contains("expand \"version\": version"));
+    }
 }

@@ -71,11 +71,11 @@ tasks.register("generateBuildInfo") {
 }
 
 processResources {
-	def version = project.version
-	inputs.property "version", version
+	def displayVersion = project.version.toString().replaceFirst(/\+mc.*$/, "")
+	inputs.property "version", displayVersion
 
 	filesMatching("fabric.mod.json") {
-		expand "version": version
+		expand "version": displayVersion
 	}
 }
 
