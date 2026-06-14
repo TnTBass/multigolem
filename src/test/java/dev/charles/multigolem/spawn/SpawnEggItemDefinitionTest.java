@@ -40,7 +40,7 @@ class SpawnEggItemDefinitionTest {
             actualWhenValues.add(element.getAsJsonObject().get("when").getAsString());
         }
         for (GolemVariant variant : GolemVariant.spawnEggVariants()) {
-            String expectedWhen = "{multigolem:{variant:\"" + variant.id() + "\"}}";
+            String expectedWhen = SpawnEggStacks.customDataSnbt(SpawnEggStacks.create(variant));
             String expectedModel = "multigolem:item/" + variant.id() + "_golem_spawn_egg";
             boolean found = false;
             for (var element : cases) {

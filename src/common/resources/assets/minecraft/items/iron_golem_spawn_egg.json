@@ -5,27 +5,27 @@
     "component": "minecraft:custom_data",
     "cases": [
       {
-        "when": "{multigolem:{variant:\"copper\"}}",
+        "when": "{multigolem:{family:\"iron_golem\",variant:\"copper\"}}",
         "model": { "type": "minecraft:model", "model": "multigolem:item/copper_golem_spawn_egg" }
       },
       {
-        "when": "{multigolem:{variant:\"gold\"}}",
+        "when": "{multigolem:{family:\"iron_golem\",variant:\"gold\"}}",
         "model": { "type": "minecraft:model", "model": "multigolem:item/gold_golem_spawn_egg" }
       },
       {
-        "when": "{multigolem:{variant:\"emerald\"}}",
+        "when": "{multigolem:{family:\"iron_golem\",variant:\"emerald\"}}",
         "model": { "type": "minecraft:model", "model": "multigolem:item/emerald_golem_spawn_egg" }
       },
       {
-        "when": "{multigolem:{variant:\"diamond\"}}",
+        "when": "{multigolem:{family:\"iron_golem\",variant:\"diamond\"}}",
         "model": { "type": "minecraft:model", "model": "multigolem:item/diamond_golem_spawn_egg" }
       },
       {
-        "when": "{multigolem:{variant:\"netherite\"}}",
+        "when": "{multigolem:{family:\"iron_golem\",variant:\"netherite\"}}",
         "model": { "type": "minecraft:model", "model": "multigolem:item/netherite_golem_spawn_egg" }
       },
       {
-        "when": "{multigolem:{variant:\"zombie\"}}",
+        "when": "{multigolem:{family:\"iron_golem\",variant:\"zombie\"}}",
         "model": { "type": "minecraft:model", "model": "multigolem:item/zombie_golem_spawn_egg" }
       }
     ],

@@ -50,6 +50,10 @@ class NeoForgeSkeletonSourceTest {
         assertFalse(mainEntrypoint.contains("Fabric"));
 
         assertTrue(clientEntrypoint.contains("Dist.CLIENT"));
+        assertTrue(clientEntrypoint.contains("ModContainer"));
+        assertTrue(clientEntrypoint.contains("IConfigScreenFactory"));
+        assertTrue(clientEntrypoint.contains("MultiGolemStatusScreen"));
+        assertTrue(clientEntrypoint.contains("registerExtensionPoint(IConfigScreenFactory.class"));
         assertFalse(clientEntrypoint.contains("registerClient"));
         assertFalse(clientEntrypoint.contains("ClientPlayNetworking"));
         assertFalse(clientEntrypoint.contains("Fabric"));
