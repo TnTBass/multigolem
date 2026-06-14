@@ -3,7 +3,7 @@ plugins {
 	id 'maven-publish'
 }
 
-base.archivesName = "multigolem-${project.version}-fabric"
+base.archivesName = "multigolem-fabric-${project.version}"
 
 repositories {
 	mavenCentral()

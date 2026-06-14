@@ -63,12 +63,12 @@ class NeoForgeSkeletonSourceTest {
     }
 
     @Test
-    void neoforgeBuildProducesLoaderSuffixedArtifacts() throws IOException {
+    void neoforgeBuildProducesNormalizedLoaderArtifacts() throws IOException {
         String build = Files.readString(Path.of("neoforge/build.gradle"));
         String rootBuild = Files.readString(Path.of("build.gradle"));
 
         assertTrue(build.contains("id 'net.neoforged.moddev'"));
-        assertTrue(build.contains("base.archivesName = \"multigolem-${project.version}-neoforge\""));
+        assertTrue(build.contains("base.archivesName = \"multigolem-neoforge-${project.version}\""));
         assertTrue(build.contains("archiveVersion = \"\""));
         assertTrue(rootBuild.contains(":neoforge:build"));
     }

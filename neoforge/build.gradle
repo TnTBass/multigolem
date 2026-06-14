@@ -3,7 +3,7 @@ plugins {
 	id 'maven-publish'
 }
 
-base.archivesName = "multigolem-${project.version}-neoforge"
+base.archivesName = "multigolem-neoforge-${project.version}"
 
 repositories {
 	mavenCentral()
