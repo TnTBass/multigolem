@@ -7,12 +7,13 @@ import dev.charles.multigolem.attachment.GolemVariantAttachment;
 import dev.charles.multigolem.identity.GolemIdentity;
 import dev.charles.multigolem.permissions.MultiGolemPermissions;
 import dev.charles.multigolem.permissions.PumpkinPlacementTracker;
-import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.advancements.triggers.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -63,7 +64,7 @@ public final class GolemCreationHandler {
                 }
             }
 
-            IronGolem golem = EntityType.IRON_GOLEM.create(server, EntitySpawnReason.TRIGGERED);
+            IronGolem golem = EntityTypes.IRON_GOLEM.create(server, EntitySpawnReason.TRIGGERED);
             if (golem == null) {
                 MultiGolem.LOG.warn("Failed to create iron golem entity for variant {}", variant.id());
                 return false;

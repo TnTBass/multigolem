@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.minecraft.world.item.ItemStack;
@@ -32,7 +33,7 @@ public final class SpawnEggVariantSpawner {
         boolean invertY
     ) {
         Optional<GolemIdentity> identity = SpawnEggStacks.identityFrom(stack);
-        if (identity.isEmpty() || type != EntityType.IRON_GOLEM) {
+        if (identity.isEmpty() || type != EntityTypes.IRON_GOLEM) {
             return type.spawn(level, stack, user, pos, reason, alignPosition, invertY);
         }
 

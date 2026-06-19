@@ -13,6 +13,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SpawnEggItem;
@@ -81,13 +82,13 @@ public abstract class SpawnEggItemMixin {
         if (identity.isPresent()) {
             // Vanilla setEntityId and this marker write run synchronously inside the same server useOn call.
             SpawnerVariantMarker.writeIdentity(data.getEntityToSpawn(), identity.get());
-        } else if (SpawnEggItem.getType(context.getItemInHand()) == EntityType.IRON_GOLEM) {
+        } else if (SpawnEggItem.getType(context.getItemInHand()) == EntityTypes.IRON_GOLEM) {
             SpawnerVariantMarker.clear(data.getEntityToSpawn());
         }
     }
 
     @Redirect(
-        method = "spawnMob(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;ZZ)Lnet/minecraft/world/InteractionResult;",
+        method = "spawnMob(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;ZZ)Lnet/minecraft/world/InteractionResult;",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/world/entity/EntityType;spawn(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/EntitySpawnReason;ZZ)Lnet/minecraft/world/entity/Entity;"

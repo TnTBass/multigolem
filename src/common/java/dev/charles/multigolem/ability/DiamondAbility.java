@@ -12,6 +12,7 @@ import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.minecraft.world.level.entity.EntityTypeTest;
@@ -87,7 +88,7 @@ public final class DiamondAbility {
             .min(Comparator.comparingDouble(e -> e.distanceToSqr(golem)))
             .orElseThrow();
 
-        var bolt = EntityType.LIGHTNING_BOLT.create(world, EntitySpawnReason.TRIGGERED);
+        var bolt = EntityTypes.LIGHTNING_BOLT.create(world, EntitySpawnReason.TRIGGERED);
         if (bolt != null) {
             bolt.setPos(target.getX(), target.getY(), target.getZ());
             world.addFreshEntity(bolt);

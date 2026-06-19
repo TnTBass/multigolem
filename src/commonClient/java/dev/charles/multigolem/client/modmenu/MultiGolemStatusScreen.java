@@ -24,11 +24,11 @@ public final class MultiGolemStatusScreen extends Screen {
         int primaryTop = Math.max(44, height / 2 - 28);
 
         addRenderableWidget(Button.builder(Component.literal("Server Customizations"), button ->
-            Minecraft.getInstance().setScreen(new ServerCustomizationsScreen(this))
+            Minecraft.getInstance().setScreenAndShow(new ServerCustomizationsScreen(this))
         ).bounds(left, primaryTop, buttonWidth, 20).build());
 
         addRenderableWidget(Button.builder(Component.literal("Golempedia"), button ->
-            Minecraft.getInstance().setScreen(new GolempediaScreen(this))
+            Minecraft.getInstance().setScreenAndShow(new GolempediaScreen(this))
         ).bounds(left, primaryTop + actionStep, buttonWidth, 20).build());
 
         addRenderableWidget(Button.builder(Component.literal("Done"), button -> onClose())
@@ -44,6 +44,6 @@ public final class MultiGolemStatusScreen extends Screen {
 
     @Override
     public void onClose() {
-        Minecraft.getInstance().setScreen(parent);
+        Minecraft.getInstance().setScreenAndShow(parent);
     }
 }

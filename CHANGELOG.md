@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-- Documented the Redstone and Lapis Golem roadmap and renumbered future roadmap phases.
+## 0.6.1+mc26.2 — 2026-06-19
+
+- Updated the Fabric and NeoForge builds for Minecraft 26.2.
 
 ## 0.6.0+mc26.1.2 — 2026-06-14
 

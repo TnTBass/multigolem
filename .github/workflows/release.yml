@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       release_ref:
-        description: 'Release tag to publish from, for example v0.6.0+mc26.1.2'
+        description: 'Release tag to publish from, for example v0.6.1+mc26.2'
         required: true
       publish_target:
         description: 'Publisher to run'

@@ -9,6 +9,7 @@ import dev.charles.multigolem.spawn.SpawnEggStacks;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.CreativeModeTabs;
@@ -62,7 +63,7 @@ public final class NeoForgeMultiGolemEvents {
     }
 
     private static void onLootTableLoad(LootTableLoadEvent event) {
-        Optional<ResourceKey<LootTable>> ironGolemTable = EntityType.IRON_GOLEM.getDefaultLootTable();
+        Optional<ResourceKey<LootTable>> ironGolemTable = EntityTypes.IRON_GOLEM.getDefaultLootTable();
         if (ironGolemTable.isEmpty()) {
             MultiGolem.LOG.warn("Iron golem default loot table key not present; variant drops disabled");
             return;

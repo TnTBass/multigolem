@@ -5,6 +5,7 @@ import dev.charles.multigolem.identity.GolemWeatheringStage;
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockState;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -35,10 +36,10 @@ class CopperSurfaceResolverTest {
     void mixedWeatheringUsesMostOxidizedStage() {
         assertEquals(Optional.of(new GolemSurfaceState(GolemWeatheringStage.OXIDIZED, false)),
             CopperSurfaceResolver.resolveBody(List.of(
-                state(Blocks.COPPER_BLOCK),
-                state(Blocks.EXPOSED_COPPER),
-                state(Blocks.WEATHERED_COPPER),
-                state(Blocks.OXIDIZED_COPPER)
+                state(copper(WeatheringCopper.WeatherState.UNAFFECTED)),
+                state(copper(WeatheringCopper.WeatherState.EXPOSED)),
+                state(copper(WeatheringCopper.WeatherState.WEATHERED)),
+                state(copper(WeatheringCopper.WeatherState.OXIDIZED))
             )));
     }
 
@@ -46,10 +47,10 @@ class CopperSurfaceResolverTest {
     void mixedWaxedAndUnwaxedUsesUnwaxedUnlessEveryBlockIsWaxed() {
         assertEquals(Optional.of(new GolemSurfaceState(GolemWeatheringStage.EXPOSED, false)),
             CopperSurfaceResolver.resolveBody(List.of(
-                state(Blocks.WAXED_EXPOSED_COPPER),
-                state(Blocks.EXPOSED_COPPER),
-                state(Blocks.WAXED_EXPOSED_COPPER),
-                state(Blocks.EXPOSED_COPPER)
+                state(waxedCopper(WeatheringCopper.WeatherState.EXPOSED)),
+                state(copper(WeatheringCopper.WeatherState.EXPOSED)),
+                state(waxedCopper(WeatheringCopper.WeatherState.EXPOSED)),
+                state(copper(WeatheringCopper.WeatherState.EXPOSED))
             )));
     }
 
@@ -57,20 +58,20 @@ class CopperSurfaceResolverTest {
     void allWaxedBodyBlocksResolveAsWaxed() {
         assertEquals(Optional.of(new GolemSurfaceState(GolemWeatheringStage.WEATHERED, true)),
             CopperSurfaceResolver.resolveBody(List.of(
-                state(Blocks.WAXED_WEATHERED_COPPER),
-                state(Blocks.WAXED_WEATHERED_COPPER),
-                state(Blocks.WAXED_WEATHERED_COPPER),
-                state(Blocks.WAXED_WEATHERED_COPPER)
+                state(waxedCopper(WeatheringCopper.WeatherState.WEATHERED)),
+                state(waxedCopper(WeatheringCopper.WeatherState.WEATHERED)),
+                state(waxedCopper(WeatheringCopper.WeatherState.WEATHERED)),
+                state(waxedCopper(WeatheringCopper.WeatherState.WEATHERED))
             )));
     }
 
     @Test
     void nonCopperBodyBlocksResolveEmpty() {
         assertEquals(Optional.empty(), CopperSurfaceResolver.resolveBody(List.of(
-            state(Blocks.COPPER_BLOCK),
+            state(copper(WeatheringCopper.WeatherState.UNAFFECTED)),
             state(Blocks.IRON_BLOCK),
-            state(Blocks.COPPER_BLOCK),
-            state(Blocks.COPPER_BLOCK)
+            state(copper(WeatheringCopper.WeatherState.UNAFFECTED)),
+            state(copper(WeatheringCopper.WeatherState.UNAFFECTED))
         )));
     }
 
@@ -83,18 +84,26 @@ class CopperSurfaceResolverTest {
 
     private static Stream<Arguments> singleCopperBlocks() {
         return Stream.of(
-            Arguments.of(Blocks.COPPER_BLOCK, GolemWeatheringStage.UNAFFECTED, false),
-            Arguments.of(Blocks.EXPOSED_COPPER, GolemWeatheringStage.EXPOSED, false),
-            Arguments.of(Blocks.WEATHERED_COPPER, GolemWeatheringStage.WEATHERED, false),
-            Arguments.of(Blocks.OXIDIZED_COPPER, GolemWeatheringStage.OXIDIZED, false),
-            Arguments.of(Blocks.WAXED_COPPER_BLOCK, GolemWeatheringStage.UNAFFECTED, true),
-            Arguments.of(Blocks.WAXED_EXPOSED_COPPER, GolemWeatheringStage.EXPOSED, true),
-            Arguments.of(Blocks.WAXED_WEATHERED_COPPER, GolemWeatheringStage.WEATHERED, true),
-            Arguments.of(Blocks.WAXED_OXIDIZED_COPPER, GolemWeatheringStage.OXIDIZED, true)
+            Arguments.of(copper(WeatheringCopper.WeatherState.UNAFFECTED), GolemWeatheringStage.UNAFFECTED, false),
+            Arguments.of(copper(WeatheringCopper.WeatherState.EXPOSED), GolemWeatheringStage.EXPOSED, false),
+            Arguments.of(copper(WeatheringCopper.WeatherState.WEATHERED), GolemWeatheringStage.WEATHERED, false),
+            Arguments.of(copper(WeatheringCopper.WeatherState.OXIDIZED), GolemWeatheringStage.OXIDIZED, false),
+            Arguments.of(waxedCopper(WeatheringCopper.WeatherState.UNAFFECTED), GolemWeatheringStage.UNAFFECTED, true),
+            Arguments.of(waxedCopper(WeatheringCopper.WeatherState.EXPOSED), GolemWeatheringStage.EXPOSED, true),
+            Arguments.of(waxedCopper(WeatheringCopper.WeatherState.WEATHERED), GolemWeatheringStage.WEATHERED, true),
+            Arguments.of(waxedCopper(WeatheringCopper.WeatherState.OXIDIZED), GolemWeatheringStage.OXIDIZED, true)
         );
     }
 
     private static BlockState state(Block block) {
         return block.defaultBlockState();
+    }
+
+    private static Block copper(WeatheringCopper.WeatherState state) {
+        return Blocks.COPPER_BLOCK.weathering().pick(state);
+    }
+
+    private static Block waxedCopper(WeatheringCopper.WeatherState state) {
+        return Blocks.COPPER_BLOCK.waxed().pick(state);
     }
 }

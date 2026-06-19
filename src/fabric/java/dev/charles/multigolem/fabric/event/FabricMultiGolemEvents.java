@@ -14,6 +14,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.level.storage.loot.LootTable;
@@ -51,7 +52,7 @@ public final class FabricMultiGolemEvents {
     }
 
     private static void registerVariantLoot() {
-        Optional<ResourceKey<LootTable>> ironGolemTable = EntityType.IRON_GOLEM.getDefaultLootTable();
+        Optional<ResourceKey<LootTable>> ironGolemTable = EntityTypes.IRON_GOLEM.getDefaultLootTable();
         if (ironGolemTable.isEmpty()) {
             MultiGolem.LOG.warn("Iron golem default loot table key not present; variant drops disabled");
             return;

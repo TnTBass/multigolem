@@ -12,6 +12,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.pattern.BlockInWorld;
 import net.minecraft.world.level.block.state.pattern.BlockPattern;
@@ -35,10 +36,10 @@ class GolemCreationHandlerTest {
         assertEquals(GolemIdentity.ofIronVariant(GolemVariant.COPPER,
                 new GolemSurfaceState(GolemWeatheringStage.OXIDIZED, false)),
             GolemCreationHandler.identityForBodyStates(GolemVariant.COPPER, List.of(
-                state(Blocks.COPPER_BLOCK),
-                state(Blocks.WEATHERED_COPPER),
-                state(Blocks.OXIDIZED_COPPER),
-                state(Blocks.EXPOSED_COPPER)
+                state(copper(WeatheringCopper.WeatherState.UNAFFECTED)),
+                state(copper(WeatheringCopper.WeatherState.WEATHERED)),
+                state(copper(WeatheringCopper.WeatherState.OXIDIZED)),
+                state(copper(WeatheringCopper.WeatherState.EXPOSED))
             )));
     }
 
@@ -57,10 +58,10 @@ class GolemCreationHandlerTest {
     void copperMatchBodyStatesSampleLowerBodyBlockNotPumpkin() {
         BlockPattern.BlockPatternMatch match = matchWithStates(Map.of(
             new BlockPos(1, 2, 0), state(Blocks.CARVED_PUMPKIN),
-            new BlockPos(0, 1, 0), state(Blocks.OXIDIZED_COPPER),
-            new BlockPos(1, 1, 0), state(Blocks.OXIDIZED_COPPER),
-            new BlockPos(2, 1, 0), state(Blocks.OXIDIZED_COPPER),
-            new BlockPos(1, 0, 0), state(Blocks.OXIDIZED_COPPER)
+            new BlockPos(0, 1, 0), state(copper(WeatheringCopper.WeatherState.OXIDIZED)),
+            new BlockPos(1, 1, 0), state(copper(WeatheringCopper.WeatherState.OXIDIZED)),
+            new BlockPos(2, 1, 0), state(copper(WeatheringCopper.WeatherState.OXIDIZED)),
+            new BlockPos(1, 0, 0), state(copper(WeatheringCopper.WeatherState.OXIDIZED))
         ));
 
         assertEquals(GolemIdentity.ofIronVariant(GolemVariant.COPPER,
@@ -70,6 +71,10 @@ class GolemCreationHandlerTest {
 
     private static BlockState state(Block block) {
         return block.defaultBlockState();
+    }
+
+    private static Block copper(WeatheringCopper.WeatherState state) {
+        return Blocks.COPPER_BLOCK.weathering().pick(state);
     }
 
     private static BlockPattern.BlockPatternMatch matchWithStates(Map<BlockPos, BlockState> states) {

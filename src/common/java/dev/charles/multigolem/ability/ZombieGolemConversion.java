@@ -4,7 +4,7 @@ import dev.charles.multigolem.config.TierStats;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ConversionParams;
 import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -56,7 +56,7 @@ public final class ZombieGolemConversion {
         int xp = villager.getVillagerXp();
         // Capture before convertTo invalidates the source entity state used by the conversion callback.
         boolean sourceWasBaby = villager.isBaby();
-        villager.convertTo(EntityType.ZOMBIE_VILLAGER, ConversionParams.single(villager, false, false), zombie -> {
+        villager.convertTo(EntityTypes.ZOMBIE_VILLAGER, ConversionParams.single(villager, false, false), zombie -> {
             zombie.setVillagerData(villager.getVillagerData());
             zombie.setTradeOffers(offers);
             zombie.setVillagerXp(xp);
@@ -67,7 +67,7 @@ public final class ZombieGolemConversion {
 
     private static void convertTrader(ServerLevel level, WanderingTrader trader) {
         MerchantOffers offers = trader.getOffers().copy();
-        trader.convertTo(EntityType.ZOMBIE_VILLAGER, ConversionParams.single(trader, false, false), zombie -> {
+        trader.convertTo(EntityTypes.ZOMBIE_VILLAGER, ConversionParams.single(trader, false, false), zombie -> {
             zombie.setTradeOffers(offers);
             zombie.finalizeSpawn(level, level.getCurrentDifficultyAt(zombie.blockPosition()), EntitySpawnReason.CONVERSION, null);
             finalizeConvertedZombieState(zombie, false);

@@ -47,7 +47,7 @@ public final class ServerCustomizationsScreen extends Screen {
     @Override
     public void onClose() {
         ServerCustomizationsClient.state().onScreenClose();
-        Minecraft.getInstance().setScreen(parent);
+        Minecraft.getInstance().setScreenAndShow(parent);
     }
 
     @Override

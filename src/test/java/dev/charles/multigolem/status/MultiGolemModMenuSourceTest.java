@@ -46,6 +46,8 @@ class MultiGolemModMenuSourceTest {
         assertTrue(screen.contains("primaryTop + actionStep"));
         assertTrue(screen.contains("height - BOTTOM_BUTTON_MARGIN"));
         assertFalse(screen.contains("Button.builder(Component.literal(\"Cancel\")"));
+        assertTrue(screen.contains("setScreenAndShow(new ServerCustomizationsScreen(this))"));
+        assertTrue(screen.contains("setScreenAndShow(new GolempediaScreen(this))"));
         assertTrue(screen.contains("MultiGolemStatusWidget.renderTopRight("));
         assertFalse(screen.contains("renderStatusRow(guiGraphics"), "hub must not keep a centered permanent status row");
         assertFalse(screen.contains("display.statusLabel()"), "status label belongs in tooltip only");

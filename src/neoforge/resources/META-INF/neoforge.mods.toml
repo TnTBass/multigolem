@@ -21,13 +21,13 @@ description='''Adds Copper, Gold, Emerald, Diamond, Netherite, and zombie golem 
 [[dependencies.multigolem]]
 modId="neoforge"
 type="required"
-versionRange="[26.1.2.75,)"
+versionRange="[26.2.0.6-beta,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.multigolem]]
 modId="minecraft"
 type="required"
-versionRange="[26.1.2,26.2)"
+versionRange="[26.2,)"
 ordering="NONE"
 side="BOTH"

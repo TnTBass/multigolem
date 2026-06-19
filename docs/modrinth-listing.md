@@ -58,9 +58,9 @@ Players with ModMenu installed can open MultiGolem's client-side hub to check wh
 
 ## Requirements
 
-- Minecraft 26.1.2
+- Minecraft 26.2 or later compatible 26.x runtime
 - Fabric Loader 0.19.2+
-- Fabric API 0.148.0+26.1.2
+- Fabric API 0.152.2+26.2
 
 ## Spawn Eggs
 

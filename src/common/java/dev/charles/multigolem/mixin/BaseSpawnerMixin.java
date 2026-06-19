@@ -14,6 +14,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityProcessor;
 import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntitySpawnRequest;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.BaseSpawner;
 import net.minecraft.world.level.Level;
@@ -78,17 +79,17 @@ public abstract class BaseSpawnerMixin {
         method = "getOrCreateDisplayEntity(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/entity/Entity;",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/world/entity/EntityType;loadEntityRecursive(Lnet/minecraft/nbt/CompoundTag;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/EntitySpawnReason;Lnet/minecraft/world/entity/EntityProcessor;)Lnet/minecraft/world/entity/Entity;"
+            target = "Lnet/minecraft/world/entity/EntityType;loadEntityRecursive(Lnet/minecraft/nbt/CompoundTag;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/EntitySpawnRequest;Lnet/minecraft/world/entity/EntityProcessor;)Lnet/minecraft/world/entity/Entity;"
         ),
         require = 1
     )
     private Entity multigolem$applyPreviewIdentity(
         CompoundTag entityTag,
         Level level,
-        EntitySpawnReason reason,
+        EntitySpawnRequest request,
         EntityProcessor processor
     ) {
-        Entity displayEntity = EntityType.loadEntityRecursive(entityTag, level, reason, processor);
+        Entity displayEntity = EntityType.loadEntityRecursive(entityTag, level, request, processor);
         if (level.isClientSide() && displayEntity instanceof IronGolem golem) {
             SpawnerVariantMarker.previewIdentity(entityTag)
                 .ifPresent(identity -> GolemIdentityAttachment.set(golem, identity));

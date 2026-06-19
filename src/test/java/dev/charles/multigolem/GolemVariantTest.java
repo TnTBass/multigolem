@@ -2,7 +2,9 @@ package dev.charles.multigolem;
 
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.WeatheringCopper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +19,7 @@ class GolemVariantTest {
 
     @Test
     void fromBodyBlock_recognizesAllSixTiers() {
-        assertEquals(GolemVariant.COPPER,    GolemVariant.fromBodyBlock(Blocks.COPPER_BLOCK).orElseThrow());
+        assertEquals(GolemVariant.COPPER,    GolemVariant.fromBodyBlock(copper(WeatheringCopper.WeatherState.UNAFFECTED)).orElseThrow());
         assertEquals(GolemVariant.IRON,      GolemVariant.fromBodyBlock(Blocks.IRON_BLOCK).orElseThrow());
         assertEquals(GolemVariant.GOLD,      GolemVariant.fromBodyBlock(Blocks.GOLD_BLOCK).orElseThrow());
         assertEquals(GolemVariant.EMERALD,   GolemVariant.fromBodyBlock(Blocks.EMERALD_BLOCK).orElseThrow());
@@ -27,11 +29,11 @@ class GolemVariantTest {
 
     @Test
     void fromBodyBlock_recognizesCopperFamilyAsCopperTier() {
-        assertEquals(GolemVariant.COPPER, GolemVariant.fromBodyBlock(Blocks.WAXED_COPPER_BLOCK).orElseThrow());
-        assertEquals(GolemVariant.COPPER, GolemVariant.fromBodyBlock(Blocks.EXPOSED_COPPER).orElseThrow());
-        assertEquals(GolemVariant.COPPER, GolemVariant.fromBodyBlock(Blocks.WEATHERED_COPPER).orElseThrow());
-        assertEquals(GolemVariant.COPPER, GolemVariant.fromBodyBlock(Blocks.OXIDIZED_COPPER).orElseThrow());
-        assertEquals(GolemVariant.COPPER, GolemVariant.fromBodyBlock(Blocks.WAXED_OXIDIZED_COPPER).orElseThrow());
+        assertEquals(GolemVariant.COPPER, GolemVariant.fromBodyBlock(waxedCopper(WeatheringCopper.WeatherState.UNAFFECTED)).orElseThrow());
+        assertEquals(GolemVariant.COPPER, GolemVariant.fromBodyBlock(copper(WeatheringCopper.WeatherState.EXPOSED)).orElseThrow());
+        assertEquals(GolemVariant.COPPER, GolemVariant.fromBodyBlock(copper(WeatheringCopper.WeatherState.WEATHERED)).orElseThrow());
+        assertEquals(GolemVariant.COPPER, GolemVariant.fromBodyBlock(copper(WeatheringCopper.WeatherState.OXIDIZED)).orElseThrow());
+        assertEquals(GolemVariant.COPPER, GolemVariant.fromBodyBlock(waxedCopper(WeatheringCopper.WeatherState.OXIDIZED)).orElseThrow());
     }
 
     @Test
@@ -95,5 +97,13 @@ class GolemVariantTest {
         assertEquals(Items.EMERALD,         GolemVariant.EMERALD.dropItem());
         assertEquals(Items.DIAMOND,         GolemVariant.DIAMOND.dropItem());
         assertEquals(Items.NETHERITE_SCRAP, GolemVariant.NETHERITE.dropItem());
+    }
+
+    private static Block copper(WeatheringCopper.WeatherState state) {
+        return Blocks.COPPER_BLOCK.weathering().pick(state);
+    }
+
+    private static Block waxedCopper(WeatheringCopper.WeatherState state) {
+        return Blocks.COPPER_BLOCK.waxed().pick(state);
     }
 }

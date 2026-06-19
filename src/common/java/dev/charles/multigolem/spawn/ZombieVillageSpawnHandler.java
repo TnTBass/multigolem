@@ -13,6 +13,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.SpawnUtil;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.monster.zombie.ZombieVillager;
@@ -107,7 +108,7 @@ public final class ZombieVillageSpawnHandler {
         @Override
         public boolean spawnZombieGolem(BlockPos pos) {
             Optional<IronGolem> spawned = SpawnUtil.trySpawnMob(
-                EntityType.IRON_GOLEM,
+                EntityTypes.IRON_GOLEM,
                 EntitySpawnReason.MOB_SUMMONED,
                 level,
                 pos,

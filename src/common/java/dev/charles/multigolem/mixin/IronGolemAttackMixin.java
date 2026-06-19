@@ -16,6 +16,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
@@ -82,7 +83,7 @@ public abstract class IronGolemAttackMixin {
             var excludeFilter = TargetFilter.fromIgnoredList(stats.ignoredTargetTypes());
             if (excludeFilter.isExcluded(target)) return;
 
-            var bolt = EntityType.LIGHTNING_BOLT.create(level, EntitySpawnReason.TRIGGERED);
+            var bolt = EntityTypes.LIGHTNING_BOLT.create(level, EntitySpawnReason.TRIGGERED);
             if (bolt != null) {
                 bolt.setPos(target.getX(), target.getY(), target.getZ());
                 level.addFreshEntity(bolt);

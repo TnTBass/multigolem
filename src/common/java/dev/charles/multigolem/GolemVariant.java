@@ -19,11 +19,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public enum GolemVariant {
-    COPPER   ("copper",    "Copper",    Blocks.COPPER_BLOCK,    Items.COPPER_INGOT,    Items.COPPER_INGOT),
+    COPPER   ("copper",    "Copper",    Blocks.COPPER_BLOCK.weathering().unaffected(), Items.COPPER_INGOT, Items.COPPER_INGOT),
     IRON     ("iron",      "Iron",      Blocks.IRON_BLOCK,      Items.IRON_INGOT,      Items.IRON_INGOT),
     GOLD     ("gold",      "Gold",      Blocks.GOLD_BLOCK,      Items.GOLD_INGOT,      Items.GOLD_INGOT),
     EMERALD  ("emerald",   "Emerald",   Blocks.EMERALD_BLOCK,   Items.EMERALD,         Items.EMERALD),
@@ -43,12 +42,10 @@ public enum GolemVariant {
         v -> com.mojang.serialization.DataResult.success(v.id)
     );
 
-    private static final Map<Block, GolemVariant> BY_BODY_BLOCK = Arrays.stream(values())
-        .collect(Collectors.toUnmodifiableMap(v -> v.bodyBlock, Function.identity()));
     private static final Map<Item, GolemVariant> BY_HEAL_INGOT = Arrays.stream(values())
-        .collect(Collectors.toUnmodifiableMap(v -> v.healIngot, Function.identity()));
+        .collect(Collectors.toUnmodifiableMap(v -> v.healIngot, v -> v));
     private static final Map<String, GolemVariant> BY_ID = Arrays.stream(values())
-        .collect(Collectors.toUnmodifiableMap(v -> v.id, Function.identity()));
+        .collect(Collectors.toUnmodifiableMap(v -> v.id, v -> v));
 
     private final String id;
     private final String displayName;

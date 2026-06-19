@@ -8,6 +8,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.TypedEntityData;
@@ -36,7 +37,7 @@ public final class MinecraftBootstrap {
         }
         holder.bindComponents(DataComponentMap.builder()
             .addAll(DataComponents.COMMON_ITEM_COMPONENTS)
-            .set(DataComponents.ENTITY_DATA, TypedEntityData.of(EntityType.IRON_GOLEM, new CompoundTag()))
+            .set(DataComponents.ENTITY_DATA, TypedEntityData.of(EntityTypes.IRON_GOLEM, new CompoundTag()))
             .build());
     }
 }

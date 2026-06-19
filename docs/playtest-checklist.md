@@ -50,7 +50,7 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 
 ## Vanilla client compatibility
 
-- [ ] Run the modded server. Connect with a vanilla MC 26.1.2 client.
+- [ ] Run the modded server. Connect with a vanilla MC 26.2 client.
 - [ ] Verify the vanilla client doesn't get kicked at login.
 - [ ] Have a modded player create a copper-variant golem on the same world; verify the vanilla client sees it as an iron golem (appearance) but reacts correctly to its stats (e.g., dies in copper-golem hit counts, drops copper ingots when killed).
 
