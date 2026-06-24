@@ -95,14 +95,12 @@ jobs:
             -Loader "fabric" `
             -Version $version `
             -JarPath "fabric/build/libs/multigolem-fabric-$version.jar" `
-            -SourcesJarPath "fabric/build/libs/multigolem-fabric-$version-sources.jar" `
             -ChangelogPath "release-notes.md"
           ./scripts/upload-modrinth.ps1 `
             -Slug "multigolem" `
             -Loader "neoforge" `
             -Version $version `
             -JarPath "neoforge/build/libs/multigolem-neoforge-$version.jar" `
-            -SourcesJarPath "neoforge/build/libs/multigolem-neoforge-$version-sources.jar" `
             -ChangelogPath "release-notes.md"
       - name: publish curseforge release
         if: ${{ github.event_name != 'workflow_dispatch' || inputs.publish_target == 'all' || inputs.publish_target == 'curseforge' }}

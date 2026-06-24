@@ -4,7 +4,6 @@ param(
     [string] $Loader = "fabric",
     [string] $Version = "",
     [string] $JarPath = "",
-    [string] $SourcesJarPath = "",
     [string] $ChangelogPath = "",
     [switch] $SyncDescriptionOnly
 )
@@ -30,10 +29,6 @@ if ([string]::IsNullOrWhiteSpace($Version)) {
 
 if ([string]::IsNullOrWhiteSpace($JarPath)) {
     $JarPath = "$Loader/build/libs/multigolem-$Loader-$Version.jar"
-}
-
-if ([string]::IsNullOrWhiteSpace($SourcesJarPath)) {
-    $SourcesJarPath = "$Loader/build/libs/multigolem-$Loader-$Version-sources.jar"
 }
 
 $minecraftVersion = $Version -replace "^.*\+mc", ""
@@ -159,13 +154,12 @@ $versionData = @{
     featured = $true
     status = "listed"
     project_id = $projectId
-    file_parts = @("file", "sources")
+    file_parts = @("file")
     primary_file = "file"
 } | ConvertTo-Json -Depth 10
 $versionData | Set-Content -LiteralPath $versionDataPath -Encoding UTF8
 
 $jar = Get-Item -LiteralPath (Join-Path $root $JarPath)
-$sources = Get-Item -LiteralPath (Join-Path $root $SourcesJarPath)
 
 $versionResponse = & $curl -sS `
     -X POST "https://api.modrinth.com/v2/version" `
@@ -173,8 +167,7 @@ $versionResponse = & $curl -sS `
     -H "User-Agent: TnTBass/multigolem Modrinth upload" `
     -H "Accept: application/json" `
     -F "data=<$versionDataPath;type=application/json" `
-    -F "file=@$($jar.FullName)" `
-    -F "sources=@$($sources.FullName)"
+    -F "file=@$($jar.FullName)"
 
 if ($LASTEXITCODE -ne 0) {
     throw "curl failed while creating Modrinth version."

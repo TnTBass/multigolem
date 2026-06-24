@@ -31,17 +31,24 @@ gh release create "${GITHUB_REF_NAME}" \\
 ./scripts/upload-curseforge.ps1 -Loader "neoforge" -JarPath "neoforge/build/libs/multigolem-neoforge-$version.jar"
 """
 
+VALID_MARKETPLACE_RELEASE = VALID_RELEASE.replace(
+    ' -SourcesJarPath "fabric/build/libs/multigolem-fabric-$version-sources.jar"',
+    "",
+).replace(
+    ' -SourcesJarPath "neoforge/build/libs/multigolem-neoforge-$version-sources.jar"',
+    "",
+)
+
 
 VALID_MODRINTH = """
 param(
     [ValidateSet("fabric", "neoforge")]
     [string] $Loader = "fabric",
-    [string] $JarPath = "",
-    [string] $SourcesJarPath = ""
+    [string] $JarPath = ""
 )
 $JarPath = "$Loader/build/libs/multigolem-$Loader-$Version.jar"
-$SourcesJarPath = "$Loader/build/libs/multigolem-$Loader-$Version-sources.jar"
 $loaders = @($Loader)
+file_parts = @("file")
 """
 
 
@@ -134,10 +141,39 @@ $SourcesJarPath = "fabric/build/libs/multigolem-$Version-fabric-sources.jar"
 
         self.assertIn("Modrinth upload script must accept a loader argument", "\n".join(errors))
 
+    def test_fails_when_marketplace_uploads_include_sources_jars(self):
+        checker = load_checker()
+
+        errors = checker.check(self.write_repo())
+
+        self.assertIn("marketplace upload calls must not include sources jars", "\n".join(errors))
+
+    def test_fails_when_modrinth_upload_declares_sources_file_part(self):
+        checker = load_checker()
+        modrinth = VALID_MODRINTH.replace(
+            'file_parts = @("file")',
+            'file_parts = @("file", "sources")',
+        )
+
+        errors = checker.check(self.write_repo(release=VALID_MARKETPLACE_RELEASE, modrinth=modrinth))
+
+        self.assertIn("Modrinth upload script must not attach sources jars", "\n".join(errors))
+
+    def test_fails_when_modrinth_upload_declares_reordered_sources_file_part(self):
+        checker = load_checker()
+        modrinth = VALID_MODRINTH.replace(
+            'file_parts = @("file")',
+            'file_parts = @("sources", "file")',
+        )
+
+        errors = checker.check(self.write_repo(release=VALID_MARKETPLACE_RELEASE, modrinth=modrinth))
+
+        self.assertIn("Modrinth upload script must not attach sources jars", "\n".join(errors))
+
     def test_passes_on_separate_fabric_and_neoforge_upload_metadata(self):
         checker = load_checker()
 
-        self.assertEqual([], checker.check(self.write_repo()))
+        self.assertEqual([], checker.check(self.write_repo(release=VALID_MARKETPLACE_RELEASE)))
 
 
 if __name__ == "__main__":

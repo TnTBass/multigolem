@@ -67,12 +67,15 @@ def check(root: Path = ROOT) -> list[str]:
         if f"{loader}/build/libs/multigolem-{loader}-$version.jar" not in release:
             errors.append(f"release workflow must pass explicit {loader} jar path to upload scripts.")
 
+    if re.search(r"(?<!\w)-SourcesJarPath\b", release):
+        errors.append("marketplace upload calls must not include sources jars.")
+
     if "$Loader" not in modrinth:
         errors.append("Modrinth upload script must accept a loader argument.")
     if "fabric/build/libs" not in modrinth and "$Loader/build/libs/multigolem-$Loader-$Version.jar" not in modrinth:
         errors.append("Modrinth upload script must support loader-suffixed primary jar paths.")
-    if "neoforge/build/libs" not in modrinth and "$Loader/build/libs/multigolem-$Loader-$Version-sources.jar" not in modrinth:
-        errors.append("Modrinth upload script must support loader-suffixed sources jar paths.")
+    if re.search(r'file_parts\s*=\s*@\([^)]*"sources"', modrinth) or '-F "sources=@' in modrinth:
+        errors.append("Modrinth upload script must not attach sources jars.")
 
     if "$Loader" not in curseforge:
         errors.append("CurseForge upload script must accept a loader argument.")
