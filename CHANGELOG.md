@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.7.0+mc26.2 — 2026-06-25
+
 - Added Redstone Golems, built from Redstone Blocks and healed with Redstone Dust. They have 90 health and 13 attack by default, overcharge when badly damaged, and release a Slowness X pulse when they die.
 
 ## 0.6.1+mc26.2 — 2026-06-19
