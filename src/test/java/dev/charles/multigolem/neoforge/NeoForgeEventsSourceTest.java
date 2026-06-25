@@ -20,6 +20,7 @@ class NeoForgeEventsSourceTest {
         assertTrue(source.contains("GoldAbility.onTick(level);"));
         assertTrue(source.contains("EmeraldAbility.onTick(level);"));
         assertTrue(source.contains("DiamondAbility.onTick(level);"));
+        assertTrue(source.contains("RedstoneAbility.onTick(level);"));
         assertTrue(source.contains("CopperAbility.allowDamage(entity, source, amount)"));
         assertTrue(source.contains("NetheriteAbility.allowDamage(entity, source, amount)"));
         assertTrue(source.contains("DiamondAbility.allowDamage(entity, source, amount)"));
@@ -62,6 +63,7 @@ class NeoForgeEventsSourceTest {
         assertTrue(mixins.contains("\"GolemTargetingMixin\""));
         assertTrue(mixins.contains("\"IronGolemRegisterGoalsMixin\""));
         assertTrue(mixins.contains("\"IronGolemAttackMixin\""));
+        assertTrue(mixins.contains("\"IronGolemDeathMixin\""));
         assertTrue(mixins.contains("\"VillagerMixin\""));
         assertTrue(mixins.contains("\"BaseSpawnerAccessor\""));
         assertTrue(mixins.contains("\"BaseSpawnerMixin\""));

@@ -12,6 +12,7 @@
     "MobTargetSelectorAccessor",
     "IronGolemRegisterGoalsMixin",
     "IronGolemAttackMixin",
+    "IronGolemDeathMixin",
     "VillagerMixin",
     "BaseSpawnerAccessor",
     "BaseSpawnerMixin",

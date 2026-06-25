@@ -6,6 +6,7 @@ import dev.charles.multigolem.ability.DiamondAbility;
 import dev.charles.multigolem.ability.EmeraldAbility;
 import dev.charles.multigolem.ability.GoldAbility;
 import dev.charles.multigolem.ability.NetheriteAbility;
+import dev.charles.multigolem.ability.RedstoneAbility;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -30,6 +31,7 @@ public final class NeoForgeAbilityEvents {
         GoldAbility.onTick(level);
         EmeraldAbility.onTick(level);
         DiamondAbility.onTick(level);
+        RedstoneAbility.onTick(level);
     }
 
     private static void onLivingIncomingDamage(LivingIncomingDamageEvent event) {
