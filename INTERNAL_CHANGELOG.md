@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Implemented V7 Redstone Golem as a lower-strength emergency-control defender with Redstone Block construction, Redstone Dust healing, overcharge attack/resistance without speed, a Slowness X death pulse, marked eggs/assets, docs, and Fabric/NeoForge parity.
 - Added Redstone Golem design and implementation planning artifacts without starting gameplay implementation.
 - Stopped publishing sources jars to Modrinth while keeping sources artifacts on GitHub Releases.
 - Added NeoForge permission nodes and permission API checks for the multiloader NeoForge adapter.

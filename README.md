@@ -1,17 +1,17 @@
 # MultiGolem
 
-A Fabric and NeoForge mod for Minecraft 26.2 that adds Copper, Gold, Emerald, Diamond, Netherite, and Zombie golem variants alongside the vanilla Iron Golem. Built by Tyler and Charles.
+A Fabric and NeoForge mod for Minecraft 26.2 that adds Copper, Redstone, Gold, Emerald, Diamond, Netherite, and Zombie golem variants alongside the vanilla Iron Golem. Built by Tyler and Charles.
 
 ## What it does
 
-- Six new golem tiers, built like an Iron Golem (T-pattern + carved pumpkin) but with a different body block.
+- Seven new golem tiers, built like an Iron Golem (T-pattern + carved pumpkin) but with a different body block.
 - Each tier has a unique texture on modded clients. Vanilla clients see all variants as regular iron golems.
-- Stats scale: Copper is weakest, Netherite is strongest (designed to beat a Warden 1v1).
+- Stats scale by role: Copper is weakest, Redstone is a lower-strength emergency-control defender, and Netherite is strongest (designed to beat a Warden 1v1).
 - Heal each golem with its matching material.
 - Per-tier special abilities (see below).
-- Per-tier `ignored_target_types` — copper/gold/emerald/diamond/netherite ignore creepers by default to prevent collateral block damage.
+- Per-tier `ignored_target_types` — copper/redstone/gold/emerald/diamond/netherite ignore creepers by default to prevent collateral block damage.
 - Hostile Zombie Golems built from Mossy Cobblestone, healed with Rotten Flesh, allied with zombies, and maintained in zombie-villager village areas.
-- Marked vanilla iron golem spawn eggs for Copper, Gold, Emerald, Diamond, Netherite, and Zombie variants.
+- Marked vanilla iron golem spawn eggs for Copper, Redstone, Gold, Emerald, Diamond, Netherite, and Zombie variants.
 - **Server-side functional.** Vanilla clients can connect with no mod installed; stats, drops, and creation all behave correctly.
 
 ## Recipes
@@ -22,6 +22,7 @@ Build a T-shape (1 base block, 1 center, 2 arms) out of one of:
 |---|---|
 | Copper Block, including fresh, exposed, weathered, oxidized, and waxed variants | Copper Iron Golem |
 | Iron Block | Iron Golem (vanilla, unchanged) |
+| Redstone Block | Redstone Golem |
 | Gold Block | Gold Golem |
 | Emerald Block | Emerald Golem |
 | Diamond Block | Diamond Golem |
@@ -36,6 +37,7 @@ Place a carved pumpkin on top. Copper Iron Golems preserve the fresh, exposed, w
 |---|---:|---:|
 | Copper | 60 | 8.5 |
 | Iron | 100 | 15.0 (vanilla) |
+| Redstone | 90 | 13.0 |
 | Gold | 130 | 22.5 |
 | Emerald | 200 | 40.0 |
 | Diamond | 350 | 62.5 |
@@ -47,6 +49,7 @@ Place a carved pumpkin on top. Copper Iron Golems preserve the fresh, exposed, w
 | Tier | Ability |
 |---|---|
 | Copper | Lightning strikes heal instead of damage |
+| Redstone | Overcharges at or below 25% health for attack and resistance without speed; releases a Slowness X overload pulse on death |
 | Gold | +75% movement speed; sprint-dust and sunlight-shine particles |
 | Emerald | Heals passively while any villager or wandering trader is within 8 blocks |
 | Diamond | Passive LOS lightning zap of nearby hostiles (30–60s cooldown) + on-attack lightning; self-immune to lightning damage |
@@ -68,7 +71,7 @@ Top-level fields:
 | `allow_golem_healing` | `true` | Enables or disables ingot-based healing for all golem tiers. |
 | `zombie_village_spawning` | object | Maintains Zombie Golems near zombie-villager village areas. Defaults to enabled, one zombie villager minimum, regular zombie bonus at 3, and max 2 Zombie Golems. |
 
-Each tier lives under `tiers.<tier_id>`, where `tier_id` is one of `copper`, `iron`, `gold`, `emerald`, `diamond`, `netherite`, or `zombie`.
+Each tier lives under `tiers.<tier_id>`, where `tier_id` is one of `copper`, `iron`, `redstone`, `gold`, `emerald`, `diamond`, `netherite`, or `zombie`.
 
 Shared per-tier fields:
 
@@ -77,7 +80,7 @@ Shared per-tier fields:
 | `max_health` | `1`-`2048` | Maximum HP for that tier. |
 | `attack_damage` | `0`-`2048` | Attack damage for that tier. |
 | `anger_on_hit` | `true` / `false` | Whether that tier gets angry when attacked. |
-| `ignored_target_types` | list | Target categories this tier will not attack. Recognized values: `CREEPERS`, `ENDERMEN`, `PLAYERS`, `ALL_BOSSES`. Copper, Gold, Emerald, Diamond, and Netherite ignore creepers by default. |
+| `ignored_target_types` | list | Target categories this tier will not attack. Recognized values: `CREEPERS`, `ENDERMEN`, `PLAYERS`, `ALL_BOSSES`. Copper, Redstone, Gold, Emerald, Diamond, and Netherite ignore creepers by default. |
 
 Ability fields:
 
@@ -85,6 +88,18 @@ Ability fields:
 |---|---|---:|---|
 | Copper | `copper_lightning_immune` | `true` | Lightning heals Copper golems instead of damaging them. |
 | Copper | `copper_lightning_heal_amount` | `null` | HP restored by lightning. `null` means heal to full. |
+| Redstone | `redstone_overcharge_enabled` | `true` | Enables emergency overcharge when health crosses at or below the configured threshold. |
+| Redstone | `redstone_overcharge_health_threshold_percent` | `0.25` | Health percentage threshold for starting overcharge. |
+| Redstone | `redstone_overcharge_duration_seconds` | `12.0` | Seconds an overcharge remains active. |
+| Redstone | `redstone_overcharge_cooldown_seconds` | `45.0` | Seconds before a new overcharge can trigger after expiry. |
+| Redstone | `redstone_overcharge_attack_multiplier` | `1.5` | Attack multiplier while overcharged. |
+| Redstone | `redstone_overcharge_resistance_amplifier` | `1` | Resistance effect amplifier while overcharged. `1` is Resistance II. |
+| Redstone | `redstone_overcharge_resistance_refresh_seconds` | `3.0` | Resistance refresh duration while overcharged. |
+| Redstone | `redstone_death_pulse_enabled` | `true` | Enables the Slowness death overload pulse. |
+| Redstone | `redstone_death_pulse_radius` | `8` | Death pulse radius in blocks. |
+| Redstone | `redstone_death_pulse_slowness_seconds` | `6.0` | Slowness duration applied by the death pulse. |
+| Redstone | `redstone_death_pulse_slowness_amplifier` | `9` | Slowness effect amplifier. `9` is Slowness X. |
+| Redstone | `redstone_particles_enabled`, `redstone_death_pulse_particles_enabled` | `true` | Enables overcharge and death pulse particles. |
 | Gold | `gold_speed_multiplier` | `1.75` | Movement speed multiplier. |
 | Gold | `gold_sprint_particles_enabled` | `true` | Enables sprint-dust particles while moving. |
 | Gold | `gold_sunlight_shine_enabled` | `true` | Enables sunlight-shine particles while idle outdoors. |
@@ -114,6 +129,7 @@ MultiGolem supports LuckPerms-compatible permissions through Fabric Permissions 
 Creation permissions:
 
 - `multigolem.create.copper`
+- `multigolem.create.redstone`
 - `multigolem.create.gold`
 - `multigolem.create.emerald`
 - `multigolem.create.diamond`
@@ -124,6 +140,7 @@ Healing permissions:
 
 - `multigolem.heal.copper`
 - `multigolem.heal.iron`
+- `multigolem.heal.redstone`
 - `multigolem.heal.gold`
 - `multigolem.heal.emerald`
 - `multigolem.heal.diamond`
@@ -145,7 +162,7 @@ These nodes affect player-built MultiGolem T-pattern creation, ingot-based golem
 - **V4** ✅: Spawn eggs for the Iron Golem variants.
 - **V5** ✅: Zombie Golem, with hostile Mossy Cobblestone golems, Rotten Flesh healing, sickness effects, civilian conversion, marked eggs, and zombie-village maintenance.
 - **V6**: NeoForge support.
-- **V7**: Redstone Golem, a planned lower-strength emergency-control defender that overcharges below 25% health, gains attack/resistance without speed, and releases a Slowness X death overload pulse.
+- **V7** ✅: Redstone Golem, a lower-strength emergency-control defender that overcharges at or below 25% health, gains attack/resistance without speed, and releases a Slowness X death overload pulse.
 - **V8**: Lapis Golem, a planned lower-strength enchantment support golem with full immunity to magic damage and hostile magical status effects while remaining vulnerable to physical, projectile, explosion, fire, and melee damage.
 - **V9**: Copper Golem variants.
 

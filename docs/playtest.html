@@ -39,6 +39,7 @@
 
 <h3>Creation</h3>
 <label><input type="checkbox"> T-pattern of copper blocks + carved pumpkin → copper golem spawns, 60 HP.</label>
+<label><input type="checkbox"> Redstone blocks → redstone golem, 90 HP.</label>
 <label><input type="checkbox"> Gold blocks → gold golem, 130 HP.</label>
 <label><input type="checkbox"> Emerald → emerald golem, 200 HP.</label>
 <label><input type="checkbox"> Diamond → diamond golem, 350 HP.</label>
@@ -52,11 +53,13 @@
 <label><input type="checkbox"> Netherite golem vs Warden: netherite wins 1v1 with HP to spare; kills warden in ~6 swings.</label>
 
 <h3>Drops</h3>
-<label><input type="checkbox"> Kill each variant in creative; matching ingot drops (3–5; 2–3 netherite scrap for netherite) plus 0–2 poppies.</label>
+<label><input type="checkbox"> Kill each variant in creative; matching material drops (3–5; 2–3 netherite scrap for netherite) plus 0–2 poppies.</label>
 <label><input type="checkbox"> Kill a vanilla iron golem; vanilla 3–5 iron ingots + poppies.</label>
 
 <h3>Healing</h3>
 <label><input type="checkbox"> Damage copper golem; right-click with copper ingot → heals 25 HP, consumes 1 ingot.</label>
+<label><input type="checkbox"> Damage redstone golem; right-click with Redstone Dust → heals 25 HP, consumes 1 dust.</label>
+<label><input type="checkbox"> Right-click redstone golem with iron ingot → no heal.</label>
 <label><input type="checkbox"> Right-click copper golem with iron ingot → no heal.</label>
 <label><input type="checkbox"> Right-click iron golem with copper ingot → no heal.</label>
 <label><input type="checkbox"> Right-click iron golem with iron ingot → vanilla heal works.</label>
@@ -84,6 +87,7 @@
 
 <h3>Textures (modded client)</h3>
 <label><input type="checkbox"> Copper golem displays with copper-tinted skin.</label>
+<label><input type="checkbox"> Redstone golem displays with redstone skin.</label>
 <label><input type="checkbox"> Gold golem displays with gold skin.</label>
 <label><input type="checkbox"> Emerald golem displays with emerald skin.</label>
 <label><input type="checkbox"> Diamond golem displays with diamond skin.</label>
@@ -136,7 +140,7 @@
 <label><input type="checkbox"> Hit another netherite golem → no fire effect on target.</label>
 
 <h3>ignored_target_types</h3>
-<label><input type="checkbox"> Default: copper/gold/emerald/diamond/netherite ignore creepers in melee.</label>
+<label><input type="checkbox"> Default: copper/redstone/gold/emerald/diamond/netherite ignore creepers in melee.</label>
 <label><input type="checkbox"> Default: iron attacks creepers (vanilla preserved).</label>
 <label><input type="checkbox"> Set <code>iron.ignored_target_types: ["CREEPERS"]</code> → iron now ignores creepers.</label>
 <label><input type="checkbox"> Unknown value (<code>"DRAGONS_AND_CASTLES"</code>) → warning logged, dropped, other entries preserved.</label>
@@ -152,10 +156,10 @@
 <div class="version">V3 — village natural spawns</div>
 
 <h3>Village variant rolls</h3>
-<label><input type="checkbox"> Set <code>village_spawning.weights</code> to <code>{"iron":0,"copper":1,"gold":0,"emerald":0,"diamond":0,"netherite":0}</code>. Trigger a villager-called golem spawn. Copper variant spawns.</label>
-<label><input type="checkbox"> Repeat forced one-at-a-time weights for Gold, Emerald, Diamond, and Netherite. Each target variant can spawn from villagers.</label>
+<label><input type="checkbox"> Set <code>village_spawning.weights</code> to <code>{"iron":0,"copper":1,"redstone":0,"gold":0,"emerald":0,"diamond":0,"netherite":0}</code>. Trigger a villager-called golem spawn. Copper variant spawns.</label>
+<label><input type="checkbox"> Repeat forced one-at-a-time weights for Redstone, Gold, Emerald, Diamond, and Netherite. Each target variant can spawn from villagers.</label>
 <label><input type="checkbox"> Set <code>netherite: 1</code> and all other recognized weights to <code>0</code>. Villagers can spawn Netherite.</label>
-<label><input type="checkbox"> Restore default weights. Over repeated village spawns, Iron, Copper, Gold, Emerald, and Diamond are possible outcomes; Diamond is rare and Netherite does not spawn unless configured.</label>
+<label><input type="checkbox"> Restore default weights. Over repeated village spawns, Iron, Copper, Redstone, Gold, Emerald, and Diamond are possible outcomes; Diamond is rare and Netherite does not spawn unless configured.</label>
 
 <h3>V2 behavior on village-spawned variants</h3>
 <label><input type="checkbox"> Village-spawned non-iron variant starts at configured full health.</label>
@@ -163,6 +167,7 @@
 <label><input type="checkbox"> Healing with the matching ingot works.</label>
 <label><input type="checkbox"> Variant-specific drops use the village-spawned variant.</label>
 <label><input type="checkbox"> Copper lightning heal works.</label>
+<label><input type="checkbox"> Redstone overcharge and death pulse work.</label>
 <label><input type="checkbox"> Gold speed and particles work.</label>
 <label><input type="checkbox"> Emerald villager aura works.</label>
 <label><input type="checkbox"> Diamond lightning behavior works.</label>
@@ -189,6 +194,8 @@
 
 <h3>Creation permissions</h3>
 <label><input type="checkbox"> With no LuckPerms or permissions provider installed, player-built Diamond and Netherite MultiGolem T-patterns still spawn normally.</label>
+<label><input type="checkbox"> Denying <code>multigolem.create.redstone</code> prevents a player-built Redstone MultiGolem T-pattern from spawning.</label>
+<label><input type="checkbox"> Denied Redstone creation leaves all T-pattern blocks intact.</label>
 <label><input type="checkbox"> Denying <code>multigolem.create.diamond</code> prevents a player-built Diamond MultiGolem T-pattern from spawning.</label>
 <label><input type="checkbox"> Denied Diamond creation leaves all T-pattern blocks intact.</label>
 <label><input type="checkbox"> Denied Diamond creation shows <code>You do not have permission to create a Diamond golem.</code></label>
@@ -198,6 +205,8 @@
 
 <h3>Healing permissions</h3>
 <label><input type="checkbox"> With no LuckPerms or permissions provider installed, ingot-based healing still works normally.</label>
+<label><input type="checkbox"> Denying <code>multigolem.heal.redstone</code> prevents Redstone Golem healing with Redstone Dust.</label>
+<label><input type="checkbox"> Denied Redstone healing does not consume Redstone Dust.</label>
 <label><input type="checkbox"> Denying <code>multigolem.heal.netherite</code> prevents Netherite golem healing.</label>
 <label><input type="checkbox"> Denied Netherite healing does not consume the netherite ingot.</label>
 <label><input type="checkbox"> Denied Netherite healing does not play vanilla repair feedback.</label>
@@ -218,6 +227,7 @@
 <h3>Spawn egg behavior</h3>
 <label><input type="checkbox"> Unmarked vanilla iron golem spawn egg still spawns a vanilla-owned iron golem.</label>
 <label><input type="checkbox"> Copper Golem Spawn Egg spawns a copper MultiGolem <code>IronGolem</code>.</label>
+<label><input type="checkbox"> Redstone Golem Spawn Egg spawns a redstone MultiGolem <code>IronGolem</code>.</label>
 <label><input type="checkbox"> Gold Golem Spawn Egg spawns a gold MultiGolem <code>IronGolem</code>.</label>
 <label><input type="checkbox"> Emerald Golem Spawn Egg spawns an emerald MultiGolem <code>IronGolem</code>.</label>
 <label><input type="checkbox"> Diamond Golem Spawn Egg spawns a diamond MultiGolem <code>IronGolem</code>.</label>
@@ -238,6 +248,7 @@
 <h3>Spawners</h3>
 <label><input type="checkbox"> Denied spawner configuration leaves the spawner unchanged and does not consume the egg.</label>
 <label><input type="checkbox"> Allowed marked egg use on a spawner configures the matching MultiGolem variant.</label>
+<label><input type="checkbox"> Redstone Golem Spawn Egg configures a spawner that spawns Redstone Golems with attachment/stats.</label>
 <label><input type="checkbox"> Unmarked vanilla iron golem spawn egg clears any previous MultiGolem spawner marker and remains vanilla-owned.</label>
 <label><input type="checkbox"> Spawner-spawned variants get attachment/stats and are not player-created.</label>
 <label><input type="checkbox"> Zombie Golem spawner spawns are immediately hostile.</label>
@@ -279,8 +290,36 @@
 <label><input type="checkbox"> Current live Zombie Golem count is checked before every maintenance spawn attempt.</label>
 <label><input type="checkbox"> <code>max_zombie_golems_per_village = 0</code> disables maintenance spawning while craft and egg paths still work.</label>
 
+<hr>
+
+<div class="version">Redstone Golem - emergency-control defender</div>
+
+<h3>Creation and healing</h3>
+<label><input type="checkbox"> Redstone Block T-pattern + carved pumpkin spawns a Redstone Golem at 90 HP.</label>
+<label><input type="checkbox"> Damaged Redstone Golem heals with Redstone Dust and checks <code>multigolem.heal.redstone</code>.</label>
+<label><input type="checkbox"> Denied <code>multigolem.create.redstone</code> leaves all T-pattern blocks intact and no Redstone Golem spawns.</label>
+<label><input type="checkbox"> Denied <code>multigolem.heal.redstone</code> does not consume Redstone Dust.</label>
+<label><input type="checkbox"> Redstone Golem Spawn Egg spawns a redstone MultiGolem <code>IronGolem</code>.</label>
+<label><input type="checkbox"> Redstone Golem Spawn Egg configures a spawner that spawns Redstone Golems.</label>
+
+<h3>Overcharge</h3>
+<label><input type="checkbox"> Force a Redstone Golem to at or below 25% health; overcharge starts.</label>
+<label><input type="checkbox"> While overcharged, attacks are boosted and Resistance II is applied.</label>
+<label><input type="checkbox"> While overcharged, movement speed does not increase.</label>
+<label><input type="checkbox"> Heal above the threshold while active; the active overcharge continues until expiry.</label>
+<label><input type="checkbox"> After expiry, cooldown prevents immediate retrigger.</label>
+<label><input type="checkbox"> Heal above the threshold, wait out cooldown, then damage back to 25% or below; overcharge can trigger again.</label>
+<label><input type="checkbox"> Save/reload during active overcharge or cooldown; state persists and does not retrigger incorrectly.</label>
+
+<h3>Death pulse and combat filtering</h3>
+<label><input type="checkbox"> Kill a Redstone Golem; hostiles within 8 blocks receive Slowness X for 6 seconds.</label>
+<label><input type="checkbox"> Death pulse skips players, villagers, wandering traders, Iron Golems, non-zombie MultiGolems, Redstone Golems, and creepers by default.</label>
+<label><input type="checkbox"> Zombie Golems are affected by the Redstone death pulse.</label>
+<label><input type="checkbox"> Redstone Golems and Zombie Golems can fight each other.</label>
+<label><input type="checkbox"> Fabric and NeoForge behavior match for creation, healing, overcharge, cooldown, death pulse, and filtering.</label>
+
 <script>
-  const STORAGE_KEY = 'multigolem-playtest-zombie-golem';
+  const STORAGE_KEY = 'multigolem-playtest-redstone-golem';
 
   function allBoxes() {
     return Array.from(document.querySelectorAll('input[type=checkbox]'));

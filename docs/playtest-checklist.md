@@ -5,6 +5,7 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 ## Creation
 
 - [ ] Build T-pattern of copper blocks + carved pumpkin → copper golem spawns, 60 HP.
+- [ ] Same with redstone blocks → redstone golem, 90 HP.
 - [ ] Same with gold blocks → gold golem, 130 HP.
 - [ ] Emerald → emerald golem, 200 HP.
 - [ ] Diamond → diamond golem, 350 HP.
@@ -20,12 +21,14 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 
 ## Drops
 
-- [ ] Kill each variant in creative; verify the matching ingot drops (3–5 for most; 2–3 netherite scrap for netherite) plus 0–2 poppies.
+- [ ] Kill each variant in creative; verify matching material drops (3–5 for most; 2–3 netherite scrap for netherite) plus 0–2 poppies.
 - [ ] Kill a vanilla iron golem; verify vanilla 3–5 iron ingots + poppies.
 
 ## Healing
 
 - [ ] Damage a copper golem; right-click with copper ingot → heals 25 HP, consumes 1 ingot.
+- [ ] Damage a redstone golem; right-click with Redstone Dust → heals 25 HP, consumes 1 dust.
+- [ ] Right-click redstone golem with iron ingot → no heal.
 - [ ] Right-click copper golem with iron ingot → no heal.
 - [ ] Right-click iron golem with copper ingot → no heal.
 - [ ] Right-click iron golem with iron ingot → vanilla heal works.
@@ -61,7 +64,7 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 ## Textures (modded client)
 
 - [ ] Copper golem displays with copper-tinted skin.
-- [ ] Repeat for gold, emerald, diamond, netherite.
+- [ ] Repeat for redstone, gold, emerald, diamond, netherite.
 - [ ] Iron golem displays as vanilla (no change).
 
 ## Textures (vanilla client)
@@ -116,7 +119,7 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 
 ## `ignored_target_types`
 
-- [ ] Default: copper/gold/emerald/diamond/netherite ignore creepers in melee.
+- [ ] Default: copper/redstone/gold/emerald/diamond/netherite ignore creepers in melee.
 - [ ] Default: iron attacks creepers (vanilla behavior preserved).
 - [ ] Set `iron.ignored_target_types: ["CREEPERS"]` → iron now ignores creepers too.
 - [ ] Unknown value in list (`"DRAGONS_AND_CASTLES"`) → warning logged at startup, value dropped, other entries preserved.
@@ -137,10 +140,10 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 
 ## Village variant rolls
 
-- [ ] Set `village_spawning.weights` to `{"iron":0,"copper":1,"gold":0,"emerald":0,"diamond":0,"netherite":0}`. Trigger a villager-called golem spawn. Copper variant spawns.
-- [ ] Repeat forced one-at-a-time weights for Gold, Emerald, Diamond, and Netherite. Each target variant can spawn from villagers.
+- [ ] Set `village_spawning.weights` to `{"iron":0,"copper":1,"redstone":0,"gold":0,"emerald":0,"diamond":0,"netherite":0}`. Trigger a villager-called golem spawn. Copper variant spawns.
+- [ ] Repeat forced one-at-a-time weights for Redstone, Gold, Emerald, Diamond, and Netherite. Each target variant can spawn from villagers.
 - [ ] Set `netherite: 1` and all other recognized weights to `0`. Villagers can spawn Netherite.
-- [ ] Restore default weights. Over repeated village spawns, Iron, Copper, Gold, Emerald, and Diamond are possible outcomes; Diamond is rare and Netherite does not spawn unless configured.
+- [ ] Restore default weights. Over repeated village spawns, Iron, Copper, Redstone, Gold, Emerald, and Diamond are possible outcomes; Diamond is rare and Netherite does not spawn unless configured.
 
 ## V2 behavior on village-spawned variants
 
@@ -149,6 +152,7 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 - [ ] Healing with the matching ingot works.
 - [ ] Variant-specific drops use the village-spawned variant.
 - [ ] Copper lightning heal works.
+- [ ] Redstone overcharge and death pulse work.
 - [ ] Gold speed and particles work.
 - [ ] Emerald villager aura works.
 - [ ] Diamond lightning behavior works.
@@ -179,6 +183,8 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 ## Creation permissions
 
 - [ ] With no LuckPerms or permissions provider installed, player-built Diamond and Netherite MultiGolem T-patterns still spawn normally.
+- [ ] Denying `multigolem.create.redstone` prevents a player-built Redstone MultiGolem T-pattern from spawning.
+- [ ] Denied Redstone creation leaves all T-pattern blocks intact.
 - [ ] Denying `multigolem.create.diamond` prevents a player-built Diamond MultiGolem T-pattern from spawning.
 - [ ] Denied Diamond creation leaves all T-pattern blocks intact.
 - [ ] Denied Diamond creation shows `You do not have permission to create a Diamond golem.`
@@ -189,6 +195,8 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 ## Healing permissions
 
 - [ ] With no LuckPerms or permissions provider installed, ingot-based healing still works normally.
+- [ ] Denying `multigolem.heal.redstone` prevents Redstone Golem healing with Redstone Dust.
+- [ ] Denied Redstone healing does not consume Redstone Dust.
 - [ ] Denying `multigolem.heal.netherite` prevents Netherite golem healing.
 - [ ] Denied Netherite healing does not consume the netherite ingot.
 - [ ] Denied Netherite healing does not play vanilla repair feedback.
@@ -213,6 +221,7 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 
 - [ ] Unmarked vanilla iron golem spawn egg still spawns a vanilla-owned iron golem.
 - [ ] Copper Golem Spawn Egg spawns a copper MultiGolem `IronGolem`.
+- [ ] Redstone Golem Spawn Egg spawns a redstone MultiGolem `IronGolem`.
 - [ ] Gold Golem Spawn Egg spawns a gold MultiGolem `IronGolem`.
 - [ ] Emerald Golem Spawn Egg spawns an emerald MultiGolem `IronGolem`.
 - [ ] Diamond Golem Spawn Egg spawns a diamond MultiGolem `IronGolem`.
@@ -235,6 +244,7 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 
 - [ ] Denied spawner configuration leaves the spawner unchanged and does not consume the egg.
 - [ ] Allowed marked egg use on a spawner configures the matching MultiGolem variant.
+- [ ] Redstone Golem Spawn Egg configures a spawner that spawns Redstone Golems with attachment/stats.
 - [ ] Unmarked vanilla iron golem spawn egg clears any previous MultiGolem spawner marker and remains vanilla-owned.
 - [ ] Spawner-spawned variants get attachment/stats and are not player-created.
 - [ ] Zombie Golem spawner spawns are immediately hostile.
@@ -278,3 +288,34 @@ Run a Fabric server with this mod installed. Open a client and connect (modded o
 - [ ] Default max is 2 Zombie Golems per qualifying village area.
 - [ ] Current live Zombie Golem count is checked before every maintenance spawn attempt.
 - [ ] `max_zombie_golems_per_village = 0` disables maintenance spawning while craft and egg paths still work.
+
+---
+
+# Redstone Golem - emergency-control defender
+
+## Creation and healing
+
+- [ ] Redstone Block T-pattern + carved pumpkin spawns a Redstone Golem at 90 HP.
+- [ ] Damaged Redstone Golem heals with Redstone Dust and checks `multigolem.heal.redstone`.
+- [ ] Denied `multigolem.create.redstone` leaves all T-pattern blocks intact and no Redstone Golem spawns.
+- [ ] Denied `multigolem.heal.redstone` does not consume Redstone Dust.
+- [ ] Redstone Golem Spawn Egg spawns a redstone MultiGolem `IronGolem`.
+- [ ] Redstone Golem Spawn Egg configures a spawner that spawns Redstone Golems.
+
+## Overcharge
+
+- [ ] Force a Redstone Golem to at or below 25% health; overcharge starts.
+- [ ] While overcharged, attacks are boosted and Resistance II is applied.
+- [ ] While overcharged, movement speed does not increase.
+- [ ] Heal above the threshold while active; the active overcharge continues until expiry.
+- [ ] After expiry, cooldown prevents immediate retrigger.
+- [ ] Heal above the threshold, wait out cooldown, then damage back to 25% or below; overcharge can trigger again.
+- [ ] Save/reload during active overcharge or cooldown; state persists and does not retrigger incorrectly.
+
+## Death pulse and combat filtering
+
+- [ ] Kill a Redstone Golem; hostiles within 8 blocks receive Slowness X for 6 seconds.
+- [ ] Death pulse skips players, villagers, wandering traders, Iron Golems, non-zombie MultiGolems, Redstone Golems, and creepers by default.
+- [ ] Zombie Golems are affected by the Redstone death pulse.
+- [ ] Redstone Golems and Zombie Golems can fight each other.
+- [ ] Fabric and NeoForge behavior match for creation, healing, overcharge, cooldown, death pulse, and filtering.
