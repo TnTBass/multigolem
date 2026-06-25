@@ -1,6 +1,7 @@
 package dev.charles.multigolem.golempedia;
 
 import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.config.MultiGolemConfig;
 import dev.charles.multigolem.config.TierStats;
 
 import java.util.ArrayList;
@@ -34,13 +35,28 @@ public final class GolempediaStats {
                 }
             }
             case REDSTONE -> {
-                lines.add("Overcharge: at or below " + percent(doubleOrDefault(stats.redstoneOverchargeHealthThresholdPercent(), 0.25)) + " health");
-                lines.add("Overcharge attack: " + number(doubleOrDefault(stats.redstoneOverchargeAttackMultiplier(), 1.5)) + "x");
-                lines.add("Overcharge resistance: " + romanEffectLevel(intOrDefault(stats.redstoneOverchargeResistanceAmplifier(), 1)));
+                TierStats defaults = MultiGolemConfig.defaults().tier(GolemVariant.REDSTONE);
+                lines.add("Overcharge: at or below "
+                    + percent(doubleOrDefault(stats.redstoneOverchargeHealthThresholdPercent(),
+                        defaults.redstoneOverchargeHealthThresholdPercent()))
+                    + " health");
+                lines.add("Overcharge attack: "
+                    + number(doubleOrDefault(stats.redstoneOverchargeAttackMultiplier(),
+                        defaults.redstoneOverchargeAttackMultiplier()))
+                    + "x");
+                lines.add("Overcharge resistance: "
+                    + romanEffectLevel(intOrDefault(stats.redstoneOverchargeResistanceAmplifier(),
+                        defaults.redstoneOverchargeResistanceAmplifier())));
                 lines.add("Speed: no bonus");
-                lines.add("Death pulse: Slowness " + romanEffectLevel(intOrDefault(stats.redstoneDeathPulseSlownessAmplifier(), 9))
-                    + " for " + number(doubleOrDefault(stats.redstoneDeathPulseSlownessSeconds(), 6.0)) + "s in "
-                    + intOrDefault(stats.redstoneDeathPulseRadius(), 8) + " blocks");
+                lines.add("Death pulse: Slowness "
+                    + romanEffectLevel(intOrDefault(stats.redstoneDeathPulseSlownessAmplifier(),
+                        defaults.redstoneDeathPulseSlownessAmplifier()))
+                    + " for "
+                    + number(doubleOrDefault(stats.redstoneDeathPulseSlownessSeconds(),
+                        defaults.redstoneDeathPulseSlownessSeconds()))
+                    + "s in "
+                    + intOrDefault(stats.redstoneDeathPulseRadius(), defaults.redstoneDeathPulseRadius())
+                    + " blocks");
             }
             case EMERALD -> {
                 lines.add("Aura range: " + stats.emeraldAuraRange() + " blocks");

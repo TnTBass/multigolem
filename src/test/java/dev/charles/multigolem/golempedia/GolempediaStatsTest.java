@@ -19,7 +19,18 @@ class GolempediaStatsTest {
 
     @Test
     void redstoneStatsHandleMissingAbilityFields() {
-        TierStats legacyStats = new TierStats(
+        List<String> lines = GolempediaStats.linesFor(GolemVariant.REDSTONE, redstoneStatsWithoutRedstoneFields());
+
+        assertTrue(lines.contains("Overcharge: at or below 25% health"));
+        assertTrue(lines.contains("Overcharge attack: 1.5x"));
+        assertTrue(lines.contains("Overcharge resistance: II"));
+        assertTrue(lines.contains("Death pulse: Slowness X for 6s in 8 blocks"));
+        assertFalse(lines.stream().anyMatch(line -> line.contains("null")));
+    }
+
+    private static TierStats redstoneStatsWithoutRedstoneFields() {
+        // Use the legacy compatibility constructor intentionally: it predates Redstone-specific fields.
+        return new TierStats(
             90,
             13.0,
             true,
@@ -41,13 +52,5 @@ class GolempediaStatsTest {
             null,
             null,
             null);
-
-        List<String> lines = GolempediaStats.linesFor(GolemVariant.REDSTONE, legacyStats);
-
-        assertTrue(lines.contains("Overcharge: at or below 25% health"));
-        assertTrue(lines.contains("Overcharge attack: 1.5x"));
-        assertTrue(lines.contains("Overcharge resistance: II"));
-        assertTrue(lines.contains("Death pulse: Slowness X for 6s in 8 blocks"));
-        assertFalse(lines.stream().anyMatch(line -> line.contains("null")));
     }
 }
