@@ -9,9 +9,15 @@ import dev.charles.multigolem.test.MinecraftBootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class VariantAttributesTest {
     @BeforeAll
@@ -44,5 +50,13 @@ class VariantAttributesTest {
             VariantAttributes.freshSpawnHealth(GolemIdentity.ofIronVariant(GolemVariant.COPPER).variant(), config));
         assertEquals(config.tier(GolemVariant.COPPER).maxHealth(),
             VariantAttributes.freshSpawnHealth(oxidizedCopper.variant(), config));
+    }
+
+    @Test
+    void speedModifierRemainsGoldOnly() throws IOException {
+        String source = Files.readString(Path.of("src/common/java/dev/charles/multigolem/attribute/VariantAttributes.java"));
+
+        assertTrue(source.contains("double speedDelta = (variant == GolemVariant.GOLD)"));
+        assertFalse(source.toLowerCase(Locale.ROOT).contains("redstone"));
     }
 }
