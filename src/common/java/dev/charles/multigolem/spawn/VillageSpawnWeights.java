@@ -13,6 +13,7 @@ public record VillageSpawnWeights(boolean enabled, EnumMap<GolemVariant, Integer
     static final List<GolemVariant> ROLL_ORDER = List.of(
         GolemVariant.IRON,
         GolemVariant.COPPER,
+        GolemVariant.REDSTONE,
         GolemVariant.GOLD,
         GolemVariant.EMERALD,
         GolemVariant.DIAMOND,
@@ -36,6 +37,7 @@ public record VillageSpawnWeights(boolean enabled, EnumMap<GolemVariant, Integer
         EnumMap<GolemVariant, Integer> defaults = new EnumMap<>(GolemVariant.class);
         defaults.put(GolemVariant.IRON, 19);
         defaults.put(GolemVariant.COPPER, 19);
+        defaults.put(GolemVariant.REDSTONE, 19);
         defaults.put(GolemVariant.GOLD, 19);
         defaults.put(GolemVariant.EMERALD, 19);
         defaults.put(GolemVariant.DIAMOND, 5);

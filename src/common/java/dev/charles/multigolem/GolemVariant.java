@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 public enum GolemVariant {
     COPPER   ("copper",    "Copper",    Blocks.COPPER_BLOCK.weathering().unaffected(), Items.COPPER_INGOT, Items.COPPER_INGOT),
     IRON     ("iron",      "Iron",      Blocks.IRON_BLOCK,      Items.IRON_INGOT,      Items.IRON_INGOT),
+    REDSTONE ("redstone",  "Redstone",  Blocks.REDSTONE_BLOCK,  Items.REDSTONE,        Items.REDSTONE),
     GOLD     ("gold",      "Gold",      Blocks.GOLD_BLOCK,      Items.GOLD_INGOT,      Items.GOLD_INGOT),
     EMERALD  ("emerald",   "Emerald",   Blocks.EMERALD_BLOCK,   Items.EMERALD,         Items.EMERALD),
     DIAMOND  ("diamond",   "Diamond",   Blocks.DIAMOND_BLOCK,   Items.DIAMOND,         Items.DIAMOND),

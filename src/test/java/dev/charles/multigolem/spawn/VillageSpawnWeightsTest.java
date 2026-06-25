@@ -24,11 +24,12 @@ class VillageSpawnWeightsTest {
         assertTrue(weights.enabled());
         assertEquals(19, weights.weight(GolemVariant.IRON));
         assertEquals(19, weights.weight(GolemVariant.COPPER));
+        assertEquals(19, weights.weight(GolemVariant.REDSTONE));
         assertEquals(19, weights.weight(GolemVariant.GOLD));
         assertEquals(19, weights.weight(GolemVariant.EMERALD));
         assertEquals(5, weights.weight(GolemVariant.DIAMOND));
         assertEquals(0, weights.weight(GolemVariant.NETHERITE));
-        assertEquals(81, weights.totalWeight());
+        assertEquals(100, weights.totalWeight());
     }
 
     @Test
@@ -36,19 +37,20 @@ class VillageSpawnWeightsTest {
         VillageSpawnWeights weights = VillageSpawnWeights.defaults();
         assertEquals(Optional.of(GolemVariant.IRON), weights.roll(bound -> 0));
         assertEquals(Optional.of(GolemVariant.COPPER), weights.roll(bound -> 19));
-        assertEquals(Optional.of(GolemVariant.GOLD), weights.roll(bound -> 38));
-        assertEquals(Optional.of(GolemVariant.EMERALD), weights.roll(bound -> 57));
-        assertEquals(Optional.of(GolemVariant.DIAMOND), weights.roll(bound -> 76));
-        assertEquals(Optional.of(GolemVariant.DIAMOND), weights.roll(bound -> 80));
-        assertEquals(Optional.empty(), weights.roll(bound -> 81));
+        assertEquals(Optional.of(GolemVariant.REDSTONE), weights.roll(bound -> 38));
+        assertEquals(Optional.of(GolemVariant.GOLD), weights.roll(bound -> 57));
+        assertEquals(Optional.of(GolemVariant.EMERALD), weights.roll(bound -> 76));
+        assertEquals(Optional.of(GolemVariant.DIAMOND), weights.roll(bound -> 95));
+        assertEquals(Optional.of(GolemVariant.DIAMOND), weights.roll(bound -> 99));
+        assertEquals(Optional.empty(), weights.roll(bound -> 100));
     }
 
     @Test
     void eachSuccessfulCallRollsIndependently() {
         VillageSpawnWeights weights = VillageSpawnWeights.defaults();
         AtomicInteger calls = new AtomicInteger();
-        assertEquals(Optional.of(GolemVariant.IRON), weights.roll(bound -> calls.getAndIncrement() == 0 ? 0 : 80));
-        assertEquals(Optional.of(GolemVariant.DIAMOND), weights.roll(bound -> calls.getAndIncrement() == 0 ? 0 : 80));
+        assertEquals(Optional.of(GolemVariant.IRON), weights.roll(bound -> calls.getAndIncrement() == 0 ? 0 : 99));
+        assertEquals(Optional.of(GolemVariant.DIAMOND), weights.roll(bound -> calls.getAndIncrement() == 0 ? 0 : 99));
         assertEquals(2, calls.get());
     }
 
@@ -88,6 +90,7 @@ class VillageSpawnWeightsTest {
         EnumMap<GolemVariant, Integer> map = new EnumMap<>(GolemVariant.class);
         map.put(GolemVariant.IRON, -10);
         map.put(GolemVariant.COPPER, 1);
+        map.put(GolemVariant.REDSTONE, 0);
         map.put(GolemVariant.GOLD, 0);
         map.put(GolemVariant.EMERALD, 0);
         map.put(GolemVariant.DIAMOND, 0);

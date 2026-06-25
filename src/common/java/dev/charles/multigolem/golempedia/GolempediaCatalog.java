@@ -40,6 +40,7 @@ public final class GolempediaCatalog {
     private static String creationFor(GolemVariant variant) {
         return switch (variant) {
             case COPPER -> "Build with a copper-family body block and carved pumpkin head.";
+            case REDSTONE -> "Build with a redstone block body and carved pumpkin head.";
             case GOLD -> "Build with a gold block body and carved pumpkin head.";
             case EMERALD -> "Build with an emerald block body and carved pumpkin head.";
             case DIAMOND -> "Build with a diamond block body and carved pumpkin head.";
@@ -85,6 +86,7 @@ public final class GolempediaCatalog {
     private static String abilityFor(GolemVariant variant) {
         return switch (variant) {
             case COPPER -> "Lightning does not hurt Copper golems; it heals them instead.";
+            case REDSTONE -> "Redstone golems overcharge near death for attack and resistance without speed, then release a Slowness X pulse.";
             case GOLD -> "Gold golems move faster and can show sprint and sunlight shine behavior.";
             case EMERALD -> "Emerald golems heal themselves when villagers are nearby.";
             case DIAMOND -> "Diamond golems call lightning onto nearby hostile mobs after a cooldown.";
@@ -98,6 +100,7 @@ public final class GolempediaCatalog {
     private static List<String> caveatsFor(GolemVariant variant) {
         return switch (variant) {
             case COPPER -> List.of("Server settings may change lightning healing amounts or target rules.");
+            case REDSTONE -> List.of("Server settings may change overcharge timing, resistance, attack, pulse radius, or Slowness duration.");
             case GOLD -> List.of("Server settings may change speed, sprint particles, or sunlight shine behavior.");
             case EMERALD -> List.of("Server settings may change aura range, interval, healing amount, or which villagers count.");
             case DIAMOND -> List.of("Server settings may change target mode, aura range, cooldowns, or lightning protection.");

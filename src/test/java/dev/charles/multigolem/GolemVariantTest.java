@@ -21,6 +21,7 @@ class GolemVariantTest {
     void fromBodyBlock_recognizesAllSixTiers() {
         assertEquals(GolemVariant.COPPER,    GolemVariant.fromBodyBlock(copper(WeatheringCopper.WeatherState.UNAFFECTED)).orElseThrow());
         assertEquals(GolemVariant.IRON,      GolemVariant.fromBodyBlock(Blocks.IRON_BLOCK).orElseThrow());
+        assertEquals(GolemVariant.REDSTONE,  GolemVariant.fromBodyBlock(Blocks.REDSTONE_BLOCK).orElseThrow());
         assertEquals(GolemVariant.GOLD,      GolemVariant.fromBodyBlock(Blocks.GOLD_BLOCK).orElseThrow());
         assertEquals(GolemVariant.EMERALD,   GolemVariant.fromBodyBlock(Blocks.EMERALD_BLOCK).orElseThrow());
         assertEquals(GolemVariant.DIAMOND,   GolemVariant.fromBodyBlock(Blocks.DIAMOND_BLOCK).orElseThrow());
@@ -45,6 +46,7 @@ class GolemVariantTest {
     void fromIngot_recognizesAllSixTiers() {
         assertEquals(GolemVariant.COPPER,    GolemVariant.fromIngot(Items.COPPER_INGOT).orElseThrow());
         assertEquals(GolemVariant.IRON,      GolemVariant.fromIngot(Items.IRON_INGOT).orElseThrow());
+        assertEquals(GolemVariant.REDSTONE,  GolemVariant.fromIngot(Items.REDSTONE).orElseThrow());
         assertEquals(GolemVariant.GOLD,      GolemVariant.fromIngot(Items.GOLD_INGOT).orElseThrow());
         assertEquals(GolemVariant.EMERALD,   GolemVariant.fromIngot(Items.EMERALD).orElseThrow());
         assertEquals(GolemVariant.DIAMOND,   GolemVariant.fromIngot(Items.DIAMOND).orElseThrow());
@@ -67,9 +69,20 @@ class GolemVariantTest {
     }
 
     @Test
+    void redstoneUsesRedstoneBlockAndDust() {
+        assertEquals(GolemVariant.REDSTONE, GolemVariant.fromBodyBlock(Blocks.REDSTONE_BLOCK).orElseThrow());
+        assertTrue(GolemVariant.REDSTONE.matchesBodyBlock(Blocks.REDSTONE_BLOCK.defaultBlockState()));
+        assertEquals(GolemVariant.REDSTONE, GolemVariant.fromIngot(Items.REDSTONE).orElseThrow());
+        assertEquals(Items.REDSTONE, GolemVariant.REDSTONE.dropItem());
+        assertEquals("redstone", GolemVariant.REDSTONE.id());
+        assertEquals("Redstone", GolemVariant.REDSTONE.displayName());
+    }
+
+    @Test
     void idIsStableLowercase() {
         assertEquals("copper",    GolemVariant.COPPER.id());
         assertEquals("iron",      GolemVariant.IRON.id());
+        assertEquals("redstone",  GolemVariant.REDSTONE.id());
         assertEquals("gold",      GolemVariant.GOLD.id());
         assertEquals("emerald",   GolemVariant.EMERALD.id());
         assertEquals("diamond",   GolemVariant.DIAMOND.id());
@@ -93,6 +106,7 @@ class GolemVariantTest {
     void dropItem_matchesExpected() {
         assertEquals(Items.COPPER_INGOT,    GolemVariant.COPPER.dropItem());
         assertEquals(Items.IRON_INGOT,      GolemVariant.IRON.dropItem());
+        assertEquals(Items.REDSTONE,        GolemVariant.REDSTONE.dropItem());
         assertEquals(Items.GOLD_INGOT,      GolemVariant.GOLD.dropItem());
         assertEquals(Items.EMERALD,         GolemVariant.EMERALD.dropItem());
         assertEquals(Items.DIAMOND,         GolemVariant.DIAMOND.dropItem());

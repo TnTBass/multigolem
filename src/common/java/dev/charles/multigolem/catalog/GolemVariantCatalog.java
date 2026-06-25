@@ -57,6 +57,7 @@ public final class GolemVariantCatalog {
         EnumMap<GolemVariant, GolemVariantSpec> specs = new EnumMap<>(GolemVariant.class);
         add(specs, GolemVariant.COPPER, 3, 5, true, true, true, true);
         add(specs, GolemVariant.IRON, 0, 0, false, false, false, false);
+        add(specs, GolemVariant.REDSTONE, 3, 5, true, true, true, true);
         add(specs, GolemVariant.GOLD, 3, 5, true, true, true, true);
         add(specs, GolemVariant.EMERALD, 3, 5, true, true, true, true);
         add(specs, GolemVariant.DIAMOND, 3, 5, true, true, true, true);
@@ -100,6 +101,7 @@ public final class GolemVariantCatalog {
         return switch (variant) {
             case COPPER -> Items.COPPER_INGOT;
             case IRON -> Items.IRON_INGOT;
+            case REDSTONE -> Items.REDSTONE;
             case GOLD -> Items.GOLD_INGOT;
             case EMERALD -> Items.EMERALD;
             case DIAMOND -> Items.DIAMOND;

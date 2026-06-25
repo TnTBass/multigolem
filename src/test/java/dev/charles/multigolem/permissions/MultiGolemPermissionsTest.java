@@ -29,6 +29,7 @@ class MultiGolemPermissionsTest {
         // Keep COPPER pinned as the Phase 3 surface-state tier even if set membership changes later.
         assertEquals("multigolem.create." + GolemVariantCatalog.require(GolemVariant.COPPER).permissionSuffix(),
             MultiGolemPermissions.createNode(GolemVariant.COPPER));
+        assertEquals("multigolem.create.redstone", MultiGolemPermissions.createNode(GolemVariant.REDSTONE));
     }
 
     @Test
@@ -40,6 +41,7 @@ class MultiGolemPermissionsTest {
         // Keep COPPER pinned as the Phase 3 surface-state tier even if set membership changes later.
         assertEquals("multigolem.heal." + GolemVariantCatalog.require(GolemVariant.COPPER).permissionSuffix(),
             MultiGolemPermissions.healNode(GolemVariant.COPPER));
+        assertEquals("multigolem.heal.redstone", MultiGolemPermissions.healNode(GolemVariant.REDSTONE));
     }
 
     @Test
