@@ -1,6 +1,7 @@
 package dev.charles.multigolem.attachment;
 
 import com.mojang.serialization.JsonOps;
+import com.google.gson.JsonParser;
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -93,5 +94,38 @@ class GolemAbilityStateTest {
         GolemAbilityState s = GolemAbilityState.fresh().withDiamondCooldown(now + 600L);
 
         assertEquals(s, s.clampDiamondCooldown(now, 1200L));
+    }
+
+    @Test
+    void redstoneStateHelpers_roundTrip() {
+        GolemAbilityState state = GolemAbilityState.fresh()
+            .withRedstoneOvercharge(1200L)
+            .withRedstoneCooldown(2400L)
+            .withRedstoneWasBelowThreshold(true);
+
+        assertEquals(1200L, state.redstoneOverchargeActiveUntilGameTime());
+        assertEquals(2400L, state.redstoneOverchargeCooldownUntilGameTime());
+        assertTrue(state.redstoneWasBelowThreshold());
+
+        var encoded = GolemAbilityState.CODEC.encodeStart(JsonOps.INSTANCE, state).result().orElseThrow();
+        GolemAbilityState decoded = GolemAbilityState.CODEC.parse(JsonOps.INSTANCE, encoded).result().orElseThrow();
+        assertEquals(state, decoded);
+    }
+
+    @Test
+    void oldDiamondOnlyJsonDefaultsRedstoneStateInactive() {
+        var oldJson = JsonParser.parseString("""
+            {
+              "next_diamond_ability_game_time": 500,
+              "next_diamond_scan_game_time": 999
+            }
+            """);
+
+        GolemAbilityState decoded = GolemAbilityState.CODEC.parse(JsonOps.INSTANCE, oldJson).result().orElseThrow();
+        assertEquals(500L, decoded.nextDiamondAbilityGameTime());
+        assertEquals(999L, decoded.nextDiamondScanGameTime());
+        assertEquals(0L, decoded.redstoneOverchargeActiveUntilGameTime());
+        assertEquals(0L, decoded.redstoneOverchargeCooldownUntilGameTime());
+        assertFalse(decoded.redstoneWasBelowThreshold());
     }
 }
