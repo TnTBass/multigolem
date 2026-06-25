@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added Redstone Golems, built from Redstone Blocks and healed with Redstone Dust. They have 90 health and 13 attack by default, overcharge when badly damaged, and release a Slowness X pulse when they die.
+
 ## 0.6.1+mc26.2 — 2026-06-19
 
 - Updated the Fabric and NeoForge builds for Minecraft 26.2.
