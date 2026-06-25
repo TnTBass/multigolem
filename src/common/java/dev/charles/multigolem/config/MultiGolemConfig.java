@@ -88,6 +88,18 @@ public final class MultiGolemConfig {
             null, null, null, null,
             null, null, null, null, null,
             null, null, null));
+        m.put(GolemVariant.REDSTONE, new TierStats(90, 13.0, true, List.of("CREEPERS"),
+            null, null,
+            null, null, null,
+            null, null, null, null,
+            null, null, null, null, null,
+            null, null, null,
+            null, null, null, null,
+            null, null, null,
+            null, null, null,
+            null, null, null, null,
+            true, 0.25, 12.0, 45.0, 1.5, 1, 3.0,
+            true, 8, 6.0, 9, true, true));
         m.put(GolemVariant.GOLD, new TierStats(130, 22.5, true, List.of("CREEPERS"),
             null, null,
             1.75, true, true,
@@ -336,6 +348,17 @@ public final class MultiGolemConfig {
             canonicalizeDouble(t, "zombie_villager_conversion_chance", 0.0, 1.0, Double.NaN);
             canonicalizeDouble(t, "zombie_wandering_trader_conversion_chance", 0.0, 1.0, Double.NaN);
         }
+        if (variant == GolemVariant.REDSTONE) {
+            canonicalizeDouble(t, "redstone_overcharge_health_threshold_percent", 0.01, 1.0, Double.NaN);
+            canonicalizeDouble(t, "redstone_overcharge_duration_seconds", 0.0, 3600.0, Double.NaN);
+            canonicalizeDouble(t, "redstone_overcharge_cooldown_seconds", 0.0, 3600.0, Double.NaN);
+            canonicalizeDouble(t, "redstone_overcharge_attack_multiplier", 1.0, 10.0, Double.NaN);
+            canonicalizeInt(t, "redstone_overcharge_resistance_amplifier", 0, 4);
+            canonicalizeDoubleMin(t, "redstone_overcharge_resistance_refresh_seconds", 0.5);
+            canonicalizeInt(t, "redstone_death_pulse_radius", 1, 64);
+            canonicalizeDouble(t, "redstone_death_pulse_slowness_seconds", 0.0, 3600.0, Double.NaN);
+            canonicalizeInt(t, "redstone_death_pulse_slowness_amplifier", 0, 9);
+        }
     }
 
     private static void canonicalizeZombieVillageSpawningInPlace(JsonObject root) {
@@ -571,6 +594,45 @@ public final class MultiGolemConfig {
         Double zombieWanderingTraderChance = def.zombieWanderingTraderConversionChance() != null
             ? clampDouble(readDouble(t, "zombie_wandering_trader_conversion_chance", def.zombieWanderingTraderConversionChance()), 0.0, 1.0, "zombie_wandering_trader_conversion_chance")
             : null;
+        Boolean redstoneOverchargeEnabled = def.redstoneOverchargeEnabled() != null
+            ? readBoolean(t, "redstone_overcharge_enabled", def.redstoneOverchargeEnabled())
+            : null;
+        Double redstoneThreshold = def.redstoneOverchargeHealthThresholdPercent() != null
+            ? clampDouble(readDouble(t, "redstone_overcharge_health_threshold_percent", def.redstoneOverchargeHealthThresholdPercent()), 0.01, 1.0, "redstone_overcharge_health_threshold_percent")
+            : null;
+        Double redstoneDuration = def.redstoneOverchargeDurationSeconds() != null
+            ? clampDouble(readDouble(t, "redstone_overcharge_duration_seconds", def.redstoneOverchargeDurationSeconds()), 0.0, 3600.0, "redstone_overcharge_duration_seconds")
+            : null;
+        Double redstoneCooldown = def.redstoneOverchargeCooldownSeconds() != null
+            ? clampDouble(readDouble(t, "redstone_overcharge_cooldown_seconds", def.redstoneOverchargeCooldownSeconds()), 0.0, 3600.0, "redstone_overcharge_cooldown_seconds")
+            : null;
+        Double redstoneAttackMultiplier = def.redstoneOverchargeAttackMultiplier() != null
+            ? clampDouble(readDouble(t, "redstone_overcharge_attack_multiplier", def.redstoneOverchargeAttackMultiplier()), 1.0, 10.0, "redstone_overcharge_attack_multiplier")
+            : null;
+        Integer redstoneResistanceAmplifier = def.redstoneOverchargeResistanceAmplifier() != null
+            ? clampInt(readInt(t, "redstone_overcharge_resistance_amplifier", def.redstoneOverchargeResistanceAmplifier()), 0, 4, "redstone_overcharge_resistance_amplifier")
+            : null;
+        Double redstoneResistanceRefresh = def.redstoneOverchargeResistanceRefreshSeconds() != null
+            ? Math.max(0.5, readDouble(t, "redstone_overcharge_resistance_refresh_seconds", def.redstoneOverchargeResistanceRefreshSeconds()))
+            : null;
+        Boolean redstoneDeathPulseEnabled = def.redstoneDeathPulseEnabled() != null
+            ? readBoolean(t, "redstone_death_pulse_enabled", def.redstoneDeathPulseEnabled())
+            : null;
+        Integer redstoneDeathPulseRadius = def.redstoneDeathPulseRadius() != null
+            ? clampInt(readInt(t, "redstone_death_pulse_radius", def.redstoneDeathPulseRadius()), 1, 64, "redstone_death_pulse_radius")
+            : null;
+        Double redstoneSlownessSeconds = def.redstoneDeathPulseSlownessSeconds() != null
+            ? clampDouble(readDouble(t, "redstone_death_pulse_slowness_seconds", def.redstoneDeathPulseSlownessSeconds()), 0.0, 3600.0, "redstone_death_pulse_slowness_seconds")
+            : null;
+        Integer redstoneSlownessAmplifier = def.redstoneDeathPulseSlownessAmplifier() != null
+            ? clampInt(readInt(t, "redstone_death_pulse_slowness_amplifier", def.redstoneDeathPulseSlownessAmplifier()), 0, 9, "redstone_death_pulse_slowness_amplifier")
+            : null;
+        Boolean redstoneParticlesEnabled = def.redstoneParticlesEnabled() != null
+            ? readBoolean(t, "redstone_particles_enabled", def.redstoneParticlesEnabled())
+            : null;
+        Boolean redstoneDeathPulseParticlesEnabled = def.redstoneDeathPulseParticlesEnabled() != null
+            ? readBoolean(t, "redstone_death_pulse_particles_enabled", def.redstoneDeathPulseParticlesEnabled())
+            : null;
 
         return new TierStats(health, damage, anger, ignored,
             copperImmune, copperHeal,
@@ -582,7 +644,13 @@ public final class MultiGolemConfig {
             zombieNauseaEnabled, zombieNauseaSeconds, zombieNauseaAmplifier,
             zombiePoisonEnabled, zombiePoisonSeconds, zombiePoisonAmplifier,
             zombieConvertVillagersEnabled, zombieVillagerChance,
-            zombieConvertWanderingTradersEnabled, zombieWanderingTraderChance);
+            zombieConvertWanderingTradersEnabled, zombieWanderingTraderChance,
+            redstoneOverchargeEnabled, redstoneThreshold, redstoneDuration,
+            redstoneCooldown, redstoneAttackMultiplier, redstoneResistanceAmplifier,
+            redstoneResistanceRefresh, redstoneDeathPulseEnabled,
+            redstoneDeathPulseRadius, redstoneSlownessSeconds,
+            redstoneSlownessAmplifier, redstoneParticlesEnabled,
+            redstoneDeathPulseParticlesEnabled);
     }
 
     private static List<String> parseIgnoredTargetTypes(JsonObject t, List<String> fallback) {
@@ -752,6 +820,20 @@ public final class MultiGolemConfig {
             if (s.zombieVillagerConversionChance() != null) t.addProperty("zombie_villager_conversion_chance", s.zombieVillagerConversionChance());
             if (s.zombieConvertWanderingTradersEnabled() != null) t.addProperty("zombie_convert_wandering_traders_enabled", s.zombieConvertWanderingTradersEnabled());
             if (s.zombieWanderingTraderConversionChance() != null) t.addProperty("zombie_wandering_trader_conversion_chance", s.zombieWanderingTraderConversionChance());
+            // Redstone
+            if (s.redstoneOverchargeEnabled() != null) t.addProperty("redstone_overcharge_enabled", s.redstoneOverchargeEnabled());
+            if (s.redstoneOverchargeHealthThresholdPercent() != null) t.addProperty("redstone_overcharge_health_threshold_percent", s.redstoneOverchargeHealthThresholdPercent());
+            if (s.redstoneOverchargeDurationSeconds() != null) t.addProperty("redstone_overcharge_duration_seconds", s.redstoneOverchargeDurationSeconds());
+            if (s.redstoneOverchargeCooldownSeconds() != null) t.addProperty("redstone_overcharge_cooldown_seconds", s.redstoneOverchargeCooldownSeconds());
+            if (s.redstoneOverchargeAttackMultiplier() != null) t.addProperty("redstone_overcharge_attack_multiplier", s.redstoneOverchargeAttackMultiplier());
+            if (s.redstoneOverchargeResistanceAmplifier() != null) t.addProperty("redstone_overcharge_resistance_amplifier", s.redstoneOverchargeResistanceAmplifier());
+            if (s.redstoneOverchargeResistanceRefreshSeconds() != null) t.addProperty("redstone_overcharge_resistance_refresh_seconds", s.redstoneOverchargeResistanceRefreshSeconds());
+            if (s.redstoneDeathPulseEnabled() != null) t.addProperty("redstone_death_pulse_enabled", s.redstoneDeathPulseEnabled());
+            if (s.redstoneDeathPulseRadius() != null) t.addProperty("redstone_death_pulse_radius", s.redstoneDeathPulseRadius());
+            if (s.redstoneDeathPulseSlownessSeconds() != null) t.addProperty("redstone_death_pulse_slowness_seconds", s.redstoneDeathPulseSlownessSeconds());
+            if (s.redstoneDeathPulseSlownessAmplifier() != null) t.addProperty("redstone_death_pulse_slowness_amplifier", s.redstoneDeathPulseSlownessAmplifier());
+            if (s.redstoneParticlesEnabled() != null) t.addProperty("redstone_particles_enabled", s.redstoneParticlesEnabled());
+            if (s.redstoneDeathPulseParticlesEnabled() != null) t.addProperty("redstone_death_pulse_particles_enabled", s.redstoneDeathPulseParticlesEnabled());
             tiers.add(v.id(), t);
         }
         root.add("tiers", tiers);

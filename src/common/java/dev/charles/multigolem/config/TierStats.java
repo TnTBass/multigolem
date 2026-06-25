@@ -49,7 +49,21 @@ public record TierStats(
     Boolean zombieConvertVillagersEnabled,
     Double zombieVillagerConversionChance,
     Boolean zombieConvertWanderingTradersEnabled,
-    Double zombieWanderingTraderConversionChance
+    Double zombieWanderingTraderConversionChance,
+    // Redstone
+    Boolean redstoneOverchargeEnabled,
+    Double redstoneOverchargeHealthThresholdPercent,
+    Double redstoneOverchargeDurationSeconds,
+    Double redstoneOverchargeCooldownSeconds,
+    Double redstoneOverchargeAttackMultiplier,
+    Integer redstoneOverchargeResistanceAmplifier,
+    Double redstoneOverchargeResistanceRefreshSeconds,
+    Boolean redstoneDeathPulseEnabled,
+    Integer redstoneDeathPulseRadius,
+    Double redstoneDeathPulseSlownessSeconds,
+    Integer redstoneDeathPulseSlownessAmplifier,
+    Boolean redstoneParticlesEnabled,
+    Boolean redstoneDeathPulseParticlesEnabled
 ) {
 
     public static final int MIN_HEALTH = 1;
@@ -91,7 +105,59 @@ public record TierStats(
             emeraldAuraRange, emeraldHealIntervalSeconds, emeraldHealPerTick, emeraldCountWanderingTraders,
             diamondTargetMode, diamondCooldownMinSeconds, diamondCooldownMaxSeconds, diamondAuraRange, diamondLightningProof,
             netheriteFireImmune, netheriteIgniteSeconds, netheriteVillageIgniteSeconds,
-            null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null, null, null);
+    }
+
+    public TierStats(
+        int maxHealth,
+        double attackDamage,
+        boolean angerOnHit,
+        List<String> ignoredTargetTypes,
+        Boolean copperLightningImmune,
+        Double copperLightningHealAmount,
+        Double goldSpeedMultiplier,
+        Boolean goldSprintParticlesEnabled,
+        Boolean goldSunlightShineEnabled,
+        Integer emeraldAuraRange,
+        Double emeraldHealIntervalSeconds,
+        Double emeraldHealPerTick,
+        Boolean emeraldCountWanderingTraders,
+        String diamondTargetMode,
+        Integer diamondCooldownMinSeconds,
+        Integer diamondCooldownMaxSeconds,
+        Integer diamondAuraRange,
+        Boolean diamondLightningProof,
+        Boolean netheriteFireImmune,
+        Integer netheriteIgniteSeconds,
+        Integer netheriteVillageIgniteSeconds,
+        Double zombieRottenFleshHealAmount,
+        Boolean zombieHungerEnabled,
+        Integer zombieHungerSeconds,
+        Integer zombieHungerAmplifier,
+        Boolean zombieNauseaEnabled,
+        Integer zombieNauseaSeconds,
+        Integer zombieNauseaAmplifier,
+        Boolean zombiePoisonEnabled,
+        Integer zombiePoisonSeconds,
+        Integer zombiePoisonAmplifier,
+        Boolean zombieConvertVillagersEnabled,
+        Double zombieVillagerConversionChance,
+        Boolean zombieConvertWanderingTradersEnabled,
+        Double zombieWanderingTraderConversionChance
+    ) {
+        this(maxHealth, attackDamage, angerOnHit, ignoredTargetTypes,
+            copperLightningImmune, copperLightningHealAmount,
+            goldSpeedMultiplier, goldSprintParticlesEnabled, goldSunlightShineEnabled,
+            emeraldAuraRange, emeraldHealIntervalSeconds, emeraldHealPerTick, emeraldCountWanderingTraders,
+            diamondTargetMode, diamondCooldownMinSeconds, diamondCooldownMaxSeconds, diamondAuraRange, diamondLightningProof,
+            netheriteFireImmune, netheriteIgniteSeconds, netheriteVillageIgniteSeconds,
+            zombieRottenFleshHealAmount, zombieHungerEnabled, zombieHungerSeconds, zombieHungerAmplifier,
+            zombieNauseaEnabled, zombieNauseaSeconds, zombieNauseaAmplifier,
+            zombiePoisonEnabled, zombiePoisonSeconds, zombiePoisonAmplifier,
+            zombieConvertVillagersEnabled, zombieVillagerConversionChance,
+            zombieConvertWanderingTradersEnabled, zombieWanderingTraderConversionChance,
+            null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     /** Clamp V1 fields. V2 field clamping happens in MultiGolemConfig.parse. */
@@ -109,7 +175,14 @@ public record TierStats(
             zombieNauseaEnabled, zombieNauseaSeconds, zombieNauseaAmplifier,
             zombiePoisonEnabled, zombiePoisonSeconds, zombiePoisonAmplifier,
             zombieConvertVillagersEnabled, zombieVillagerConversionChance,
-            zombieConvertWanderingTradersEnabled, zombieWanderingTraderConversionChance);
+            zombieConvertWanderingTradersEnabled, zombieWanderingTraderConversionChance,
+            redstoneOverchargeEnabled, redstoneOverchargeHealthThresholdPercent,
+            redstoneOverchargeDurationSeconds, redstoneOverchargeCooldownSeconds,
+            redstoneOverchargeAttackMultiplier, redstoneOverchargeResistanceAmplifier,
+            redstoneOverchargeResistanceRefreshSeconds, redstoneDeathPulseEnabled,
+            redstoneDeathPulseRadius, redstoneDeathPulseSlownessSeconds,
+            redstoneDeathPulseSlownessAmplifier, redstoneParticlesEnabled,
+            redstoneDeathPulseParticlesEnabled);
     }
 
     public boolean isHealthDamageClamped() {
