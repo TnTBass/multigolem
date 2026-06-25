@@ -15,6 +15,7 @@ REPO = Path(__file__).resolve().parent.parent
 SCRIPT = REPO / "scripts" / "generate-textures.py"
 GENERATED_TEXTURES = (
     "copper_golem.png",
+    "redstone_golem.png",
     "gold_golem.png",
     "emerald_golem.png",
     "diamond_golem.png",
@@ -33,6 +34,7 @@ GENERATED_COPPER_SURFACE_TEXTURES = (
 )
 GENERATED_SPAWN_EGG_TEXTURES = (
     "copper_golem_spawn_egg.png",
+    "redstone_golem_spawn_egg.png",
     "gold_golem_spawn_egg.png",
     "emerald_golem_spawn_egg.png",
     "diamond_golem_spawn_egg.png",
@@ -377,11 +379,13 @@ class GenerateTexturesTest(unittest.TestCase):
             netherite = Path(tmp) / "netherite_golem.png"
             diamond = Path(tmp) / "diamond_golem.png"
             gold = Path(tmp) / "gold_golem.png"
+            redstone = Path(tmp) / "redstone_golem.png"
             copper = Path(tmp) / "copper_golem.png"
             emerald = Path(tmp) / "emerald_golem.png"
             spawn_egg_dir = Path(tmp) / "item"
             copper_egg = spawn_egg_dir / "copper_golem_spawn_egg.png"
             gold_egg = spawn_egg_dir / "gold_golem_spawn_egg.png"
+            redstone_egg = spawn_egg_dir / "redstone_golem_spawn_egg.png"
             emerald_egg = spawn_egg_dir / "emerald_golem_spawn_egg.png"
             diamond_egg = spawn_egg_dir / "diamond_golem_spawn_egg.png"
             netherite_egg = spawn_egg_dir / "netherite_golem_spawn_egg.png"
@@ -422,6 +426,14 @@ class GenerateTexturesTest(unittest.TestCase):
             gold_bright_pixels = count_pixels(
                 gold,
                 lambda r, g, b: r >= 250 and g >= 220 and 70 <= b <= 140,
+            )
+            redstone_pixels = count_pixels(
+                redstone,
+                lambda r, g, b: r >= 145 and g <= 90 and b <= 80,
+            )
+            redstone_glow_pixels = count_pixels(
+                redstone,
+                lambda r, g, b: r >= 220 and 20 <= g <= 120 and b <= 70,
             )
             lava = lambda r, g, b: r >= 210 and 45 <= g <= 150 and b <= 65
             dim_lava = lambda r, g, b: 110 <= r <= 210 and 35 <= g <= 115 and b <= 75
@@ -494,6 +506,8 @@ class GenerateTexturesTest(unittest.TestCase):
             self.assertGreaterEqual(gold_body_pixels, 1200)
             self.assertGreaterEqual(gold_highlight_pixels, 90)
             self.assertGreaterEqual(gold_bright_pixels, 320)
+            self.assertGreaterEqual(redstone_pixels, 900)
+            self.assertGreaterEqual(redstone_glow_pixels, 45)
             self.assertGreaterEqual(netherite_dark_pixels, 450)
             self.assertGreaterEqual(ember_pixels, 10)
             self.assertGreaterEqual(netherite_deep_dark_pixels, 800)
@@ -513,6 +527,7 @@ class GenerateTexturesTest(unittest.TestCase):
             copper_egg_pixels = count_pixels(copper_egg, lambda r, g, b: r >= 150 and 70 <= g <= 145 and b <= 110)
             patina_egg_pixels = count_pixels(copper_egg, lambda r, g, b: r <= 115 and g >= 135 and 95 <= b <= 160)
             gold_egg_pixels = count_pixels(gold_egg, lambda r, g, b: r >= 215 and g >= 145 and b <= 145)
+            redstone_egg_pixels = count_pixels(redstone_egg, lambda r, g, b: r >= 145 and g <= 95 and b <= 85)
             emerald_egg_pixels = count_pixels(emerald_egg, lambda r, g, b: r <= 100 and g >= 150 and 70 <= b <= 145)
             diamond_egg_pixels = count_pixels(diamond_egg, lambda r, g, b: 45 <= r <= 170 and g >= 160 and b >= 150)
             diamond_egg_olive_pixels = count_pixels(diamond_egg, lambda r, g, b: 95 <= r <= 165 and 105 <= g <= 165 and b <= 80)
@@ -522,6 +537,7 @@ class GenerateTexturesTest(unittest.TestCase):
             self.assertGreaterEqual(copper_egg_pixels, 30)
             self.assertGreaterEqual(patina_egg_pixels, 2)
             self.assertGreaterEqual(gold_egg_pixels, 35)
+            self.assertGreaterEqual(redstone_egg_pixels, 35)
             self.assertGreaterEqual(emerald_egg_pixels, 25)
             self.assertGreaterEqual(diamond_egg_pixels, 25)
             self.assertLessEqual(diamond_egg_olive_pixels, 4)

@@ -31,6 +31,8 @@ class ServerCustomizationsSummarizerTest {
         assertTrue(snapshot.variantOverrides().isEmpty());
         assertFalse(snapshot.golempediaStats().get(GolemVariant.COPPER).isEmpty());
         assertTrue(snapshot.golempediaStats().get(GolemVariant.COPPER).stream().anyMatch(line -> line.startsWith("Health:")));
+        assertTrue(snapshot.golempediaStats().get(GolemVariant.REDSTONE).contains("Overcharge: at or below 25% health"));
+        assertTrue(snapshot.golempediaStats().get(GolemVariant.REDSTONE).contains("Death pulse: Slowness X for 6s in 8 blocks"));
     }
 
     @Test
@@ -42,6 +44,9 @@ class ServerCustomizationsSummarizerTest {
         assertTrue(summary.villageLines().stream().anyMatch(line -> line.contains("roughly")));
         assertTrue(summary.zombieVillageLines().stream().anyMatch(line -> line.contains("Zombie village spawning: enabled")));
         assertTrue(summary.variantLines().stream().anyMatch(line -> line.contains("Copper")));
+        assertTrue(summary.variantLines().stream().anyMatch(line -> line.contains("Redstone")));
+        assertTrue(summary.variantLines().stream().anyMatch(line -> line.contains("Overcharge: at or below 25% health")));
+        assertTrue(summary.variantLines().stream().anyMatch(line -> line.contains("Death pulse: Slowness X")));
         assertTrue(summary.variantLines().stream().anyMatch(line -> line.contains("Health:")));
         assertTrue(summary.variantLines().stream().anyMatch(line -> line.contains("Attack:")));
     }

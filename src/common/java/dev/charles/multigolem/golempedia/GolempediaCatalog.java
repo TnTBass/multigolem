@@ -6,6 +6,7 @@ import dev.charles.multigolem.catalog.GolemVariantSpec;
 import dev.charles.multigolem.config.MultiGolemConfig;
 import dev.charles.multigolem.spawn.VillageSpawnWeights;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 
 import java.util.List;
 
@@ -58,6 +59,9 @@ public final class GolempediaCatalog {
     }
 
     private static String itemName(Item item) {
+        if (item == Items.REDSTONE) {
+            return "Redstone Dust";
+        }
         String id = item.getDescriptionId();
         String key = id.substring(id.lastIndexOf('.') + 1);
         String[] words = key.split("_");
@@ -86,7 +90,8 @@ public final class GolempediaCatalog {
     private static String abilityFor(GolemVariant variant) {
         return switch (variant) {
             case COPPER -> "Lightning does not hurt Copper golems; it heals them instead.";
-            case REDSTONE -> "Redstone golems overcharge near death for attack and resistance without speed, then release a Slowness X pulse.";
+            case REDSTONE -> "Redstone golems overcharge at or below 25% health for attack and resistance without speed, "
+                + "then release a Slowness X pulse on death.";
             case GOLD -> "Gold golems move faster and can show sprint and sunlight shine behavior.";
             case EMERALD -> "Emerald golems heal themselves when villagers are nearby.";
             case DIAMOND -> "Diamond golems call lightning onto nearby hostile mobs after a cooldown.";

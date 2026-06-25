@@ -14,6 +14,7 @@ SPAWN_EGG_OUT_DIR = REPO / "src" / "common" / "resources" / "assets" / "multigol
 
 TIERS = {
     "copper":    {"hue_shift": -10, "saturation": 1.25, "lightness": 0.95},
+    "redstone":  {"hue_shift": 350, "saturation": 1.85, "lightness": 0.72},
     "gold":      {"hue_shift": 38,  "saturation": 1.70, "lightness": 1.14},
     "emerald":   {"hue_shift": 110, "saturation": 1.58, "lightness": 0.98},
     "diamond":   {"hue_shift": 165, "saturation": 1.00, "lightness": 1.12},
@@ -124,6 +125,29 @@ def apply_material_details(tier: str, img: Image.Image) -> Image.Image:
             (27, 52, 2, 11), (72, 28, 2, 25), (48, 5, 2, 17),
             (71, 5, 2, 17),
         ], (124, 71, 7, 130))
+
+    elif tier == "redstone":
+        img = blend_material(img, (154, 30, 28), 0.50)
+        draw_rects(draw, [
+            (12, 52, 17, 11), (67, 28, 5, 26), (42, 6, 6, 16),
+            (65, 6, 6, 16), (40, 51, 18, 12), (76, 28, 4, 27),
+            (80, 64, 5, 27),
+        ], (112, 18, 18, 155))
+        circuit_lines = [
+            [(13, 53), (20, 53), (20, 61), (28, 61)],
+            [(67, 30), (70, 39), (68, 54)],
+            [(42, 8), (47, 12), (43, 20)],
+            [(65, 8), (70, 14), (66, 21)],
+            [(78, 31), (77, 43), (80, 55)],
+            [(82, 66), (83, 78), (81, 92)],
+        ]
+        draw_lines(draw, circuit_lines, (83, 8, 8, 190), width=2)
+        draw_lines(draw, circuit_lines, (236, 43, 31, 235), width=1)
+        draw_rects(draw, [
+            (19, 52, 2, 2), (27, 60, 2, 2), (69, 38, 2, 2),
+            (46, 11, 2, 2), (69, 13, 2, 2), (79, 54, 2, 2),
+            (82, 91, 2, 2),
+        ], (255, 72, 40, 245))
 
     elif tier == "diamond":
         img = blend_material(img, (72, 207, 218), 0.34)
@@ -308,6 +332,12 @@ def apply_spawn_egg_material_details(tier: str, img: Image.Image) -> Image.Image
         img = blend_material(img, (255, 205, 24), 0.50)
         draw_rects(draw, [(4, 4, 5, 3), (8, 8, 4, 3), (5, 12, 3, 1)], (255, 239, 91, 230))
         draw_rects(draw, [(11, 5, 1, 5), (7, 12, 4, 1)], (128, 74, 8, 130))
+    elif tier == "redstone":
+        img = blend_material(img, (154, 30, 28), 0.56)
+        circuits = [[(4, 5), (8, 5), (8, 9), (12, 9)], [(6, 12), (10, 12)]]
+        draw_lines(draw, circuits, (83, 8, 8, 190), width=2)
+        draw_lines(draw, circuits, (236, 43, 31, 245), width=1)
+        draw_rects(draw, [(8, 5, 1, 1), (12, 9, 1, 1), (10, 12, 1, 1)], (255, 72, 40, 255))
     elif tier == "emerald":
         img = blend_material(img, (42, 205, 104), 0.50)
         draw_rects(draw, [(4, 4, 5, 3), (8, 9, 4, 2), (6, 12, 2, 1)], (60, 235, 125, 230))

@@ -54,6 +54,9 @@ class GolempediaCatalogTest {
     void playerFacingCopyExplainsAbilitiesAndAvoidsInternalSpawnWeights() {
         assertEquals("Lightning does not hurt Copper golems; it heals them instead.",
             entry(GolemVariant.COPPER).coreAbility());
+        assertEquals("Redstone golems overcharge at or below 25% health for attack and resistance without speed, "
+                + "then release a Slowness X pulse on death.",
+            entry(GolemVariant.REDSTONE).coreAbility());
         assertEquals("Emerald golems heal themselves when villagers are nearby.",
             entry(GolemVariant.EMERALD).coreAbility());
         assertEquals("Diamond golems call lightning onto nearby hostile mobs after a cooldown.",
@@ -72,23 +75,37 @@ class GolempediaCatalogTest {
     @Test
     void defaultEntriesExposePlayerFacingStats() {
         GolempediaEntry copper = entry(GolemVariant.COPPER);
+        GolempediaEntry redstone = entry(GolemVariant.REDSTONE);
 
         assertTrue(copper.statLines().stream().anyMatch(line -> line.startsWith("Health:")));
         assertTrue(copper.statLines().stream().anyMatch(line -> line.startsWith("Attack:")));
         assertFalse(copper.statLines().stream().anyMatch(line -> line.contains("null")));
+
+        assertTrue(redstone.creationSummary().contains("redstone block"));
+        assertEquals("Redstone Dust", redstone.healingItem());
+        assertTrue(redstone.statLines().contains("Health: 90"));
+        assertTrue(redstone.statLines().contains("Attack: 13"));
+        assertTrue(redstone.statLines().contains("Overcharge: at or below 25% health"));
+        assertTrue(redstone.statLines().contains("Overcharge attack: 1.5x"));
+        assertTrue(redstone.statLines().contains("Overcharge resistance: II"));
+        assertTrue(redstone.statLines().contains("Speed: no bonus"));
+        assertTrue(redstone.statLines().contains("Death pulse: Slowness X for 6s in 8 blocks"));
     }
 
     @Test
     void villageSpawnCopyDescribesFrequencyFromConfiguredWeights() {
-        assertTrue(entry(GolemVariant.GOLD).villageSpawnSummary().contains("About 23%"));
-        assertTrue(entry(GolemVariant.GOLD).villageSpawnSummary().contains("roughly 1 in 4"));
-        assertTrue(entry(GolemVariant.DIAMOND).villageSpawnSummary().contains("About 6%"));
-        assertTrue(entry(GolemVariant.DIAMOND).villageSpawnSummary().contains("roughly 1 in 16"));
+        assertTrue(entry(GolemVariant.REDSTONE).villageSpawnSummary().contains("About 19%"));
+        assertTrue(entry(GolemVariant.REDSTONE).villageSpawnSummary().contains("roughly 1 in 5"));
+        assertTrue(entry(GolemVariant.GOLD).villageSpawnSummary().contains("About 19%"));
+        assertTrue(entry(GolemVariant.GOLD).villageSpawnSummary().contains("roughly 1 in 5"));
+        assertTrue(entry(GolemVariant.DIAMOND).villageSpawnSummary().contains("About 5%"));
+        assertTrue(entry(GolemVariant.DIAMOND).villageSpawnSummary().contains("roughly 1 in 20"));
         assertTrue(entry(GolemVariant.NETHERITE).villageSpawnSummary().contains("Does not spawn"));
 
         EnumMap<GolemVariant, Integer> custom = new EnumMap<>(GolemVariant.class);
         custom.put(GolemVariant.IRON, 0);
         custom.put(GolemVariant.COPPER, 0);
+        custom.put(GolemVariant.REDSTONE, 0);
         custom.put(GolemVariant.GOLD, 1);
         custom.put(GolemVariant.EMERALD, 0);
         custom.put(GolemVariant.DIAMOND, 1);

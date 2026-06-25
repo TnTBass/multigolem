@@ -9,6 +9,10 @@
         "model": { "type": "minecraft:model", "model": "multigolem:item/copper_golem_spawn_egg" }
       },
       {
+        "when": "{multigolem:{family:\"iron_golem\",variant:\"redstone\"}}",
+        "model": { "type": "minecraft:model", "model": "multigolem:item/redstone_golem_spawn_egg" }
+      },
+      {
         "when": "{multigolem:{family:\"iron_golem\",variant:\"gold\"}}",
         "model": { "type": "minecraft:model", "model": "multigolem:item/gold_golem_spawn_egg" }
       },
