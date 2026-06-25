@@ -34,13 +34,13 @@ public final class GolempediaStats {
                 }
             }
             case REDSTONE -> {
-                lines.add("Overcharge: at or below " + percent(stats.redstoneOverchargeHealthThresholdPercent()) + " health");
-                lines.add("Overcharge attack: " + number(stats.redstoneOverchargeAttackMultiplier()) + "x");
-                lines.add("Overcharge resistance: " + romanEffectLevel(stats.redstoneOverchargeResistanceAmplifier()));
+                lines.add("Overcharge: at or below " + percent(doubleOrDefault(stats.redstoneOverchargeHealthThresholdPercent(), 0.25)) + " health");
+                lines.add("Overcharge attack: " + number(doubleOrDefault(stats.redstoneOverchargeAttackMultiplier(), 1.5)) + "x");
+                lines.add("Overcharge resistance: " + romanEffectLevel(intOrDefault(stats.redstoneOverchargeResistanceAmplifier(), 1)));
                 lines.add("Speed: no bonus");
-                lines.add("Death pulse: Slowness " + romanEffectLevel(stats.redstoneDeathPulseSlownessAmplifier())
-                    + " for " + number(stats.redstoneDeathPulseSlownessSeconds()) + "s in "
-                    + stats.redstoneDeathPulseRadius() + " blocks");
+                lines.add("Death pulse: Slowness " + romanEffectLevel(intOrDefault(stats.redstoneDeathPulseSlownessAmplifier(), 9))
+                    + " for " + number(doubleOrDefault(stats.redstoneDeathPulseSlownessSeconds(), 6.0)) + "s in "
+                    + intOrDefault(stats.redstoneDeathPulseRadius(), 8) + " blocks");
             }
             case EMERALD -> {
                 lines.add("Aura range: " + stats.emeraldAuraRange() + " blocks");
@@ -77,6 +77,14 @@ public final class GolempediaStats {
 
     private static String percent(double value) {
         return number(value * 100.0) + "%";
+    }
+
+    private static double doubleOrDefault(Double value, double fallback) {
+        return value != null ? value : fallback;
+    }
+
+    private static int intOrDefault(Integer value, int fallback) {
+        return value != null ? value : fallback;
     }
 
     private static String romanEffectLevel(int zeroBasedAmplifier) {
