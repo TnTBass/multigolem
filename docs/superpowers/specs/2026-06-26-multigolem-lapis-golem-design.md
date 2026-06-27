@@ -64,12 +64,15 @@ Lapis should ignore creepers by default through the existing `ignored_target_typ
 The Lapis ward is active when the Lapis Golem is:
 
 - Alive.
-- Awake/active according to normal Minecraft entity state.
+- Loaded and ticking on the server.
+- Not removed or otherwise inactive according to a future Minecraft or MultiGolem entity state.
 - Enabled by config.
 
 The ward is not combat-gated and does not require a current target.
 
-While active, the ward protects eligible entities within 15 blocks. Protection should feel continuous to players: if an eligible entity is inside the ward, hostile magic does not stick. Internally, implementation may use periodic refresh/cleanup plus damage/effect hooks.
+Iron Golems do not have a normal sleep state. "Awake/active" means the entity is alive, loaded, ticking, and not removed; do not invent an extra sleep or dormancy check for Lapis unless implementation discovers an existing state that applies.
+
+While active, the ward protects eligible entities within 15 blocks. Protection should feel continuous to players: if an eligible entity is inside the ward, hostile magic does not stick. The default ward scan interval is every 5 ticks. Damage and effect hooks should provide immediate protection, while the periodic scan keeps cleanup, particles, and range state consistent.
 
 ### 4.2 Protected Entities
 
@@ -95,7 +98,7 @@ Mundane damage remains effective, including melee, projectiles, explosions, fire
 
 ### 4.4 Magic-Style Effect Protection
 
-The ward removes or prevents a configurable list of magic-style harmful effects. Defaults:
+The ward prevents and removes a configurable list of magic-style harmful effects. Defaults:
 
 - `minecraft:poison`
 - `minecraft:wither`
@@ -110,6 +113,13 @@ The ward removes or prevents a configurable list of magic-style harmful effects.
 This list is deliberately thematic rather than "all harmful effects." Server owners can add or remove effect ids through config.
 
 Unknown or invalid effect ids should not crash runtime behavior. Preserve unknown values through config write-back if the existing config system supports that cleanly; ignore invalid ids at runtime.
+
+Canonical behavior is both immediate prevention and periodic cleanup:
+
+- When a protected entity receives a configured effect, the effect should be blocked at application time when the loader hook or common mixin path supports it.
+- During the periodic ward scan, configured effects already present on protected entities should be removed.
+
+This avoids a visible effect flicker during normal play while still cleaning up effects that were present before the entity entered the ward or that slipped past an event path.
 
 ### 4.5 Visual Readability
 
@@ -132,6 +142,7 @@ Suggested defaults:
 |---|---:|---|
 | `lapis_ward_enabled` | `true` | Enables the Lapis ward. |
 | `lapis_ward_range` | `15` | Block radius for protected allies. |
+| `lapis_ward_scan_interval_ticks` | `5` | Server ticks between ward scans, effect cleanup, and range-state refresh. |
 | `lapis_ward_affects_players` | `false` | Allows players to receive ward protection. |
 | `lapis_ward_magic_damage_enabled` | `true` | Blocks magic-tagged damage for protected entities. |
 | `lapis_ward_effect_cleanup_enabled` | `true` | Removes/prevents configured magic-style effects. |
@@ -141,6 +152,7 @@ Suggested defaults:
 Suggested validation:
 
 - `lapis_ward_range`: clamp to `1..64`.
+- `lapis_ward_scan_interval_ticks`: clamp to `1..200`.
 - `lapis_ward_effect_ids`: preserve configured strings where possible, resolve valid ids at runtime, and ignore invalid ids without crashing.
 - Booleans follow existing malformed-field fallback behavior.
 
@@ -160,9 +172,11 @@ Rationale:
 - Its weak combat stats prevent it from replacing sturdier defenders.
 - Rare natural spawns create memorable support moments without making every village anti-magic by default.
 
-The player-facing roll order should place Lapis between Gold and Emerald:
+The expected final player-facing roll order places Lapis between Gold and Emerald:
 
 `iron`, `copper`, `redstone`, `gold`, `lapis`, `emerald`, `diamond`, `netherite`
+
+Implementation should update README tables and docs to this final order, rather than treating the pre-Lapis README ordering as a competing source of truth.
 
 Existing configs must migrate by filling missing Lapis village weights and tier fields from defaults while preserving unknown fields.
 
@@ -195,7 +209,17 @@ Implementation should follow current Redstone-era patterns:
 - Ward logic belongs in a focused common ability class, likely `LapisAbility`.
 - Loader adapters should only wire loader-specific tick, damage, and effect hooks where needed.
 
-Damage blocking should be based on Minecraft's current 26.2 magic damage-source/tag path. The implementation should confirm the exact 26.2 API surface before editing mixins or loader hooks.
+Damage blocking should be based on Minecraft's current 26.2 magic damage-source/tag path. Preferred hook shape:
+
+- Fabric: extend the existing `ServerLivingEntityEvents.ALLOW_DAMAGE` registration pattern used by Copper, Netherite, and Diamond abilities.
+- NeoForge: extend the existing `LivingIncomingDamageEvent` handling in `NeoForgeAbilityEvents`.
+
+Effect protection should block at application time and clean up during ward scans. Preferred hook shape:
+
+- NeoForge: use the 26.2 `MobEffectEvent.Applicable` path if available.
+- Fabric: use a 26.2 Fabric API server-side effect-application callback if available; otherwise use a narrow common mixin around `LivingEntity#addEffect`/effect application and list it in both loader mixin configs.
+
+The implementation plan must confirm exact 26.2 method and event names before editing runtime hooks.
 
 Effect cleanup should resolve configured effect ids at runtime and ignore invalid ids safely.
 
@@ -204,10 +228,12 @@ Effect cleanup should resolve configured effect ids at runtime and ignore invali
 ### 9.1 Ward Tick
 
 1. Server tick reaches a loaded Lapis Golem.
-2. Ability checks that the golem is alive, awake/active, and ward-enabled.
+2. Ability checks that the golem is alive, loaded, ticking, not removed, and ward-enabled.
 3. Ability finds eligible allies within `lapis_ward_range`.
-4. Ability removes configured magic-style effects from protected entities when effect cleanup is enabled.
-5. Ability emits configured particle cues at a restrained interval.
+4. Ability runs no more often than `lapis_ward_scan_interval_ticks`.
+5. Ability removes configured magic-style effects from protected entities when effect cleanup is enabled.
+6. Ability refreshes any internal range-state cache if implementation uses one.
+7. Ability emits configured particle cues at a restrained interval.
 
 ### 9.2 Magic Damage
 
@@ -224,8 +250,9 @@ Effect cleanup should resolve configured effect ids at runtime and ignore invali
 2. Effect hook checks whether the effect id is in the configured Lapis ward effect list.
 3. If not listed, the effect proceeds normally.
 4. If listed, ability checks whether the target is protected by an active Lapis ward.
-5. If protected and cleanup is enabled, the effect is prevented or removed.
+5. If protected and cleanup is enabled, the effect is prevented at application time.
 6. If not protected, the effect proceeds normally.
+7. If a configured effect is already present on a protected entity, the ward scan removes it.
 
 ## 10. Testing And Playtest Coverage
 
@@ -240,12 +267,15 @@ Add or update focused tests for:
 - Config defaults include Lapis tier fields and ward fields.
 - Config migration/write-back fills missing Lapis tier and ward fields into older configs.
 - Config validation clamps ward range and handles invalid effect ids without crashing.
+- Config validation clamps ward scan interval.
 - Ward entity eligibility: villagers, wandering traders, Iron Golems, friendly MultiGolems, Lapis itself, players off by default, players on when configured.
+- Ward scan cadence uses the configured interval and defaults to 5 ticks.
 - Magic damage blocked for protected entities in range.
 - Magic damage not blocked outside range or when Lapis is dead, inactive, or disabled.
 - Mundane damage is not blocked.
 - Configured magic-style harmful effects are removed or prevented in range.
 - Unconfigured effects are not removed.
+- Dragon breath and wither-skull damage follow the 26.2 magic damage-source/tag classification exactly; if they are not magic-tagged/identified, they are not blocked.
 - Fabric and NeoForge hook registration for tick, damage, and effect paths.
 
 ### 10.2 Manual Playtest Rows
@@ -259,6 +289,7 @@ Add rows to `docs/playtest-checklist.md` and `docs/playtest.html` for:
 - Verify a village-spawned Lapis Golem can appear under forced weight.
 - Verify protected villagers/golems within 15 blocks avoid configured magic-style effects.
 - Verify protected villagers/golems within 15 blocks avoid magic-tagged damage.
+- Verify adjacent supernatural damage such as dragon breath or wither skulls is blocked only when 26.2 classifies the source as magic-tagged/identified.
 - Verify players are not protected by default.
 - Enable player protection and verify players are protected inside the ward.
 - Verify melee, projectile, explosion, fire/lava, and fall damage are not blocked.
@@ -291,6 +322,7 @@ Public wording should emphasize:
 | Risk | Mitigation |
 |---|---|
 | Magic damage classification differs between loaders or 26.2 APIs. | Confirm the exact 26.2 damage-source/tag API before implementation and cover Fabric/NeoForge hooks with source tests. |
+| Player expectations around dragon breath or wither-skull damage differ from 26.2 tags. | Document and test that Lapis blocks only sources classified as magic by the 26.2 damage-source/tag path. |
 | Ward becomes too broad and invalidates ordinary threats. | Protect only magic-tagged damage and configured effects; keep mundane damage untouched. |
 | Lapis replaces combat defenders. | Keep half-Iron health and attack, rare village spawns, and no offensive ability. |
 | Player ward becomes overpowered. | Keep player protection off by default and configurable. |
