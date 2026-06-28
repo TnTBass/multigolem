@@ -29,9 +29,12 @@ class MultiGolemConfigV3Test {
         assertEquals(19, weights.weight(GolemVariant.COPPER));
         assertEquals(19, weights.weight(GolemVariant.REDSTONE));
         assertEquals(19, weights.weight(GolemVariant.GOLD));
+        assertEquals(5, weights.weight(GolemVariant.LAPIS));
         assertEquals(19, weights.weight(GolemVariant.EMERALD));
         assertEquals(5, weights.weight(GolemVariant.DIAMOND));
         assertEquals(0, weights.weight(GolemVariant.NETHERITE));
+        assertEquals(50, cfg.tier(GolemVariant.LAPIS).maxHealth());
+        assertTrue(cfg.tier(GolemVariant.LAPIS).lapisWardEnabled());
         assertEquals(5, cfg.tier(GolemVariant.NETHERITE).netheriteIgniteSeconds());
         assertEquals(0, cfg.tier(GolemVariant.NETHERITE).netheriteVillageIgniteSeconds());
     }
@@ -63,13 +66,17 @@ class MultiGolemConfigV3Test {
         String after = Files.readString(file);
         assertTrue(after.contains("\"village_spawning\""));
         assertTrue(after.contains("villages are made of wood"));
+        assertTrue(after.contains("\"lapis\""));
+        assertTrue(after.contains("\"lapis_ward_range\": 15"));
+        assertTrue(after.contains("\"lapis_ward_effect_ids\""));
+        assertTrue(after.contains("\"minecraft:poison\""));
         assertTrue(after.contains("\"netherite_village_ignite_seconds\": 0"));
         assertTrue(after.contains("_user_note"));
         assertTrue(after.contains("_tier_note"));
 
         MultiGolemConfig reloaded = MultiGolemConfig.loadOrCreate(file);
         assertTrue(reloaded.villageSpawnWeights().enabled());
-        assertEquals(100, reloaded.villageSpawnWeights().totalWeight());
+        assertEquals(105, reloaded.villageSpawnWeights().totalWeight());
     }
 
     @Test
@@ -79,7 +86,7 @@ class MultiGolemConfigV3Test {
             {
               "village_spawning": {
                 "enabled": false,
-                "weights": { "iron": 19, "copper": 19, "redstone": 19, "gold": 19, "emerald": 19, "diamond": 5, "netherite": 2 }
+                "weights": { "iron": 19, "copper": 19, "redstone": 19, "gold": 19, "lapis": 5, "emerald": 19, "diamond": 5, "netherite": 2 }
               }
             }
             """);
@@ -122,7 +129,7 @@ class MultiGolemConfigV3Test {
             {
               "village_spawning": {
                 "enabled": true,
-                "weights": { "iron": 0, "copper": 0, "redstone": 0, "gold": 0, "emerald": 0, "diamond": 0, "netherite": 0 }
+                "weights": { "iron": 0, "copper": 0, "redstone": 0, "gold": 0, "lapis": 0, "emerald": 0, "diamond": 0, "netherite": 0 }
               }
             }
             """);
@@ -138,13 +145,13 @@ class MultiGolemConfigV3Test {
         Files.writeString(missing, """
             { "village_spawning": { "enabled": true } }
             """);
-        assertEquals(100, MultiGolemConfig.loadOrCreate(missing).villageSpawnWeights().totalWeight());
+        assertEquals(105, MultiGolemConfig.loadOrCreate(missing).villageSpawnWeights().totalWeight());
 
         Path malformed = tmp.resolve("malformed.json");
         Files.writeString(malformed, """
             { "village_spawning": { "enabled": true, "weights": "heavy" } }
             """);
-        assertEquals(100, MultiGolemConfig.loadOrCreate(malformed).villageSpawnWeights().totalWeight());
+        assertEquals(105, MultiGolemConfig.loadOrCreate(malformed).villageSpawnWeights().totalWeight());
     }
 
     @Test
@@ -163,6 +170,7 @@ class MultiGolemConfigV3Test {
         assertEquals(2, weights.weight(GolemVariant.COPPER));
         assertEquals(19, weights.weight(GolemVariant.REDSTONE));
         assertEquals(19, weights.weight(GolemVariant.GOLD));
+        assertEquals(5, weights.weight(GolemVariant.LAPIS));
         assertEquals(19, weights.weight(GolemVariant.EMERALD));
         assertEquals(5, weights.weight(GolemVariant.DIAMOND));
         assertEquals(0, weights.weight(GolemVariant.NETHERITE));
@@ -174,16 +182,16 @@ class MultiGolemConfigV3Test {
         Files.writeString(file, """
             {
               "village_spawning": {
-                "weights": { "obsidian": 100, "lapis": 50 }
+                "weights": { "obsidian": 100, "ruby": 50 }
               }
             }
             """);
 
         VillageSpawnWeights weights = MultiGolemConfig.loadOrCreate(file).villageSpawnWeights();
-        assertEquals(100, weights.totalWeight());
+        assertEquals(105, weights.totalWeight());
         String after = Files.readString(file);
         assertTrue(after.contains("\"obsidian\""));
-        assertTrue(after.contains("\"lapis\""));
+        assertTrue(after.contains("\"ruby\""));
     }
 
     @Test
@@ -197,6 +205,7 @@ class MultiGolemConfigV3Test {
                   "copper": "many",
                   "redstone": 7,
                   "gold": 3,
+                  "lapis": "blue",
                   "emerald": 4,
                   "diamond": 5,
                   "netherite": 6
@@ -210,6 +219,7 @@ class MultiGolemConfigV3Test {
         assertEquals(19, weights.weight(GolemVariant.COPPER));
         assertEquals(7, weights.weight(GolemVariant.REDSTONE));
         assertEquals(3, weights.weight(GolemVariant.GOLD));
+        assertEquals(5, weights.weight(GolemVariant.LAPIS));
         assertEquals(4, weights.weight(GolemVariant.EMERALD));
         assertEquals(5, weights.weight(GolemVariant.DIAMOND));
         assertEquals(6, weights.weight(GolemVariant.NETHERITE));
@@ -226,6 +236,7 @@ class MultiGolemConfigV3Test {
                   "copper": 1,
                   "redstone": 1,
                   "gold": 1,
+                  "lapis": 1,
                   "emerald": 1,
                   "diamond": 1,
                   "netherite": 1,
@@ -236,7 +247,7 @@ class MultiGolemConfigV3Test {
             """);
 
         VillageSpawnWeights weights = MultiGolemConfig.loadOrCreate(file).villageSpawnWeights();
-        assertEquals(7, weights.totalWeight());
+        assertEquals(8, weights.totalWeight());
         assertTrue(Files.readString(file).contains("\"ruby\""));
     }
 }

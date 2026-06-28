@@ -80,9 +80,33 @@ class GolemStatsResolverTest {
     }
 
     @Test
+    void resolvesV8_lapisFields() {
+        GolemStatsResolver r = new GolemStatsResolver(MultiGolemConfig.defaults());
+        assertTrue(r.lapisWardEnabled());
+        assertEquals(15, r.lapisWardRange());
+        assertEquals(5, r.lapisWardScanIntervalTicks());
+        assertFalse(r.lapisWardAffectsPlayers());
+        assertTrue(r.lapisWardMagicDamageEnabled());
+        assertTrue(r.lapisWardEffectCleanupEnabled());
+        assertEquals(List.of(
+            "minecraft:poison",
+            "minecraft:wither",
+            "minecraft:weakness",
+            "minecraft:slowness",
+            "minecraft:blindness",
+            "minecraft:nausea",
+            "minecraft:levitation",
+            "minecraft:darkness",
+            "minecraft:mining_fatigue"
+        ), r.lapisWardEffectIds());
+        assertTrue(r.lapisParticlesEnabled());
+    }
+
+    @Test
     void resolvesV2_ignoredTargetTypes() {
         GolemStatsResolver r = new GolemStatsResolver(MultiGolemConfig.defaults());
         assertEquals(List.of(), r.ignoredTargetTypes(GolemVariant.IRON));
         assertEquals(List.of("CREEPERS"), r.ignoredTargetTypes(GolemVariant.COPPER));
+        assertEquals(List.of("CREEPERS"), r.ignoredTargetTypes(GolemVariant.LAPIS));
     }
 }

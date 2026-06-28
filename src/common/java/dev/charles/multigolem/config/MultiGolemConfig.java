@@ -42,6 +42,17 @@ public final class MultiGolemConfig {
         Set.of("ALL_HOSTILE_MOBS", "ALL_HOSTILE_MOBS_AND_PLAYERS", "BOSSES_ONLY", "NONE");
     private static final String VILLAGE_SPAWNING_NOTE =
         "Keep in mind, villages are made of wood and netherite golems start fires.";
+    private static final List<String> DEFAULT_LAPIS_WARD_EFFECT_IDS = List.of(
+        "minecraft:poison",
+        "minecraft:wither",
+        "minecraft:weakness",
+        "minecraft:slowness",
+        "minecraft:blindness",
+        "minecraft:nausea",
+        "minecraft:levitation",
+        "minecraft:darkness",
+        "minecraft:mining_fatigue"
+    );
 
     private final boolean allowGolemHealing;
     private final Map<GolemVariant, TierStats> tiers;
@@ -99,13 +110,26 @@ public final class MultiGolemConfig {
             null, null, null,
             null, null, null, null,
             true, 0.25, 12.0, 45.0, 1.5, 1, 3.0,
-            true, 8, 6.0, 9, true, true));
+            true, 8, 6.0, 9, true, true,
+            null, null, null, null, null, null, null, null));
         m.put(GolemVariant.GOLD, new TierStats(130, 22.5, true, List.of("CREEPERS"),
             null, null,
             1.75, true, true,
             null, null, null, null,
             null, null, null, null, null,
             null, null, null));
+        m.put(GolemVariant.LAPIS, new TierStats(50, 7.5, true, List.of("CREEPERS"),
+            null, null,
+            null, null, null,
+            null, null, null, null,
+            null, null, null, null, null,
+            null, null, null,
+            null, null, null, null,
+            null, null, null,
+            null, null, null,
+            null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null, null, null,
+            true, 15, 5, false, true, true, DEFAULT_LAPIS_WARD_EFFECT_IDS, true));
         m.put(GolemVariant.EMERALD, new TierStats(200, 40.0, true, List.of("CREEPERS"),
             null, null,
             null, null, null,
@@ -358,6 +382,10 @@ public final class MultiGolemConfig {
             canonicalizeInt(t, "redstone_death_pulse_radius", 1, 64);
             canonicalizeDouble(t, "redstone_death_pulse_slowness_seconds", 0.0, 3600.0, Double.NaN);
             canonicalizeInt(t, "redstone_death_pulse_slowness_amplifier", 0, 9);
+        }
+        if (variant == GolemVariant.LAPIS) {
+            canonicalizeInt(t, "lapis_ward_range", 1, 64);
+            canonicalizeInt(t, "lapis_ward_scan_interval_ticks", 1, 200);
         }
     }
 
@@ -633,6 +661,30 @@ public final class MultiGolemConfig {
         Boolean redstoneDeathPulseParticlesEnabled = def.redstoneDeathPulseParticlesEnabled() != null
             ? readBoolean(t, "redstone_death_pulse_particles_enabled", def.redstoneDeathPulseParticlesEnabled())
             : null;
+        Boolean lapisWardEnabled = def.lapisWardEnabled() != null
+            ? readBoolean(t, "lapis_ward_enabled", def.lapisWardEnabled())
+            : null;
+        Integer lapisWardRange = def.lapisWardRange() != null
+            ? clampInt(readInt(t, "lapis_ward_range", def.lapisWardRange()), 1, 64, "lapis_ward_range")
+            : null;
+        Integer lapisScanInterval = def.lapisWardScanIntervalTicks() != null
+            ? clampInt(readInt(t, "lapis_ward_scan_interval_ticks", def.lapisWardScanIntervalTicks()), 1, 200, "lapis_ward_scan_interval_ticks")
+            : null;
+        Boolean lapisPlayers = def.lapisWardAffectsPlayers() != null
+            ? readBoolean(t, "lapis_ward_affects_players", def.lapisWardAffectsPlayers())
+            : null;
+        Boolean lapisMagicDamage = def.lapisWardMagicDamageEnabled() != null
+            ? readBoolean(t, "lapis_ward_magic_damage_enabled", def.lapisWardMagicDamageEnabled())
+            : null;
+        Boolean lapisEffectCleanup = def.lapisWardEffectCleanupEnabled() != null
+            ? readBoolean(t, "lapis_ward_effect_cleanup_enabled", def.lapisWardEffectCleanupEnabled())
+            : null;
+        List<String> lapisEffectIds = def.lapisWardEffectIds() != null
+            ? parseStringList(t, "lapis_ward_effect_ids", def.lapisWardEffectIds())
+            : null;
+        Boolean lapisParticles = def.lapisParticlesEnabled() != null
+            ? readBoolean(t, "lapis_particles_enabled", def.lapisParticlesEnabled())
+            : null;
 
         return new TierStats(health, damage, anger, ignored,
             copperImmune, copperHeal,
@@ -650,7 +702,9 @@ public final class MultiGolemConfig {
             redstoneResistanceRefresh, redstoneDeathPulseEnabled,
             redstoneDeathPulseRadius, redstoneSlownessSeconds,
             redstoneSlownessAmplifier, redstoneParticlesEnabled,
-            redstoneDeathPulseParticlesEnabled);
+            redstoneDeathPulseParticlesEnabled,
+            lapisWardEnabled, lapisWardRange, lapisScanInterval, lapisPlayers,
+            lapisMagicDamage, lapisEffectCleanup, lapisEffectIds, lapisParticles);
     }
 
     private static List<String> parseIgnoredTargetTypes(JsonObject t, List<String> fallback) {
@@ -669,6 +723,22 @@ public final class MultiGolemConfig {
             }
         }
         return result;
+    }
+
+    private static List<String> parseStringList(JsonObject t, String key, List<String> fallback) {
+        if (!t.has(key) || !t.get(key).isJsonArray()) {
+            return fallback;
+        }
+        JsonArray arr = t.getAsJsonArray(key);
+        List<String> result = new ArrayList<>();
+        for (JsonElement e : arr) {
+            if (e.isJsonPrimitive() && e.getAsJsonPrimitive().isString()) {
+                result.add(e.getAsString());
+            } else {
+                MultiGolem.LOG.warn("lapis_ward_effect_ids value '{}' is not a string; skipped", e);
+            }
+        }
+        return List.copyOf(result);
     }
 
     private static Double parseCopperHealAmount(JsonObject t, Double fallback) {
@@ -834,6 +904,19 @@ public final class MultiGolemConfig {
             if (s.redstoneDeathPulseSlownessAmplifier() != null) t.addProperty("redstone_death_pulse_slowness_amplifier", s.redstoneDeathPulseSlownessAmplifier());
             if (s.redstoneParticlesEnabled() != null) t.addProperty("redstone_particles_enabled", s.redstoneParticlesEnabled());
             if (s.redstoneDeathPulseParticlesEnabled() != null) t.addProperty("redstone_death_pulse_particles_enabled", s.redstoneDeathPulseParticlesEnabled());
+            // Lapis
+            if (s.lapisWardEnabled() != null) t.addProperty("lapis_ward_enabled", s.lapisWardEnabled());
+            if (s.lapisWardRange() != null) t.addProperty("lapis_ward_range", s.lapisWardRange());
+            if (s.lapisWardScanIntervalTicks() != null) t.addProperty("lapis_ward_scan_interval_ticks", s.lapisWardScanIntervalTicks());
+            if (s.lapisWardAffectsPlayers() != null) t.addProperty("lapis_ward_affects_players", s.lapisWardAffectsPlayers());
+            if (s.lapisWardMagicDamageEnabled() != null) t.addProperty("lapis_ward_magic_damage_enabled", s.lapisWardMagicDamageEnabled());
+            if (s.lapisWardEffectCleanupEnabled() != null) t.addProperty("lapis_ward_effect_cleanup_enabled", s.lapisWardEffectCleanupEnabled());
+            if (s.lapisWardEffectIds() != null) {
+                JsonArray effects = new JsonArray();
+                for (String effect : s.lapisWardEffectIds()) effects.add(effect);
+                t.add("lapis_ward_effect_ids", effects);
+            }
+            if (s.lapisParticlesEnabled() != null) t.addProperty("lapis_particles_enabled", s.lapisParticlesEnabled());
             tiers.add(v.id(), t);
         }
         root.add("tiers", tiers);
