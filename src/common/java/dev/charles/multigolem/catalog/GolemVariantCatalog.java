@@ -59,6 +59,7 @@ public final class GolemVariantCatalog {
         add(specs, GolemVariant.IRON, 0, 0, false, false, false, false);
         add(specs, GolemVariant.REDSTONE, 3, 5, true, true, true, true);
         add(specs, GolemVariant.GOLD, 3, 5, true, true, true, true);
+        add(specs, GolemVariant.LAPIS, 3, 5, true, true, true, true);
         add(specs, GolemVariant.EMERALD, 3, 5, true, true, true, true);
         add(specs, GolemVariant.DIAMOND, 3, 5, true, true, true, true);
         add(specs, GolemVariant.NETHERITE, 2, 3, true, true, true, true);
@@ -103,6 +104,7 @@ public final class GolemVariantCatalog {
             case IRON -> Items.IRON_INGOT;
             case REDSTONE -> Items.REDSTONE;
             case GOLD -> Items.GOLD_INGOT;
+            case LAPIS -> Items.LAPIS_LAZULI;
             case EMERALD -> Items.EMERALD;
             case DIAMOND -> Items.DIAMOND;
             case NETHERITE -> Items.NETHERITE_SCRAP;

@@ -15,6 +15,7 @@ public record VillageSpawnWeights(boolean enabled, EnumMap<GolemVariant, Integer
         GolemVariant.COPPER,
         GolemVariant.REDSTONE,
         GolemVariant.GOLD,
+        GolemVariant.LAPIS,
         GolemVariant.EMERALD,
         GolemVariant.DIAMOND,
         GolemVariant.NETHERITE
@@ -39,6 +40,7 @@ public record VillageSpawnWeights(boolean enabled, EnumMap<GolemVariant, Integer
         defaults.put(GolemVariant.COPPER, 19);
         defaults.put(GolemVariant.REDSTONE, 19);
         defaults.put(GolemVariant.GOLD, 19);
+        defaults.put(GolemVariant.LAPIS, 5);
         defaults.put(GolemVariant.EMERALD, 19);
         defaults.put(GolemVariant.DIAMOND, 5);
         defaults.put(GolemVariant.NETHERITE, 0);

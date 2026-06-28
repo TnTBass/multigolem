@@ -43,6 +43,7 @@ public final class GolempediaCatalog {
             case COPPER -> "Build with a copper-family body block and carved pumpkin head.";
             case REDSTONE -> "Build with a redstone block body and carved pumpkin head.";
             case GOLD -> "Build with a gold block body and carved pumpkin head.";
+            case LAPIS -> "Build with a lapis block body and carved pumpkin head.";
             case EMERALD -> "Build with an emerald block body and carved pumpkin head.";
             case DIAMOND -> "Build with a diamond block body and carved pumpkin head.";
             case NETHERITE -> "Build with a netherite block body and carved pumpkin head.";
@@ -93,6 +94,7 @@ public final class GolempediaCatalog {
             case REDSTONE -> "Redstone golems overcharge at or below 25% health for attack and resistance without speed, "
                 + "then release a Slowness X pulse on death.";
             case GOLD -> "Gold golems move faster and can show sprint and sunlight shine behavior.";
+            case LAPIS -> "Lapis golem ability details are added by the Lapis ward implementation slice.";
             case EMERALD -> "Emerald golems heal themselves when villagers are nearby.";
             case DIAMOND -> "Diamond golems call lightning onto nearby hostile mobs after a cooldown.";
             case NETHERITE -> "Netherite golems are fireproof and can ignite nearby attackers.";
@@ -107,6 +109,7 @@ public final class GolempediaCatalog {
             case COPPER -> List.of("Server settings may change lightning healing amounts or target rules.");
             case REDSTONE -> List.of("Server settings may change overcharge timing, resistance, attack, pulse radius, or Slowness duration.");
             case GOLD -> List.of("Server settings may change speed, sprint particles, or sunlight shine behavior.");
+            case LAPIS -> List.of("Lapis ward server settings are added by the Lapis ward implementation slice.");
             case EMERALD -> List.of("Server settings may change aura range, interval, healing amount, or which villagers count.");
             case DIAMOND -> List.of("Server settings may change target mode, aura range, cooldowns, or lightning protection.");
             case NETHERITE -> List.of("Netherite golems can be dangerous near villages when fire ignition is enabled.");
