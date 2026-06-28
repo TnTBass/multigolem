@@ -94,7 +94,7 @@ public final class GolempediaCatalog {
             case REDSTONE -> "Redstone golems overcharge at or below 25% health for attack and resistance without speed, "
                 + "then release a Slowness X pulse on death.";
             case GOLD -> "Gold golems move faster and can show sprint and sunlight shine behavior.";
-            case LAPIS -> "Lapis golem ability details are added by the Lapis ward implementation slice.";
+            case LAPIS -> "Lapis golems protect nearby allied village entities from magic-tagged damage and configured magical effects.";
             case EMERALD -> "Emerald golems heal themselves when villagers are nearby.";
             case DIAMOND -> "Diamond golems call lightning onto nearby hostile mobs after a cooldown.";
             case NETHERITE -> "Netherite golems are fireproof and can ignite nearby attackers.";
@@ -109,7 +109,11 @@ public final class GolempediaCatalog {
             case COPPER -> List.of("Server settings may change lightning healing amounts or target rules.");
             case REDSTONE -> List.of("Server settings may change overcharge timing, resistance, attack, pulse radius, or Slowness duration.");
             case GOLD -> List.of("Server settings may change speed, sprint particles, or sunlight shine behavior.");
-            case LAPIS -> List.of("Lapis ward server settings are added by the Lapis ward implementation slice.");
+            case LAPIS -> List.of(
+                "Server settings may change ward range, scan interval, magic damage blocking, or effect cleanup.",
+                "Player protection is disabled by default and can be enabled by server config.",
+                "Ordinary melee, projectile, explosion, fire, lava, and fall damage are not blocked."
+            );
             case EMERALD -> List.of("Server settings may change aura range, interval, healing amount, or which villagers count.");
             case DIAMOND -> List.of("Server settings may change target mode, aura range, cooldowns, or lightning protection.");
             case NETHERITE -> List.of("Netherite golems can be dangerous near villages when fire ignition is enabled.");

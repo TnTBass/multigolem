@@ -34,6 +34,23 @@ public final class GolempediaStats {
                     lines.add("Speed: " + number(stats.goldSpeedMultiplier()) + "x");
                 }
             }
+            case LAPIS -> {
+                TierStats defaults = MultiGolemConfig.defaults().tier(GolemVariant.LAPIS);
+                lines.add("Ward range: "
+                    + intOrDefault(stats.lapisWardRange(), defaults.lapisWardRange())
+                    + " blocks");
+                lines.add("Ward scan: every "
+                    + intOrDefault(stats.lapisWardScanIntervalTicks(), defaults.lapisWardScanIntervalTicks())
+                    + " ticks");
+                lines.add("Magic damage: "
+                    + enabledText(booleanOrDefault(stats.lapisWardMagicDamageEnabled(), defaults.lapisWardMagicDamageEnabled())));
+                lines.add("Effect cleanup: "
+                    + enabledText(booleanOrDefault(stats.lapisWardEffectCleanupEnabled(), defaults.lapisWardEffectCleanupEnabled())));
+                lines.add("Players protected: "
+                    + (booleanOrDefault(stats.lapisWardAffectsPlayers(), defaults.lapisWardAffectsPlayers())
+                        ? "enabled"
+                        : "disabled by default"));
+            }
             case REDSTONE -> {
                 TierStats defaults = MultiGolemConfig.defaults().tier(GolemVariant.REDSTONE);
                 lines.add("Overcharge: at or below "
@@ -93,6 +110,14 @@ public final class GolempediaStats {
 
     private static String percent(double value) {
         return number(value * 100.0) + "%";
+    }
+
+    private static String enabledText(Boolean value) {
+        return Boolean.TRUE.equals(value) ? "enabled" : "disabled";
+    }
+
+    private static boolean booleanOrDefault(Boolean value, Boolean fallback) {
+        return value != null ? value : Boolean.TRUE.equals(fallback);
     }
 
     private static double doubleOrDefault(Double value, double fallback) {
