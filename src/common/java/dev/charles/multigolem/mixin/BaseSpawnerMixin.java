@@ -1,9 +1,10 @@
 package dev.charles.multigolem.mixin;
 
-import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.MultiGolem;
 import dev.charles.multigolem.attachment.GolemIdentityAttachment;
 import dev.charles.multigolem.attribute.VariantAttributes;
 import dev.charles.multigolem.identity.GolemIdentity;
+import dev.charles.multigolem.spawn.GolemAvailabilityGuards;
 import dev.charles.multigolem.spawn.SpawnerVariantMarker;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -57,6 +58,9 @@ public abstract class BaseSpawnerMixin {
     private boolean multigolem$applyVariantBeforeSpawnerAdd(ServerLevel level, Entity entity) {
         try {
             Optional<GolemIdentity> identity = MULTIGOLEM_SPAWNER_IDENTITY.get();
+            if (identity.isPresent() && !GolemAvailabilityGuards.canCreate(MultiGolem.config(), identity.get())) {
+                return false;
+            }
             if (identity.isPresent() && entity instanceof IronGolem golem) {
                 GolemIdentityAttachment.set(golem, identity.get());
                 VariantAttributes.fillFreshSpawnHealth(golem);

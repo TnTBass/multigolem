@@ -1,8 +1,10 @@
 package dev.charles.multigolem.mixin;
 
 import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.MultiGolem;
 import dev.charles.multigolem.identity.GolemIdentity;
 import dev.charles.multigolem.permissions.MultiGolemPermissions;
+import dev.charles.multigolem.spawn.GolemAvailabilityGuards;
 import dev.charles.multigolem.spawn.SpawnEggStacks;
 import dev.charles.multigolem.spawn.SpawnEggVariantSpawner;
 import dev.charles.multigolem.spawn.SpawnerVariantMarker;
@@ -51,7 +53,15 @@ public abstract class SpawnEggItemMixin {
             return;
         }
 
-        GolemVariant variant = identity.get().variant();
+        GolemIdentity requested = identity.get();
+        GolemVariant variant = requested.variant();
+        if (!GolemAvailabilityGuards.canCreate(MultiGolem.config(), requested)) {
+            MultiGolemPermissions.sendCreateDenied(player, variant);
+            cir.setReturnValue(InteractionResult.FAIL);
+            cir.cancel();
+            return;
+        }
+
         if (!MultiGolemPermissions.canCreate(player, variant)) {
             MultiGolemPermissions.sendCreateDenied(player, variant);
             cir.setReturnValue(InteractionResult.FAIL);

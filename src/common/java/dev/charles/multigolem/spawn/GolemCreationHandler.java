@@ -53,9 +53,16 @@ public final class GolemCreationHandler {
         for (GolemVariant variant : GolemVariant.multiGolemPlayerBuildableVariants()) {
             BlockPattern.BlockPatternMatch match = patternFor(variant).find(server, topPos);
             if (match == null) continue;
+            GolemIdentity identity = identityFromMatchBodyStates(variant, match);
 
-            // No player context means non-player or unsupported placement; ungated by design.
+            // Availability is server-authoritative even when no player context is available.
             Optional<ServerPlayer> responsiblePlayer = PumpkinPlacementTracker.currentServerPlayerFor(topPos);
+            if (!GolemAvailabilityGuards.canCreate(MultiGolem.config(), identity)) {
+                responsiblePlayer.ifPresent(player -> MultiGolemPermissions.sendCreateDenied(player, variant));
+                return true;
+            }
+
+            // No player context means non-player or unsupported placement; permission-ungated by design.
             if (responsiblePlayer.isPresent()) {
                 ServerPlayer player = responsiblePlayer.get();
                 if (!MultiGolemPermissions.canCreate(player, variant)) {
@@ -70,7 +77,7 @@ public final class GolemCreationHandler {
                 return false;
             }
             golem.setPlayerCreated(true);
-            GolemIdentityAttachment.set(golem, identityFromMatchBodyStates(variant, match));
+            GolemIdentityAttachment.set(golem, identity);
 
             // Vanilla's spawn order: clear blocks first, then position+spawn, then trigger, then updateNeighbors.
             CarvedPumpkinBlock.clearPatternBlocks(server, match);

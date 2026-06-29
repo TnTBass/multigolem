@@ -28,6 +28,9 @@ public final class ZombieVillageSpawnHandler {
 
     public static void maintain(ServerLevel level, BlockPos center) {
         try {
+            if (!GolemAvailabilityGuards.canCreate(MultiGolem.config(), GolemIdentity.ofIronVariant(GolemVariant.ZOMBIE))) {
+                return;
+            }
             ZombieVillageSpawnHandler handler = new ZombieVillageSpawnHandler(
                 new ZombieVillageSpawnResolver(MultiGolem.config().zombieVillageSpawning()));
             handler.maintain(new RuntimeZombieVillageScan(level, center));
