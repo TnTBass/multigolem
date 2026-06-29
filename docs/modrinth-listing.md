@@ -7,11 +7,11 @@
 
 ## Features
 
-- Adds seven Iron Golem variants: Copper, Redstone, Gold, Emerald, Diamond, Netherite, and Zombie.
+- Adds eight Iron Golem variants: Copper, Redstone, Gold, Lapis, Emerald, Diamond, Netherite, and Zombie.
 - Server-side functional: vanilla clients can connect to a server running MultiGolem with no mod installed.
-- Build variants with the vanilla iron-golem T-shape using copper, redstone, gold, emerald, diamond, netherite, or mossy cobblestone body blocks. Copper Iron Golems preserve fresh, exposed, weathered, oxidized, and waxed copper states with matching textures.
-- Marked vanilla iron golem spawn eggs for Copper, Redstone, Gold, Emerald, Diamond, Netherite, and Zombie variants.
-- Stats scale by role; Copper is the weakest, Redstone is a lower-strength emergency-control defender, and Netherite is the strongest.
+- Build variants with the vanilla iron-golem T-shape using copper, redstone, gold, lapis, emerald, diamond, netherite, or mossy cobblestone body blocks. Copper Iron Golems preserve fresh, exposed, weathered, oxidized, and waxed copper states with matching textures.
+- Marked vanilla iron golem spawn eggs for Copper, Redstone, Gold, Lapis, Emerald, Diamond, Netherite, and Zombie variants.
+- Each variant has its own default stats and role: Copper is lighter than vanilla, Redstone trades raw strength for emergency-control effects, Lapis is fragile anti-magic support, and Netherite is the durable endgame bruiser.
 - Heal each variant with its matching material.
 - Custom textures per variant on modded clients; vanilla clients still see regular iron golems.
 - Optional ModMenu screens show client/server MultiGolem version status, active server customization values, and a Golempedia reference for golem creation, stats, drops, village spawns, and abilities.
