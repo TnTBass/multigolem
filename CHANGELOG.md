@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added Lapis Golems, built from Lapis Blocks and healed with Lapis Lazuli. They are fragile anti-magic support defenders that protect nearby allied village entities from magic damage and configured harmful magical effects, while ordinary combat damage remains unchanged.
+
 ## 0.7.0+mc26.2 — 2026-06-25
 
 - Added Redstone Golems, built from Redstone Blocks and healed with Redstone Dust. They have 90 health and 13 attack by default, overcharge when badly damaged, and release a Slowness X pulse when they die.
