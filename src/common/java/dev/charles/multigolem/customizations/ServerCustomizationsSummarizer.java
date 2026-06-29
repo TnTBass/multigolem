@@ -3,10 +3,13 @@ package dev.charles.multigolem.customizations;
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.catalog.GolemVariantCatalog;
 import dev.charles.multigolem.catalog.GolemVariantSpec;
+import dev.charles.multigolem.config.GolemAvailability;
 import dev.charles.multigolem.config.MultiGolemConfig;
 import dev.charles.multigolem.config.TierStats;
 import dev.charles.multigolem.golempedia.GolempediaStats;
 import dev.charles.multigolem.golempedia.GolempediaVillageSpawns;
+import dev.charles.multigolem.identity.GolemFamily;
+import dev.charles.multigolem.identity.GolemIdentity;
 import dev.charles.multigolem.spawn.VillageSpawnWeights;
 
 import java.util.ArrayList;
@@ -25,14 +28,18 @@ public final class ServerCustomizationsSummarizer {
         Objects.requireNonNull(config, "config");
         EnumMap<GolemVariant, Integer> weights = new EnumMap<>(GolemVariant.class);
         for (GolemVariant variant : VillageSpawnWeights.rollOrder()) {
-            weights.put(variant, config.villageSpawnWeights().weight(variant));
+            GolemIdentity identity = GolemIdentity.ofIronVariant(variant);
+            weights.put(variant, config.golemAvailability().isAvailable(identity)
+                ? config.villageSpawnWeights().weight(variant)
+                : 0);
         }
         EnumMap<GolemVariant, List<String>> stats = new EnumMap<>(GolemVariant.class);
         for (GolemVariantSpec spec : GolemVariantCatalog.entries()) {
-            if (spec.variant() != GolemVariant.IRON) {
+            if (spec.variant() != GolemVariant.IRON && config.golemAvailability().isAvailable(spec.identity())) {
                 stats.put(spec.variant(), GolempediaStats.linesFor(spec.variant(), config.tier(spec.variant())));
             }
         }
+        List<String> disabledAvailabilityLines = disabledAvailabilityLines(config.golemAvailability());
         List<VariantCustomizationSummary> overrides = variantOverrides(config, MultiGolemConfig.defaults());
         return new ServerCustomizationsSnapshot(
             config.allowGolemHealing(),
@@ -41,7 +48,8 @@ public final class ServerCustomizationsSummarizer {
             config.zombieVillageSpawning().enabled(),
             PERMISSIONS_MODE,
             overrides,
-            stats
+            stats,
+            disabledAvailabilityLines
         );
     }
 
@@ -69,6 +77,7 @@ public final class ServerCustomizationsSummarizer {
 
         zombieVillage.add("Zombie village spawning: " + enabledText(snapshot.zombieVillageSpawningEnabled()));
 
+        variants.addAll(snapshot.disabledAvailabilityLines());
         for (GolemVariantSpec spec : GolemVariantCatalog.entries()) {
             GolemVariant variant = spec.variant();
             if (variant == GolemVariant.IRON) {
@@ -90,13 +99,36 @@ public final class ServerCustomizationsSummarizer {
         return new ServerCustomizationsSummary(global, village, zombieVillage, variants);
     }
 
+    private static List<String> disabledAvailabilityLines(GolemAvailability availability) {
+        List<String> lines = new ArrayList<>();
+        for (GolemFamily family : GolemFamily.values()) {
+            if (!availability.isFamilyAvailable(family)) {
+                lines.add(familyDisplayName(family) + " family: disabled by server availability");
+                continue;
+            }
+            for (GolemVariantSpec spec : GolemVariantCatalog.entries()) {
+                if (spec.family() == family && spec.variant() != GolemVariant.IRON && !availability.isAvailable(spec.identity())) {
+                    lines.add(spec.variant().displayName() + ": disabled by server availability");
+                }
+            }
+        }
+        return lines;
+    }
+
+    private static String familyDisplayName(GolemFamily family) {
+        return switch (family) {
+            case IRON_GOLEM -> "Iron Golem";
+            case COPPER_GOLEM -> "Copper Golem";
+        };
+    }
+
     private static List<VariantCustomizationSummary> variantOverrides(MultiGolemConfig config, MultiGolemConfig defaults) {
         List<VariantCustomizationSummary> overrides = new ArrayList<>();
         for (GolemVariantSpec spec : GolemVariantCatalog.entries()) {
             GolemVariant variant = spec.variant();
             TierStats current = config.tier(variant);
             TierStats bundled = defaults.tier(variant);
-            if (!Objects.equals(current, bundled)) {
+            if (config.golemAvailability().isAvailable(spec.identity()) && !Objects.equals(current, bundled)) {
                 overrides.add(new VariantCustomizationSummary(
                     variant,
                     List.of(variant.displayName() + " settings differ from bundled defaults")

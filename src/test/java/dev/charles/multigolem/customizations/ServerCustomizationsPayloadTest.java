@@ -42,7 +42,8 @@ class ServerCustomizationsPayloadTest {
             false,
             "permission checks use the server's configured permission provider when present",
             List.of(new VariantCustomizationSummary(GolemVariant.GOLD, List.of("Gold speed multiplier differs from defaults"))),
-            stats
+            stats,
+            List.of("Diamond: disabled by server availability")
         );
         ServerCustomizationsPayload payload = new ServerCustomizationsPayload(snapshot);
         RegistryFriendlyByteBuf buf = new RegistryFriendlyByteBuf(Unpooled.buffer(), RegistryAccess.EMPTY);
@@ -52,6 +53,7 @@ class ServerCustomizationsPayloadTest {
 
         assertEquals(payload, roundTripped);
         assertEquals(snapshot, roundTripped.snapshot());
+        assertEquals(List.of("Diamond: disabled by server availability"), roundTripped.snapshot().disabledAvailabilityLines());
         assertEquals(ServerCustomizationsPayload.TYPE, roundTripped.type());
     }
 

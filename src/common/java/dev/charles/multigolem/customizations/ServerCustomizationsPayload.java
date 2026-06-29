@@ -68,6 +68,11 @@ public record ServerCustomizationsPayload(ServerCustomizationsSnapshot snapshot)
             }
             stats.put(variant, lines);
         }
+        int disabledLineCount = readLimitedCount(buf, MAX_LINES, "disabled availability lines");
+        List<String> disabledAvailabilityLines = new ArrayList<>();
+        for (int i = 0; i < disabledLineCount; i++) {
+            disabledAvailabilityLines.add(buf.readUtf(512));
+        }
         return new ServerCustomizationsPayload(new ServerCustomizationsSnapshot(
             healingEnabled,
             villageSpawnsEnabled,
@@ -75,7 +80,8 @@ public record ServerCustomizationsPayload(ServerCustomizationsSnapshot snapshot)
             zombieVillageSpawningEnabled,
             permissionsMode,
             variants,
-            stats
+            stats,
+            disabledAvailabilityLines
         ));
     }
 
@@ -105,6 +111,10 @@ public record ServerCustomizationsPayload(ServerCustomizationsSnapshot snapshot)
             for (String line : entry.getValue()) {
                 buf.writeUtf(line, 256);
             }
+        }
+        buf.writeVarInt(snapshot.disabledAvailabilityLines().size());
+        for (String line : snapshot.disabledAvailabilityLines()) {
+            buf.writeUtf(line, 512);
         }
     }
 

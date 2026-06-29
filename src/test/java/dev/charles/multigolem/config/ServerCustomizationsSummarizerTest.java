@@ -1,6 +1,8 @@
 package dev.charles.multigolem.config;
 
 import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.config.GolemAvailability;
+import dev.charles.multigolem.identity.GolemFamily;
 import dev.charles.multigolem.customizations.ServerCustomizationsSnapshot;
 import dev.charles.multigolem.customizations.ServerCustomizationsSummarizer;
 import dev.charles.multigolem.customizations.ServerCustomizationsSummary;
@@ -67,6 +69,31 @@ class ServerCustomizationsSummarizerTest {
         assertTrue(summary.villageLines().stream().anyMatch(line -> line.contains("Copper")));
         assertTrue(summary.villageLines().stream().anyMatch(line -> line.contains("roughly")));
         assertFalse(summary.villageLines().stream().anyMatch(line -> line.contains("weight")));
+    }
+
+    @Test
+    void summaryMarksDisabledVariantsWhenServerAvailabilityIsKnown() {
+        MultiGolemConfig cfg = MultiGolemConfig.defaults()
+            .withGolemAvailability(GolemAvailability.defaults()
+                .withVariant(GolemFamily.IRON_GOLEM, GolemVariant.DIAMOND, false));
+
+        ServerCustomizationsSummary summary = ServerCustomizationsSummarizer.summary(cfg);
+
+        assertTrue(summary.variantLines().stream().anyMatch(line -> line.contains("Diamond") && line.contains("disabled")));
+        assertFalse(summary.villageLines().stream().anyMatch(line -> line.startsWith("Diamond:") && line.contains("roughly")));
+    }
+
+    @Test
+    void summaryMarksDisabledFamilyOnceWithoutListingEnabledVariantOverridesAsAvailable() {
+        MultiGolemConfig cfg = MultiGolemConfig.defaults()
+            .withGolemAvailability(GolemAvailability.defaults()
+                .withFamily(GolemFamily.IRON_GOLEM, false)
+                .withVariant(GolemFamily.IRON_GOLEM, GolemVariant.COPPER, true));
+
+        ServerCustomizationsSummary summary = ServerCustomizationsSummarizer.summary(cfg);
+
+        assertTrue(summary.variantLines().stream().anyMatch(line -> line.contains("Iron Golem family") && line.contains("disabled")));
+        assertFalse(summary.variantLines().stream().anyMatch(line -> line.startsWith("Copper: Health:")));
     }
 
     @Test

@@ -22,7 +22,15 @@ public final class GolempediaCatalog {
             .toList();
     }
 
-    private static GolempediaEntry entryFor(GolemVariantSpec spec, MultiGolemConfig defaults) {
+    public static List<GolempediaEntry> entriesAvailableToServer(MultiGolemConfig config) {
+        return GolemVariantCatalog.entries().stream()
+            .filter(spec -> spec.variant() != GolemVariant.IRON)
+            .filter(spec -> config.golemAvailability().isAvailable(spec.identity()))
+            .map(spec -> entryFor(spec, config))
+            .toList();
+    }
+
+    private static GolempediaEntry entryFor(GolemVariantSpec spec, MultiGolemConfig config) {
         GolemVariant variant = spec.variant();
         return new GolempediaEntry(
             variant,
@@ -30,9 +38,9 @@ public final class GolempediaCatalog {
             creationFor(variant),
             itemName(spec.healItem()),
             dropSummary(spec),
-            GolempediaStats.linesFor(variant, defaults.tier(variant)),
+            GolempediaStats.linesFor(variant, config.tier(variant)),
             spec.spawnEggEnabled() ? "Spawn egg available in creative tabs." : "No spawn egg in this build.",
-            villageSpawnSummary(variant, defaults),
+            villageSpawnSummary(variant, config),
             abilityFor(variant),
             caveatsFor(variant)
         );

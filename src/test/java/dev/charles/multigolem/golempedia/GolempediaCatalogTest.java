@@ -3,6 +3,9 @@ package dev.charles.multigolem.golempedia;
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.catalog.GolemVariantCatalog;
 import dev.charles.multigolem.catalog.GolemVariantSpec;
+import dev.charles.multigolem.config.GolemAvailability;
+import dev.charles.multigolem.config.MultiGolemConfig;
+import dev.charles.multigolem.identity.GolemFamily;
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -90,6 +93,20 @@ class GolempediaCatalogTest {
         assertTrue(redstone.statLines().contains("Overcharge resistance: II"));
         assertTrue(redstone.statLines().contains("Speed: no bonus"));
         assertTrue(redstone.statLines().contains("Death pulse: Slowness X for 6s in 8 blocks"));
+    }
+
+    @Test
+    void serverAvailableEntriesOmitDisabledVariants() {
+        MultiGolemConfig config = MultiGolemConfig.defaults()
+            .withGolemAvailability(GolemAvailability.defaults()
+                .withVariant(GolemFamily.IRON_GOLEM, GolemVariant.DIAMOND, false));
+
+        EnumSet<GolemVariant> actual = GolempediaCatalog.entriesAvailableToServer(config).stream()
+            .map(GolempediaEntry::variant)
+            .collect(Collectors.toCollection(() -> EnumSet.noneOf(GolemVariant.class)));
+
+        assertFalse(actual.contains(GolemVariant.DIAMOND));
+        assertTrue(actual.contains(GolemVariant.COPPER));
     }
 
     @Test

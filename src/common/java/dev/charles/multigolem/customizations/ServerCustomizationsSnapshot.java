@@ -15,14 +15,30 @@ public record ServerCustomizationsSnapshot(
     boolean zombieVillageSpawningEnabled,
     String permissionsMode,
     List<VariantCustomizationSummary> variantOverrides,
-    Map<GolemVariant, List<String>> golempediaStats
+    Map<GolemVariant, List<String>> golempediaStats,
+    List<String> disabledAvailabilityLines
 ) {
+    public ServerCustomizationsSnapshot(
+        boolean healingEnabled,
+        boolean villageSpawnsEnabled,
+        Map<GolemVariant, Integer> villageSpawnWeights,
+        boolean zombieVillageSpawningEnabled,
+        String permissionsMode,
+        List<VariantCustomizationSummary> variantOverrides,
+        Map<GolemVariant, List<String>> golempediaStats
+    ) {
+        this(healingEnabled, villageSpawnsEnabled, villageSpawnWeights, zombieVillageSpawningEnabled,
+            permissionsMode, variantOverrides, golempediaStats, List.of());
+    }
+
     public ServerCustomizationsSnapshot {
         Objects.requireNonNull(villageSpawnWeights, "villageSpawnWeights");
         permissionsMode = permissionsMode == null || permissionsMode.isBlank() ? "permissions unavailable" : permissionsMode;
         Objects.requireNonNull(variantOverrides, "variantOverrides");
+        Objects.requireNonNull(disabledAvailabilityLines, "disabledAvailabilityLines");
         villageSpawnWeights = Collections.unmodifiableMap(new EnumMap<>(villageSpawnWeights));
         variantOverrides = List.copyOf(variantOverrides);
+        disabledAvailabilityLines = List.copyOf(disabledAvailabilityLines);
         Objects.requireNonNull(golempediaStats, "golempediaStats");
         EnumMap<GolemVariant, List<String>> statsCopy = new EnumMap<>(GolemVariant.class);
         for (Map.Entry<GolemVariant, List<String>> entry : golempediaStats.entrySet()) {
