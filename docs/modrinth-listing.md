@@ -3,6 +3,8 @@
 ## Project Description
 
 ````markdown
+# MultiGolem
+
 ## Features
 
 - Adds seven Iron Golem variants: Copper, Redstone, Gold, Emerald, Diamond, Netherite, and Zombie.

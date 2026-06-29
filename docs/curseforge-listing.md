@@ -1,4 +1,4 @@
-# MultiGolem — CurseForge Listing
+# MultiGolem
 
 ## Features
 
