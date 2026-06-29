@@ -1,17 +1,17 @@
 # MultiGolem
 
-A Fabric and NeoForge mod for Minecraft 26.2 that adds Copper, Redstone, Gold, Emerald, Diamond, Netherite, and Zombie golem variants alongside the vanilla Iron Golem. Built by Tyler and Charles.
+A Fabric and NeoForge mod for Minecraft 26.2 that adds Copper, Redstone, Gold, Lapis, Emerald, Diamond, Netherite, and Zombie golem variants alongside the vanilla Iron Golem. Built by Tyler and Charles.
 
 ## What it does
 
-- Seven new golem tiers, built like an Iron Golem (T-pattern + carved pumpkin) but with a different body block.
+- Eight new golem tiers, built like an Iron Golem (T-pattern + carved pumpkin) but with a different body block.
 - Each tier has a unique texture on modded clients. Vanilla clients see all variants as regular iron golems.
-- Stats scale by role: Copper is weakest, Redstone is a lower-strength emergency-control defender, and Netherite is strongest (designed to beat a Warden 1v1).
+- Each variant has its own default stats and role: Copper is lighter than vanilla, Redstone trades raw strength for emergency-control effects, Lapis is fragile anti-magic support, and Netherite is the durable endgame bruiser.
 - Heal each golem with its matching material.
 - Per-tier special abilities (see below).
-- Per-tier `ignored_target_types` — copper/redstone/gold/emerald/diamond/netherite ignore creepers by default to prevent collateral block damage.
+- Per-tier `ignored_target_types` — copper/redstone/gold/lapis/emerald/diamond/netherite ignore creepers by default to prevent collateral block damage.
 - Hostile Zombie Golems built from Mossy Cobblestone, healed with Rotten Flesh, allied with zombies, and maintained in zombie-villager village areas.
-- Marked vanilla iron golem spawn eggs for Copper, Redstone, Gold, Emerald, Diamond, Netherite, and Zombie variants.
+- Marked vanilla iron golem spawn eggs for Copper, Redstone, Gold, Lapis, Emerald, Diamond, Netherite, and Zombie variants.
 - **Server-side functional.** Vanilla clients can connect with no mod installed; stats, drops, and creation all behave correctly.
 
 ## Recipes
@@ -80,7 +80,7 @@ Shared per-tier fields:
 | `max_health` | `1`-`2048` | Maximum HP for that tier. |
 | `attack_damage` | `0`-`2048` | Attack damage for that tier. |
 | `anger_on_hit` | `true` / `false` | Whether that tier gets angry when attacked. |
-| `ignored_target_types` | list | Target categories this tier will not attack. Recognized values: `CREEPERS`, `ENDERMEN`, `PLAYERS`, `ALL_BOSSES`. Copper, Redstone, Gold, Emerald, Diamond, and Netherite ignore creepers by default. |
+| `ignored_target_types` | list | Target categories this tier will not attack. Recognized values: `CREEPERS`, `ENDERMEN`, `PLAYERS`, `ALL_BOSSES`. Copper, Redstone, Gold, Lapis, Emerald, Diamond, and Netherite ignore creepers by default. |
 
 Ability fields:
 
