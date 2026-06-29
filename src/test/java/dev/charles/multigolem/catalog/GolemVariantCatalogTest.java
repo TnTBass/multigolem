@@ -1,7 +1,9 @@
 package dev.charles.multigolem.catalog;
 
 import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.config.GolemAvailability;
 import dev.charles.multigolem.identity.GolemFamily;
+import dev.charles.multigolem.identity.GolemIdentity;
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -66,6 +68,29 @@ class GolemVariantCatalogTest {
         assertEquals(customIronFamily, GolemVariant.nonIronVariants());
         assertFalse(Arrays.stream(GolemVariant.values())
             .anyMatch(v -> v.id().equals("lapis")));
+    }
+
+    @Test
+    void catalogEntriesExposeFamilyVariantIdentity() {
+        assertEquals(
+            GolemIdentity.ofIronVariant(GolemVariant.COPPER),
+            GolemVariantCatalog.require(GolemVariant.COPPER).identity()
+        );
+        assertEquals(
+            new GolemIdentity(GolemFamily.IRON_GOLEM, GolemVariant.ZOMBIE),
+            GolemVariantCatalog.require(GolemVariant.ZOMBIE).identity()
+        );
+    }
+
+    @Test
+    void catalogCanFilterAvailableIdentitiesWithoutFlatteningFamilies() {
+        GolemAvailability availability = GolemAvailability.defaults()
+            .withVariant(GolemFamily.IRON_GOLEM, GolemVariant.DIAMOND, false);
+
+        List<GolemIdentity> identities = GolemVariantCatalog.identitiesWhereAvailable(availability);
+
+        assertTrue(identities.contains(GolemIdentity.ofIronVariant(GolemVariant.COPPER)));
+        assertFalse(identities.contains(GolemIdentity.ofIronVariant(GolemVariant.DIAMOND)));
     }
 
     @Test

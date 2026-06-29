@@ -16,21 +16,29 @@ public final class VillageGolemSpawnHandler {
         try {
             // Constructed per-spawn to pick up live config reloads.
             VillageGolemSpawnResolver resolver = new VillageGolemSpawnResolver(MultiGolem.config());
-            resolver.rollVariant(bound -> golem.getRandom().nextInt(bound))
-                .ifPresent(variant -> applyVariant(golem, variant));
+            resolver.rollIdentity(bound -> golem.getRandom().nextInt(bound))
+                .ifPresent(identity -> applyIdentity(golem, identity));
         } catch (Throwable t) {
             MultiGolem.LOG.error("Failed to apply village golem variant roll to golem {}", golem.getId(), t);
         }
     }
 
     private static void applyVariant(IronGolem golem, GolemVariant variant) {
-        applyVariant(golem, variant, VillageGolemSpawnHandler::applyVariantAttachments);
+        applyIdentity(golem, GolemIdentity.ofIronVariant(variant), VillageGolemSpawnHandler::applyVariantAttachments);
     }
 
     static void applyVariant(IronGolem golem, GolemVariant variant, VillageVariantApplier applier) {
-        if (variant == GolemVariant.IRON) return;
+        applyIdentity(golem, GolemIdentity.ofIronVariant(variant), applier);
+    }
 
-        applier.apply(golem, variant, GolemSpawnOrigin.VILLAGE);
+    private static void applyIdentity(IronGolem golem, GolemIdentity identity) {
+        applyIdentity(golem, identity, VillageGolemSpawnHandler::applyVariantAttachments);
+    }
+
+    static void applyIdentity(IronGolem golem, GolemIdentity identity, VillageVariantApplier applier) {
+        if (identity.variant() == GolemVariant.IRON) return;
+
+        applier.apply(golem, identity.variant(), GolemSpawnOrigin.VILLAGE);
         golem.setHealth(golem.getMaxHealth());
     }
 

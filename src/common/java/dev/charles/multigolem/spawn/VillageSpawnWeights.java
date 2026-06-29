@@ -1,6 +1,8 @@
 package dev.charles.multigolem.spawn;
 
 import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.config.GolemAvailability;
+import dev.charles.multigolem.identity.GolemIdentity;
 
 import java.util.EnumMap;
 import java.util.List;
@@ -73,6 +75,29 @@ public record VillageSpawnWeights(boolean enabled, EnumMap<GolemVariant, Integer
         for (GolemVariant variant : ROLL_ORDER) {
             cursor += weight(variant);
             if (ticket < cursor) return Optional.of(variant);
+        }
+        return Optional.empty();
+    }
+
+    public Optional<GolemIdentity> rollAvailable(GolemAvailability availability, IntUnaryOperator nextIntBounded) {
+        if (!enabled) return Optional.empty();
+
+        int total = 0;
+        for (GolemVariant variant : ROLL_ORDER) {
+            GolemIdentity identity = GolemIdentity.ofIronVariant(variant);
+            if (availability.isAvailable(identity)) {
+                total += weight(variant);
+            }
+        }
+        if (total <= 0) return Optional.empty();
+
+        int ticket = nextIntBounded.applyAsInt(total);
+        int cursor = 0;
+        for (GolemVariant variant : ROLL_ORDER) {
+            GolemIdentity identity = GolemIdentity.ofIronVariant(variant);
+            if (!availability.isAvailable(identity)) continue;
+            cursor += weight(variant);
+            if (ticket < cursor) return Optional.of(identity);
         }
         return Optional.empty();
     }

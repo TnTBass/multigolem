@@ -1,7 +1,9 @@
 package dev.charles.multigolem.catalog;
 
 import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.config.GolemAvailability;
 import dev.charles.multigolem.identity.GolemFamily;
+import dev.charles.multigolem.identity.GolemIdentity;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -49,6 +51,19 @@ public final class GolemVariantCatalog {
     public static boolean contains(GolemFamily family, GolemVariant variant) {
         GolemVariantSpec spec = SPECS.get(variant);
         return spec != null && spec.family() == family;
+    }
+
+    public static Optional<GolemVariantSpec> find(GolemFamily family, GolemVariant variant) {
+        GolemVariantSpec spec = SPECS.get(variant);
+        if (spec == null || spec.family() != family) return Optional.empty();
+        return Optional.of(spec);
+    }
+
+    public static List<GolemIdentity> identitiesWhereAvailable(GolemAvailability availability) {
+        return entries().stream()
+            .map(GolemVariantSpec::identity)
+            .filter(availability::isAvailable)
+            .toList();
     }
 
     public static List<GolemVariant> variantsWhere(Predicate<GolemVariantSpec> predicate) {

@@ -1,6 +1,9 @@
 package dev.charles.multigolem.spawn;
 
 import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.config.GolemAvailability;
+import dev.charles.multigolem.identity.GolemFamily;
+import dev.charles.multigolem.identity.GolemIdentity;
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -65,6 +68,36 @@ class VillageSpawnWeightsTest {
         VillageSpawnWeights weights = new VillageSpawnWeights(true, map);
 
         assertEquals(Optional.of(GolemVariant.NETHERITE), weights.roll(bound -> 0));
+    }
+
+    @Test
+    void rollAvailableSkipsDisabledVariants() {
+        EnumMap<GolemVariant, Integer> map = new EnumMap<>(GolemVariant.class);
+        for (GolemVariant variant : GolemVariant.values()) {
+            map.put(variant, 0);
+        }
+        map.put(GolemVariant.COPPER, 10);
+        map.put(GolemVariant.DIAMOND, 10);
+        VillageSpawnWeights weights = new VillageSpawnWeights(true, map);
+        GolemAvailability availability = GolemAvailability.defaults()
+            .withVariant(GolemFamily.IRON_GOLEM, GolemVariant.COPPER, false);
+
+        assertEquals(Optional.of(GolemIdentity.ofIronVariant(GolemVariant.DIAMOND)),
+            weights.rollAvailable(availability, bound -> 0));
+    }
+
+    @Test
+    void rollAvailableReturnsEmptyWhenAllPositiveWeightsAreDisabled() {
+        EnumMap<GolemVariant, Integer> map = new EnumMap<>(GolemVariant.class);
+        for (GolemVariant variant : GolemVariant.values()) {
+            map.put(variant, 0);
+        }
+        map.put(GolemVariant.COPPER, 10);
+        VillageSpawnWeights weights = new VillageSpawnWeights(true, map);
+        GolemAvailability availability = GolemAvailability.defaults()
+            .withVariant(GolemFamily.IRON_GOLEM, GolemVariant.COPPER, false);
+
+        assertEquals(Optional.empty(), weights.rollAvailable(availability, bound -> fail("no available weight should remain")));
     }
 
     @Test

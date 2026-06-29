@@ -2,6 +2,7 @@ package dev.charles.multigolem.catalog;
 
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.identity.GolemFamily;
+import dev.charles.multigolem.identity.GolemIdentity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -29,5 +30,9 @@ public record GolemVariantSpec(
 ) {
     public boolean matchesBodyBlock(BlockState state) {
         return bodyBlockMatcherSupplier.get().test(state);
+    }
+
+    public GolemIdentity identity() {
+        return new GolemIdentity(family, variant);
     }
 }
