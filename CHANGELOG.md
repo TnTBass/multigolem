@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added `golem_availability` server config so server owners can disable whole golem families or individual family/variant identities for future creation and server-known listing surfaces without deleting existing golems.
+
 ## 0.7.0+mc26.2 — 2026-06-25
 
 - Added Redstone Golems, built from Redstone Blocks and healed with Redstone Dust. They have 90 health and 13 attack by default, overcharge when badly damaged, and release a Slowness X pulse when they die.

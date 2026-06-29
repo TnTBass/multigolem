@@ -11,7 +11,9 @@ class GolemIdentityMutationSourceTest {
     @Test
     void explicitMutationPathsUseIdentityAttachment() throws Exception {
         assertSourceContains("src/common/java/dev/charles/multigolem/spawn/GolemCreationHandler.java",
-            "GolemIdentityAttachment.set(golem, identityFromMatchBodyStates(variant, match))");
+            "GolemIdentity identity = identityFromMatchBodyStates(variant, match)");
+        assertSourceContains("src/common/java/dev/charles/multigolem/spawn/GolemCreationHandler.java",
+            "GolemIdentityAttachment.set(golem, identity)");
         assertSourceContains("src/common/java/dev/charles/multigolem/spawn/VillageGolemSpawnHandler.java",
             "GolemIdentityAttachment.set(golem, GolemIdentity.ofIronVariant(variant))");
         assertSourceContains("src/common/java/dev/charles/multigolem/spawn/ZombieVillageSpawnHandler.java",
@@ -19,7 +21,9 @@ class GolemIdentityMutationSourceTest {
         assertSourceContains("src/common/java/dev/charles/multigolem/spawn/SpawnEggVariantSpawner.java",
             "SpawnEggStacks.identityFrom(stack)");
         assertSourceContains("src/common/java/dev/charles/multigolem/spawn/SpawnEggVariantSpawner.java",
-            "GolemIdentityAttachment.set(golem, identity.get())");
+            "GolemIdentity requested = identity.get()");
+        assertSourceContains("src/common/java/dev/charles/multigolem/spawn/SpawnEggVariantSpawner.java",
+            "GolemIdentityAttachment.set(golem, requested)");
         assertSourceContains("src/common/java/dev/charles/multigolem/mixin/BaseSpawnerMixin.java",
             "SpawnerVariantMarker.readIdentity(entityTag)");
         assertSourceContains("src/common/java/dev/charles/multigolem/mixin/BaseSpawnerMixin.java",
