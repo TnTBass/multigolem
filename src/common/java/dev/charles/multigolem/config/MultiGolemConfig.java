@@ -438,12 +438,13 @@ public final class MultiGolemConfig {
     }
 
     private static void canonicalizeFamilyAvailabilityInPlace(String familyKey, GolemFamily family, JsonObject familyJson) {
+        boolean defaultEnabled = GolemAvailability.familyDefault(family).enabled();
         if (!familyJson.has("enabled") || !familyJson.get("enabled").isJsonPrimitive()
                 || !familyJson.get("enabled").getAsJsonPrimitive().isBoolean()) {
             if (familyJson.has("enabled")) {
-                MultiGolem.LOG.warn("golem_availability.{}.enabled is not a boolean; using true", familyKey);
+                MultiGolem.LOG.warn("golem_availability.{}.enabled is not a boolean; using {}", familyKey, defaultEnabled);
             }
-            familyJson.addProperty("enabled", true);
+            familyJson.addProperty("enabled", defaultEnabled);
         }
 
         if (!familyJson.has("variants") || !familyJson.get("variants").isJsonObject()) {

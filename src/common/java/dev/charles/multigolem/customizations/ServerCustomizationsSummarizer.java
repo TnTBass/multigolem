@@ -9,7 +9,6 @@ import dev.charles.multigolem.config.TierStats;
 import dev.charles.multigolem.golempedia.GolempediaStats;
 import dev.charles.multigolem.golempedia.GolempediaVillageSpawns;
 import dev.charles.multigolem.identity.GolemFamily;
-import dev.charles.multigolem.identity.GolemIdentity;
 import dev.charles.multigolem.spawn.VillageSpawnWeights;
 
 import java.util.ArrayList;
@@ -28,7 +27,7 @@ public final class ServerCustomizationsSummarizer {
         Objects.requireNonNull(config, "config");
         EnumMap<GolemVariant, Integer> weights = new EnumMap<>(GolemVariant.class);
         for (GolemVariant variant : VillageSpawnWeights.rollOrder()) {
-            GolemIdentity identity = GolemIdentity.ofIronVariant(variant);
+            var identity = GolemVariantCatalog.require(variant).identity();
             weights.put(variant, config.golemAvailability().isAvailable(identity)
                 ? config.villageSpawnWeights().weight(variant)
                 : 0);

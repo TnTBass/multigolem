@@ -12,8 +12,11 @@ import dev.charles.multigolem.test.MinecraftBootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.EnumMap;
 import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -94,6 +97,15 @@ class ServerCustomizationsSummarizerTest {
 
         assertTrue(summary.variantLines().stream().anyMatch(line -> line.contains("Iron Golem family") && line.contains("disabled")));
         assertFalse(summary.variantLines().stream().anyMatch(line -> line.startsWith("Copper: Health:")));
+    }
+
+    @Test
+    void villageSummaryAvailabilityUsesCatalogIdentity() throws IOException {
+        String source = Files.readString(Path.of(
+            "src/common/java/dev/charles/multigolem/customizations/ServerCustomizationsSummarizer.java"));
+
+        assertTrue(source.contains("GolemVariantCatalog.require(variant).identity()"));
+        assertFalse(source.contains("GolemIdentity.ofIronVariant(variant)"));
     }
 
     @Test

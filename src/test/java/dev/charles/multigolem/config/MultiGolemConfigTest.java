@@ -142,6 +142,15 @@ class MultiGolemConfigTest {
     }
 
     @Test
+    void golemAvailabilityEnabledFallbackUsesFamilyDefault() throws IOException {
+        String source = Files.readString(Path.of(
+            "src/common/java/dev/charles/multigolem/config/MultiGolemConfig.java"));
+
+        assertTrue(source.contains("boolean defaultEnabled = GolemAvailability.familyDefault(family).enabled()"));
+        assertTrue(source.contains("familyJson.addProperty(\"enabled\", defaultEnabled)"));
+    }
+
+    @Test
     void loadFromFile_missingFile_writesDefaults(@TempDir Path tmp) throws IOException {
         Path file = tmp.resolve("multigolem.json");
         MultiGolemConfig loaded = MultiGolemConfig.loadOrCreate(file);
