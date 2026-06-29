@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.8.0+mc26.2 — 2026-06-28
+
 - Added Lapis Golems, built from Lapis Blocks and healed with Lapis Lazuli. They are fragile anti-magic support defenders that protect nearby allied village entities from magic damage and configured harmful magical effects, while ordinary combat damage remains unchanged.
 
 ## 0.7.0+mc26.2 — 2026-06-25
