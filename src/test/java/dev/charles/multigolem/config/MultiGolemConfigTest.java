@@ -1,6 +1,7 @@
 package dev.charles.multigolem.config;
 
 import dev.charles.multigolem.GolemVariant;
+import dev.charles.multigolem.identity.GolemIdentity;
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -51,6 +52,93 @@ class MultiGolemConfigTest {
         for (GolemVariant v : GolemVariant.values()) {
             assertTrue(cfg.tier(v).angerOnHit(), v + " should default angerOnHit=true");
         }
+    }
+
+    @Test
+    void golemAvailabilityDefaultsEnableKnownCatalogIdentities() {
+        MultiGolemConfig cfg = MultiGolemConfig.defaults();
+
+        assertTrue(cfg.golemAvailability().isAvailable(GolemIdentity.ofIronVariant(GolemVariant.COPPER)));
+        assertTrue(cfg.golemAvailability().isAvailable(GolemIdentity.ofIronVariant(GolemVariant.DIAMOND)));
+        assertTrue(cfg.golemAvailability().isAvailable(GolemIdentity.ofIronVariant(GolemVariant.ZOMBIE)));
+    }
+
+    @Test
+    void golemAvailabilityDisabledFamilyOverridesEnabledVariants(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "golem_availability": {
+                "iron_golem": {
+                  "enabled": false,
+                  "variants": {
+                    "copper": true,
+                    "diamond": true
+                  }
+                }
+              }
+            }
+            """);
+
+        MultiGolemConfig cfg = MultiGolemConfig.loadOrCreate(file);
+
+        assertFalse(cfg.golemAvailability().isAvailable(GolemIdentity.ofIronVariant(GolemVariant.COPPER)));
+        assertFalse(cfg.golemAvailability().isAvailable(GolemIdentity.ofIronVariant(GolemVariant.DIAMOND)));
+    }
+
+    @Test
+    void golemAvailabilityDisabledVariantOnlyBlocksThatFamilyVariant(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "golem_availability": {
+                "iron_golem": {
+                  "enabled": true,
+                  "variants": {
+                    "diamond": false
+                  }
+                }
+              }
+            }
+            """);
+
+        MultiGolemConfig cfg = MultiGolemConfig.loadOrCreate(file);
+
+        assertTrue(cfg.golemAvailability().isAvailable(GolemIdentity.ofIronVariant(GolemVariant.COPPER)));
+        assertFalse(cfg.golemAvailability().isAvailable(GolemIdentity.ofIronVariant(GolemVariant.DIAMOND)));
+        assertTrue(cfg.golemAvailability().isAvailable(GolemIdentity.ofIronVariant(GolemVariant.NETHERITE)));
+    }
+
+    @Test
+    void golemAvailabilityCanonicalizationPreservesUnknownKeys(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "golem_availability": {
+                "iron_golem": {
+                  "enabled": true,
+                  "variants": {
+                    "diamond": false,
+                    "obsidian": false
+                  }
+                },
+                "future_golem": {
+                  "enabled": false,
+                  "variants": {
+                    "brass": false
+                  }
+                }
+              }
+            }
+            """);
+
+        MultiGolemConfig cfg = MultiGolemConfig.loadOrCreate(file);
+        String rewritten = Files.readString(file);
+
+        assertFalse(cfg.golemAvailability().isAvailable(GolemIdentity.ofIronVariant(GolemVariant.DIAMOND)));
+        assertTrue(rewritten.contains("\"future_golem\""));
+        assertTrue(rewritten.contains("\"obsidian\""));
+        assertTrue(rewritten.contains("\"brass\""));
     }
 
     @Test

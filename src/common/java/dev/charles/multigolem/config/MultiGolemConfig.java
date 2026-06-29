@@ -10,6 +10,8 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSyntaxException;
 import dev.charles.multigolem.GolemVariant;
 import dev.charles.multigolem.MultiGolem;
+import dev.charles.multigolem.catalog.GolemVariantCatalog;
+import dev.charles.multigolem.identity.GolemFamily;
 import dev.charles.multigolem.spawn.VillageSpawnWeights;
 import dev.charles.multigolem.spawn.ZombieVillageSpawningConfig;
 
@@ -47,19 +49,22 @@ public final class MultiGolemConfig {
     private final Map<GolemVariant, TierStats> tiers;
     private final VillageSpawnWeights villageSpawnWeights;
     private final ZombieVillageSpawningConfig zombieVillageSpawning;
+    private final GolemAvailability golemAvailability;
 
     private MultiGolemConfig(boolean allowGolemHealing, Map<GolemVariant, TierStats> tiers, VillageSpawnWeights villageSpawnWeights,
-                             ZombieVillageSpawningConfig zombieVillageSpawning) {
+                             ZombieVillageSpawningConfig zombieVillageSpawning, GolemAvailability golemAvailability) {
         this.allowGolemHealing = allowGolemHealing;
         this.tiers = new EnumMap<>(tiers);
         this.villageSpawnWeights = villageSpawnWeights;
         this.zombieVillageSpawning = zombieVillageSpawning;
+        this.golemAvailability = golemAvailability;
     }
 
     public boolean allowGolemHealing() { return allowGolemHealing; }
     public TierStats tier(GolemVariant variant) { return tiers.get(variant); }
     public VillageSpawnWeights villageSpawnWeights() { return villageSpawnWeights; }
     public ZombieVillageSpawningConfig zombieVillageSpawning() { return zombieVillageSpawning; }
+    public GolemAvailability golemAvailability() { return golemAvailability; }
 
     Map<GolemVariant, TierStats> tiersForTesting() {
         return new EnumMap<>(tiers);
@@ -71,7 +76,21 @@ public final class MultiGolemConfig {
         VillageSpawnWeights villageSpawnWeights,
         ZombieVillageSpawningConfig zombieVillageSpawning
     ) {
-        return new MultiGolemConfig(allowGolemHealing, tiers, villageSpawnWeights, zombieVillageSpawning);
+        return forTesting(allowGolemHealing, tiers, villageSpawnWeights, zombieVillageSpawning, GolemAvailability.defaults());
+    }
+
+    static MultiGolemConfig forTesting(
+        boolean allowGolemHealing,
+        Map<GolemVariant, TierStats> tiers,
+        VillageSpawnWeights villageSpawnWeights,
+        ZombieVillageSpawningConfig zombieVillageSpawning,
+        GolemAvailability golemAvailability
+    ) {
+        return new MultiGolemConfig(allowGolemHealing, tiers, villageSpawnWeights, zombieVillageSpawning, golemAvailability);
+    }
+
+    public MultiGolemConfig withGolemAvailability(GolemAvailability golemAvailability) {
+        return new MultiGolemConfig(allowGolemHealing, tiers, villageSpawnWeights, zombieVillageSpawning, golemAvailability);
     }
 
     public static MultiGolemConfig defaults() {
@@ -134,7 +153,7 @@ public final class MultiGolemConfig {
             true, 4, 0,
             true, 4, 0,
             true, 1.0, true, 1.0));
-        return new MultiGolemConfig(true, m, VillageSpawnWeights.defaults(), ZombieVillageSpawningConfig.defaults());
+        return new MultiGolemConfig(true, m, VillageSpawnWeights.defaults(), ZombieVillageSpawningConfig.defaults(), GolemAvailability.defaults());
     }
 
     public static MultiGolemConfig loadOrCreate(Path path) {
@@ -192,6 +211,7 @@ public final class MultiGolemConfig {
     private static void canonicalizeAndValidateInPlace(JsonObject root) {
         canonicalizeVillageSpawningInPlace(root);
         canonicalizeZombieVillageSpawningInPlace(root);
+        canonicalizeGolemAvailabilityInPlace(root);
 
         JsonObject tiers = root.has("tiers") && root.get("tiers").isJsonObject()
             ? root.getAsJsonObject("tiers") : null;
@@ -383,6 +403,87 @@ public final class MultiGolemConfig {
         canonicalizeInt(zombie, "max_zombie_golems_per_village", 0, Integer.MAX_VALUE);
     }
 
+    private static void canonicalizeGolemAvailabilityInPlace(JsonObject root) {
+        if (!root.has("golem_availability") || !root.get("golem_availability").isJsonObject()) {
+            if (root.has("golem_availability")) {
+                MultiGolem.LOG.warn("golem_availability is malformed; using defaults");
+            }
+            root.add("golem_availability", golemAvailabilityToJson(GolemAvailability.defaults()));
+            return;
+        }
+
+        JsonObject availability = root.getAsJsonObject("golem_availability");
+        for (Map.Entry<String, JsonElement> entry : availability.entrySet()) {
+            String familyKey = entry.getKey();
+            GolemFamily family = GolemFamily.fromId(familyKey).orElse(null);
+            if (family == null) {
+                MultiGolem.LOG.warn("unknown golem_availability family key '{}'; preserved but ignored", familyKey);
+                warnUnknownAvailabilityVariants(familyKey, entry.getValue());
+                continue;
+            }
+            if (!entry.getValue().isJsonObject()) {
+                MultiGolem.LOG.warn("golem_availability.{} is malformed; using defaults", familyKey);
+                entry.setValue(familyAvailabilityToJson(GolemAvailability.familyDefault(family)));
+                continue;
+            }
+            canonicalizeFamilyAvailabilityInPlace(familyKey, family, entry.getValue().getAsJsonObject());
+        }
+
+        for (GolemFamily family : GolemFamily.values()) {
+            String familyKey = family.id();
+            if (!availability.has(familyKey) || !availability.get(familyKey).isJsonObject()) {
+                availability.add(familyKey, familyAvailabilityToJson(GolemAvailability.familyDefault(family)));
+            }
+        }
+    }
+
+    private static void canonicalizeFamilyAvailabilityInPlace(String familyKey, GolemFamily family, JsonObject familyJson) {
+        if (!familyJson.has("enabled") || !familyJson.get("enabled").isJsonPrimitive()
+                || !familyJson.get("enabled").getAsJsonPrimitive().isBoolean()) {
+            if (familyJson.has("enabled")) {
+                MultiGolem.LOG.warn("golem_availability.{}.enabled is not a boolean; using true", familyKey);
+            }
+            familyJson.addProperty("enabled", true);
+        }
+
+        if (!familyJson.has("variants") || !familyJson.get("variants").isJsonObject()) {
+            if (familyJson.has("variants")) {
+                MultiGolem.LOG.warn("golem_availability.{}.variants is malformed; using defaults", familyKey);
+            }
+            familyJson.add("variants", new JsonObject());
+        }
+
+        JsonObject variants = familyJson.getAsJsonObject("variants");
+        for (Map.Entry<String, JsonElement> entry : variants.entrySet()) {
+            String variantKey = entry.getKey();
+            GolemVariant variant = GolemVariant.fromId(variantKey).orElse(null);
+            if (variant == null || !GolemVariantCatalog.contains(family, variant)) {
+                MultiGolem.LOG.warn("unknown golem_availability.{}.variants key '{}'; preserved but ignored", familyKey, variantKey);
+                continue;
+            }
+            JsonElement value = entry.getValue();
+            if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isBoolean()) {
+                MultiGolem.LOG.warn("golem_availability.{}.variants.{} is not a boolean; using true", familyKey, variantKey);
+                entry.setValue(new JsonPrimitive(true));
+            }
+        }
+
+        for (Map.Entry<GolemVariant, Boolean> entry : GolemAvailability.familyDefault(family).variants().entrySet()) {
+            if (!variants.has(entry.getKey().id())) {
+                variants.addProperty(entry.getKey().id(), entry.getValue());
+            }
+        }
+    }
+
+    private static void warnUnknownAvailabilityVariants(String familyKey, JsonElement familyElement) {
+        if (!familyElement.isJsonObject()) return;
+        JsonObject familyJson = familyElement.getAsJsonObject();
+        if (!familyJson.has("variants") || !familyJson.get("variants").isJsonObject()) return;
+        for (Map.Entry<String, JsonElement> variantEntry : familyJson.getAsJsonObject("variants").entrySet()) {
+            MultiGolem.LOG.warn("unknown golem_availability.{}.variants key '{}'; preserved but ignored", familyKey, variantEntry.getKey());
+        }
+    }
+
     private static void canonicalizeInt(JsonObject t, String key, int min, int max) {
         if (!t.has(key) || !t.get(key).isJsonPrimitive() || !t.get(key).getAsJsonPrimitive().isNumber()) return;
         int v = t.get(key).getAsInt();
@@ -438,6 +539,7 @@ public final class MultiGolemConfig {
         boolean healing = readBoolean(root, "allow_golem_healing", defaults.allowGolemHealing);
         VillageSpawnWeights villageSpawnWeights = parseVillageSpawnWeights(root, defaults.villageSpawnWeights);
         ZombieVillageSpawningConfig zombieVillageSpawning = parseZombieVillageSpawning(root, defaults.zombieVillageSpawning);
+        GolemAvailability golemAvailability = parseGolemAvailability(root);
 
         EnumMap<GolemVariant, TierStats> tiers = new EnumMap<>(GolemVariant.class);
         JsonObject tiersJson = root.has("tiers") && root.get("tiers").isJsonObject()
@@ -450,7 +552,46 @@ public final class MultiGolemConfig {
             }
             tiers.put(v, parseTier(v, tiersJson.getAsJsonObject(v.id()), def));
         }
-        return new MultiGolemConfig(healing, tiers, villageSpawnWeights, zombieVillageSpawning);
+        return new MultiGolemConfig(healing, tiers, villageSpawnWeights, zombieVillageSpawning, golemAvailability);
+    }
+
+    private static GolemAvailability parseGolemAvailability(JsonObject root) {
+        if (!root.has("golem_availability") || !root.get("golem_availability").isJsonObject()) {
+            return GolemAvailability.defaults();
+        }
+
+        GolemAvailability availability = GolemAvailability.defaults();
+        JsonObject availabilityJson = root.getAsJsonObject("golem_availability");
+        for (GolemFamily family : GolemFamily.values()) {
+            String familyKey = family.id();
+            if (!availabilityJson.has(familyKey) || !availabilityJson.get(familyKey).isJsonObject()) {
+                continue;
+            }
+
+            JsonObject familyJson = availabilityJson.getAsJsonObject(familyKey);
+            boolean enabled = true;
+            if (familyJson.has("enabled") && familyJson.get("enabled").isJsonPrimitive()
+                    && familyJson.get("enabled").getAsJsonPrimitive().isBoolean()) {
+                enabled = familyJson.get("enabled").getAsBoolean();
+            }
+            availability = availability.withFamily(family, enabled);
+
+            if (!familyJson.has("variants") || !familyJson.get("variants").isJsonObject()) {
+                continue;
+            }
+            JsonObject variants = familyJson.getAsJsonObject("variants");
+            for (GolemVariant variant : GolemVariant.values()) {
+                String variantKey = variant.id();
+                if (!GolemVariantCatalog.contains(family, variant)
+                        || !variants.has(variantKey)
+                        || !variants.get(variantKey).isJsonPrimitive()
+                        || !variants.get(variantKey).getAsJsonPrimitive().isBoolean()) {
+                    continue;
+                }
+                availability = availability.withVariant(family, variant, variants.get(variantKey).getAsBoolean());
+            }
+        }
+        return availability;
     }
 
     private static ZombieVillageSpawningConfig parseZombieVillageSpawning(JsonObject root, ZombieVillageSpawningConfig fallback) {
@@ -768,6 +909,7 @@ public final class MultiGolemConfig {
     static JsonObject toJson(MultiGolemConfig cfg) {
         JsonObject root = new JsonObject();
         root.addProperty("allow_golem_healing", cfg.allowGolemHealing);
+        root.add("golem_availability", golemAvailabilityToJson(cfg.golemAvailability));
         root.add("village_spawning", villageSpawnWeightsToJson(cfg.villageSpawnWeights));
         root.add("zombie_village_spawning", zombieVillageSpawningToJson(cfg.zombieVillageSpawning));
         JsonObject tiers = new JsonObject();
@@ -852,6 +994,27 @@ public final class MultiGolemConfig {
         return village;
     }
 
+    private static JsonObject golemAvailabilityToJson(GolemAvailability availability) {
+        JsonObject root = new JsonObject();
+        Map<GolemFamily, GolemAvailability.FamilyAvailability> families = availability.knownFamilies();
+        for (GolemFamily family : GolemFamily.values()) {
+            root.add(family.id(), familyAvailabilityToJson(
+                families.getOrDefault(family, GolemAvailability.familyDefault(family))));
+        }
+        return root;
+    }
+
+    private static JsonObject familyAvailabilityToJson(GolemAvailability.FamilyAvailability availability) {
+        JsonObject familyJson = new JsonObject();
+        familyJson.addProperty("enabled", availability.enabled());
+        JsonObject variantsJson = new JsonObject();
+        for (Map.Entry<GolemVariant, Boolean> entry : availability.variants().entrySet()) {
+            variantsJson.addProperty(entry.getKey().id(), entry.getValue());
+        }
+        familyJson.add("variants", variantsJson);
+        return familyJson;
+    }
+
     private static JsonObject villageWeightDefaultsJson() {
         return villageSpawnWeightsToJson(VillageSpawnWeights.defaults()).getAsJsonObject("weights");
     }
@@ -874,11 +1037,12 @@ public final class MultiGolemConfig {
         return allowGolemHealing == that.allowGolemHealing
             && tiers.equals(that.tiers)
             && villageSpawnWeights.equals(that.villageSpawnWeights)
-            && zombieVillageSpawning.equals(that.zombieVillageSpawning);
+            && zombieVillageSpawning.equals(that.zombieVillageSpawning)
+            && golemAvailability.equals(that.golemAvailability);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(allowGolemHealing, tiers, villageSpawnWeights, zombieVillageSpawning);
+        return Objects.hash(allowGolemHealing, tiers, villageSpawnWeights, zombieVillageSpawning, golemAvailability);
     }
 }

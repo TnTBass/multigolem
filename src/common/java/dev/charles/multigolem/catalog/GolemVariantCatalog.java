@@ -46,6 +46,11 @@ public final class GolemVariantCatalog {
             .findFirst();
     }
 
+    public static boolean contains(GolemFamily family, GolemVariant variant) {
+        GolemVariantSpec spec = SPECS.get(variant);
+        return spec != null && spec.family() == family;
+    }
+
     public static List<GolemVariant> variantsWhere(Predicate<GolemVariantSpec> predicate) {
         return entries().stream()
             .filter(predicate)
