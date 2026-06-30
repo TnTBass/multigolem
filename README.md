@@ -24,6 +24,7 @@ Build a T-shape (1 base block, 1 center, 2 arms) out of one of:
 | Iron Block | Iron Golem (vanilla, unchanged) |
 | Redstone Block | Redstone Golem |
 | Gold Block | Gold Golem |
+| Lapis Block | Lapis Golem |
 | Emerald Block | Emerald Golem |
 | Diamond Block | Diamond Golem |
 | Netherite Block | Netherite Golem |
@@ -39,6 +40,7 @@ Place a carved pumpkin on top. Copper Iron Golems preserve the fresh, exposed, w
 | Iron | 100 | 15.0 (vanilla) |
 | Redstone | 90 | 13.0 |
 | Gold | 130 | 22.5 |
+| Lapis | 50 | 7.5 |
 | Emerald | 200 | 40.0 |
 | Diamond | 350 | 62.5 |
 | Netherite | 600 | 85.0 |
@@ -51,6 +53,7 @@ Place a carved pumpkin on top. Copper Iron Golems preserve the fresh, exposed, w
 | Copper | Lightning strikes heal instead of damage |
 | Redstone | Overcharges at or below 25% health for attack and resistance without speed; releases a Slowness X overload pulse on death |
 | Gold | +75% movement speed; sprint-dust and sunlight-shine particles |
+| Lapis | Protects nearby allied village entities from magic damage and configured harmful magical effects; player protection is disabled by default |
 | Emerald | Heals passively while any villager or wandering trader is within 8 blocks |
 | Diamond | Passive LOS lightning zap of nearby hostiles (30–60s cooldown) + on-attack lightning; self-immune to lightning damage |
 | Netherite | Fully immune to fire and lava; ignites any mob it hits for 5 seconds |
@@ -69,9 +72,79 @@ Top-level fields:
 | Field | Default | What it does |
 |---|---:|---|
 | `allow_golem_healing` | `true` | Enables or disables ingot-based healing for all golem tiers. |
-| `zombie_village_spawning` | object | Maintains Zombie Golems near zombie-villager village areas. Defaults to enabled, one zombie villager minimum, regular zombie bonus at 3, and max 2 Zombie Golems. |
+| `golem_availability` | object | Controls which golem families and variants can be created or shown in server-known listing surfaces. It does not delete existing golems. |
+| `village_spawning` | object | Controls villager-called MultiGolem village defenders. |
+| `zombie_village_spawning` | object | Maintains Zombie Golems near zombie-villager village areas. |
+| `tiers` | object | Per-tier stats, targeting, and ability settings. |
 
-Each tier lives under `tiers.<tier_id>`, where `tier_id` is one of `copper`, `iron`, `redstone`, `gold`, `emerald`, `diamond`, `netherite`, or `zombie`.
+### Golem availability
+
+`golem_availability` lets server owners turn off future creation for whole golem families or individual family/variant identities. Disabled golems are also removed from server-known listing surfaces such as server customizations and Golempedia data sent by the server. Existing spawned golems are not deleted.
+
+Known family keys:
+
+| Family key | Current variants |
+|---|---|
+| `iron_golem` | `copper`, `iron`, `redstone`, `gold`, `lapis`, `emerald`, `diamond`, `netherite`, `zombie` |
+| `copper_golem` | Reserved for future copper-golem-family support; no current MultiGolem variants. |
+
+Each family has:
+
+| Field | Default | What it does |
+|---|---:|---|
+| `enabled` | `true` | Enables or disables the whole family. A disabled family overrides enabled variant entries. |
+| `variants` | all known variants `true` | Per-variant availability. Missing known variants default to enabled. Unknown variant keys are preserved where possible but ignored. |
+
+Example:
+
+```json
+{
+  "golem_availability": {
+    "iron_golem": {
+      "enabled": true,
+      "variants": {
+        "netherite": false,
+        "zombie": false
+      }
+    }
+  }
+}
+```
+
+Availability is checked before permissions. If a golem is unavailable, permission grants do not make it creatable.
+
+### Village spawning
+
+`village_spawning` controls villager-called MultiGolem defenders. It does not affect player-built golems, marked spawn eggs, spawners, existing golems, or Zombie Golem village maintenance.
+
+| Field | Default | What it does |
+|---|---:|---|
+| `enabled` | `true` | Enables MultiGolem variant selection for villager-called iron golem spawns. If disabled, village spawns remain vanilla Iron. |
+| `weights.iron` | `19` | Village-spawn roll weight for Iron Golems. |
+| `weights.copper` | `19` | Village-spawn roll weight for Copper Iron Golems. |
+| `weights.redstone` | `19` | Village-spawn roll weight for Redstone Golems. |
+| `weights.gold` | `19` | Village-spawn roll weight for Gold Golems. |
+| `weights.lapis` | `5` | Village-spawn roll weight for Lapis Golems. |
+| `weights.emerald` | `19` | Village-spawn roll weight for Emerald Golems. |
+| `weights.diamond` | `5` | Village-spawn roll weight for Diamond Golems. |
+| `weights.netherite` | `0` | Village-spawn roll weight for Netherite Golems. Netherite is opt-in because villages are flammable. |
+
+Weights below `0` are clamped to `0`. If all available weights are `0`, villager-called spawns fall back to vanilla behavior.
+
+### Zombie village spawning
+
+`zombie_village_spawning` maintains Zombie Golems around zombie-villager-heavy village areas. It is separate from normal `village_spawning`.
+
+| Field | Default | What it does |
+|---|---:|---|
+| `enabled` | `true` | Enables Zombie Golem village maintenance. |
+| `min_zombie_villagers` | `1` | Minimum nearby zombie villagers before maintenance can request Zombie Golems. |
+| `zombie_villagers_per_golem` | `5` | Adds desired Zombie Golems as zombie villager count rises. |
+| `regular_zombie_bonus_enabled` | `true` | Allows regular zombies to add one extra desired Zombie Golem. |
+| `regular_zombie_bonus_threshold` | `3` | Regular zombie count needed for the bonus. |
+| `max_zombie_golems_per_village` | `2` | Maximum maintained Zombie Golems per village area. |
+
+Each tier lives under `tiers.<tier_id>`, where `tier_id` is one of `copper`, `iron`, `redstone`, `gold`, `lapis`, `emerald`, `diamond`, `netherite`, or `zombie`.
 
 Shared per-tier fields:
 
@@ -103,6 +176,14 @@ Ability fields:
 | Gold | `gold_speed_multiplier` | `1.75` | Movement speed multiplier. |
 | Gold | `gold_sprint_particles_enabled` | `true` | Enables sprint-dust particles while moving. |
 | Gold | `gold_sunlight_shine_enabled` | `true` | Enables sunlight-shine particles while idle outdoors. |
+| Lapis | `lapis_ward_enabled` | `true` | Enables the Lapis ward. |
+| Lapis | `lapis_ward_range` | `15` | Ward range in blocks. Valid range: `1`-`64`. |
+| Lapis | `lapis_ward_scan_interval_ticks` | `5` | Ticks between ward cleanup scans. Valid range: `1`-`200`. |
+| Lapis | `lapis_ward_affects_players` | `false` | Whether Lapis wards protect players. Disabled by default. |
+| Lapis | `lapis_ward_magic_damage_enabled` | `true` | Blocks magic and indirect magic damage for protected targets in range. |
+| Lapis | `lapis_ward_effect_cleanup_enabled` | `true` | Removes configured harmful effects from protected targets in range and blocks new matching effect applications. |
+| Lapis | `lapis_ward_effect_ids` | default list | Namespaced mob effect IDs cleaned up by the ward. Defaults to `minecraft:poison`, `minecraft:wither`, `minecraft:weakness`, `minecraft:slowness`, `minecraft:blindness`, `minecraft:nausea`, `minecraft:levitation`, `minecraft:darkness`, and `minecraft:mining_fatigue`. |
+| Lapis | `lapis_particles_enabled` | `true` | Enables Lapis ward particles. |
 | Emerald | `emerald_aura_range` | `8` | Block radius for finding villagers and wandering traders. |
 | Emerald | `emerald_heal_interval_seconds` | `2.0` | Seconds between passive healing pulses. Minimum `0.5`. |
 | Emerald | `emerald_heal_per_tick` | `1.0` | HP restored per healing pulse. |
@@ -131,6 +212,7 @@ Creation permissions:
 - `multigolem.create.copper`
 - `multigolem.create.redstone`
 - `multigolem.create.gold`
+- `multigolem.create.lapis`
 - `multigolem.create.emerald`
 - `multigolem.create.diamond`
 - `multigolem.create.netherite`
@@ -142,6 +224,7 @@ Healing permissions:
 - `multigolem.heal.iron`
 - `multigolem.heal.redstone`
 - `multigolem.heal.gold`
+- `multigolem.heal.lapis`
 - `multigolem.heal.emerald`
 - `multigolem.heal.diamond`
 - `multigolem.heal.netherite`
@@ -161,9 +244,10 @@ These nodes affect player-built MultiGolem T-pattern creation, ingot-based golem
 - **V3.1** ✅: LuckPerms-compatible permission nodes for creation and healing.
 - **V4** ✅: Spawn eggs for the Iron Golem variants.
 - **V5** ✅: Zombie Golem, with hostile Mossy Cobblestone golems, Rotten Flesh healing, sickness effects, civilian conversion, marked eggs, and zombie-village maintenance.
-- **V6**: NeoForge support.
+- **V6** ✅: NeoForge support.
 - **V7** ✅: Redstone Golem, a lower-strength emergency-control defender that overcharges at or below 25% health, gains attack/resistance without speed, and releases a Slowness X death overload pulse.
-- **V8**: Lapis Golem, a planned lower-strength enchantment support golem with full immunity to magic damage and hostile magical status effects while remaining vulnerable to physical, projectile, explosion, fire, and melee damage.
+- **V8** ✅: Lapis Golem, a fragile anti-magic support defender that protects nearby allied village entities from magic damage and configured harmful magical effects.
+- **V8.1** ✅: Server-side golem availability config for disabling specific golem types or whole golem families.
 - **V9**: Copper Golem variants.
 
 ## License
