@@ -72,14 +72,14 @@ Top-level fields:
 | Field | Default | What it does |
 |---|---:|---|
 | `allow_golem_healing` | `true` | Enables or disables ingot-based healing for all golem tiers. |
-| `golem_availability` | object | Controls which golem families and variants can be created or shown in server-known listing surfaces. It does not delete existing golems. |
+| `golem_availability` | object | Controls which golem families and variants can be spawned manually or by villages. Existing in-world golems remain. |
 | `village_spawning` | object | Controls villager-called MultiGolem village defenders. |
 | `zombie_village_spawning` | object | Maintains Zombie Golems near zombie-villager village areas. |
 | `tiers` | object | Per-tier stats, targeting, and ability settings. |
 
 ### Golem availability
 
-`golem_availability` lets server owners turn off future creation for whole golem families or individual family/variant identities. Disabled golems are also removed from server-known listing surfaces such as server customizations and Golempedia data sent by the server. Existing spawned golems are not deleted.
+`golem_availability` lets server owners disable whole golem families or individual family/variant identities so they cannot be spawned manually or by villages. It covers player-built T-pattern creation, marked spawn egg use, marked spawn egg spawner configuration, and villager-called village spawns. If you disable a golem variant, any existing golems built or spawned naturally before this configuration option is changed will remain in world.
 
 Known family keys:
 
@@ -247,7 +247,7 @@ These nodes affect player-built MultiGolem T-pattern creation, ingot-based golem
 - **V6** ✅: NeoForge support.
 - **V7** ✅: Redstone Golem, a lower-strength emergency-control defender that overcharges at or below 25% health, gains attack/resistance without speed, and releases a Slowness X death overload pulse.
 - **V8** ✅: Lapis Golem, a fragile anti-magic support defender that protects nearby allied village entities from magic damage and configured harmful magical effects.
-- **V8.1** ✅: Server-side golem availability config for disabling specific golem types or whole golem families.
+- **V8.1** ✅: Server-side golem availability config for disabling specific golem types or whole golem families from manual and village spawning.
 - **V9**: Copper Golem variants.
 
 ## License

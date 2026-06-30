@@ -52,7 +52,7 @@ Edit `config/multigolem.json`, created on first server start. Server admins can 
 - Per-tier `max_health`, `attack_damage`, and `anger_on_hit`
 - Per-tier `ignored_target_types` values: `CREEPERS`, `ENDERMEN`, `PLAYERS`, `ALL_BOSSES`
 - Ability settings for Copper lightning healing, Redstone overcharge/death pulse, Gold movement/particles, Lapis ward protection, Emerald healing aura, Diamond lightning targeting/cooldowns, Netherite fire immunity/ignite duration, and Zombie sickness/conversion/Rotten Flesh healing
-- Golem availability with `golem_availability`, so servers can disable specific golem types or whole golem families for future creation without deleting existing golems
+- Golem availability with `golem_availability`, so servers can disable specific golem types or whole golem families from manual spawning and village spawning
 - Zombie-villager village maintenance with `zombie_village_spawning`
 
 Server owners can optionally control who may create, heal, use marked spawn eggs for, or configure spawners for each MultiGolem tier with LuckPerms-compatible permission nodes. The same creation permission nodes cover marked spawn egg use and marked spawn egg spawner configuration. Permissions are permissive by default, so existing servers keep their current behavior unless a permissions plugin denies a node.
