@@ -240,7 +240,30 @@ class MultiGolemConfigTest {
     void sourceWarnsWhenLapisEffectIdsContainNonStringEntries() throws IOException {
         String source = Files.readString(Path.of("src/common/java/dev/charles/multigolem/config/MultiGolemConfig.java"));
 
-        assertTrue(source.contains("lapis_ward_effect_ids value '{}' is not a string; skipped"));
+        assertTrue(source.contains("{} value '{}' is not a string; skipped"));
+    }
+
+    @Test
+    void loadFromFile_lapisEffectIdsRejectMalformedResourceIds(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "tiers": {
+                "lapis": {
+                  "max_health": 50,
+                  "attack_damage": 7.5,
+                  "anger_on_hit": true,
+                  "lapis_ward_effect_ids": ["minecraft:poison", "poison", "unknown:kept_for_writeback"]
+                }
+              }
+            }
+            """);
+
+        TierStats loaded = MultiGolemConfig.loadOrCreate(file).tier(GolemVariant.LAPIS);
+
+        assertTrue(loaded.lapisWardEffectIds().contains("minecraft:poison"));
+        assertTrue(loaded.lapisWardEffectIds().contains("unknown:kept_for_writeback"));
+        assertFalse(loaded.lapisWardEffectIds().contains("poison"));
     }
 
     @Test

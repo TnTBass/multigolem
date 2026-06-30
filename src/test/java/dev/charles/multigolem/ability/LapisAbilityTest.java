@@ -58,6 +58,14 @@ class LapisAbilityTest {
     }
 
     @Test
+    void wardRangeUsesBlockCubeLikeEffectCleanup() {
+        TierStats lapis = MultiGolemConfig.defaults().tier(GolemVariant.LAPIS);
+
+        assertTrue(LapisAbility.isWithinWardRange(15.0, 0.0, 15.0, lapis));
+        assertFalse(LapisAbility.isWithinWardRange(16.0, 0.0, 0.0, lapis));
+    }
+
+    @Test
     void invalidEffectInputsAreIgnoredWithoutThrowing() {
         TierStats lapis = MultiGolemConfig.defaults().tier(GolemVariant.LAPIS);
 

@@ -43,11 +43,11 @@ public final class GolempediaStats {
                     + intOrDefault(stats.lapisWardScanIntervalTicks(), defaults.lapisWardScanIntervalTicks())
                     + " ticks");
                 lines.add("Magic damage: "
-                    + enabledText(booleanOrDefault(stats.lapisWardMagicDamageEnabled(), defaults.lapisWardMagicDamageEnabled())));
+                    + enabledText(booleanOrDefault(stats.lapisWardMagicDamageEnabled(), defaults.lapisWardMagicDamageEnabled(), true)));
                 lines.add("Effect cleanup: "
-                    + enabledText(booleanOrDefault(stats.lapisWardEffectCleanupEnabled(), defaults.lapisWardEffectCleanupEnabled())));
+                    + enabledText(booleanOrDefault(stats.lapisWardEffectCleanupEnabled(), defaults.lapisWardEffectCleanupEnabled(), true)));
                 lines.add("Players protected: "
-                    + (booleanOrDefault(stats.lapisWardAffectsPlayers(), defaults.lapisWardAffectsPlayers())
+                    + (booleanOrDefault(stats.lapisWardAffectsPlayers(), defaults.lapisWardAffectsPlayers(), false)
                         ? "enabled"
                         : "disabled by default"));
             }
@@ -116,8 +116,8 @@ public final class GolempediaStats {
         return Boolean.TRUE.equals(value) ? "enabled" : "disabled";
     }
 
-    private static boolean booleanOrDefault(Boolean value, Boolean fallback) {
-        return value != null ? value : Boolean.TRUE.equals(fallback);
+    private static boolean booleanOrDefault(Boolean value, Boolean fallback, boolean lastResort) {
+        return value != null ? value : fallback != null ? fallback : lastResort;
     }
 
     private static double doubleOrDefault(Double value, double fallback) {

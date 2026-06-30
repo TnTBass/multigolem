@@ -14,6 +14,7 @@ import dev.charles.multigolem.catalog.GolemVariantCatalog;
 import dev.charles.multigolem.identity.GolemFamily;
 import dev.charles.multigolem.spawn.VillageSpawnWeights;
 import dev.charles.multigolem.spawn.ZombieVillageSpawningConfig;
+import net.minecraft.resources.Identifier;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -875,12 +876,21 @@ public final class MultiGolemConfig {
         List<String> result = new ArrayList<>();
         for (JsonElement e : arr) {
             if (e.isJsonPrimitive() && e.getAsJsonPrimitive().isString()) {
-                result.add(e.getAsString());
+                String value = e.getAsString();
+                if (isNamespacedResourceId(value)) {
+                    result.add(value);
+                } else {
+                    MultiGolem.LOG.warn("{} value '{}' is not a namespaced resource id; skipped", key, value);
+                }
             } else {
-                MultiGolem.LOG.warn("lapis_ward_effect_ids value '{}' is not a string; skipped", e);
+                MultiGolem.LOG.warn("{} value '{}' is not a string; skipped", key, e);
             }
         }
         return List.copyOf(result);
+    }
+
+    private static boolean isNamespacedResourceId(String value) {
+        return value != null && value.contains(":") && Identifier.tryParse(value) != null;
     }
 
     private static Double parseCopperHealAmount(JsonObject t, Double fallback) {

@@ -105,6 +105,13 @@ public final class LapisAbility {
         return id != null && stats.lapisWardEffectIds().contains(id.toString());
     }
 
+    static boolean isWithinWardRange(double xDistance, double yDistance, double zDistance, TierStats stats) {
+        int range = wardRange(stats);
+        return Math.abs(xDistance) <= range
+            && Math.abs(yDistance) <= range
+            && Math.abs(zDistance) <= range;
+    }
+
     private static void tickWard(ServerLevel world, IronGolem golem, TierStats stats) {
         if (!activeLapisWard(golem, stats)) return;
 
@@ -142,7 +149,13 @@ public final class LapisAbility {
 
         AABB box = entity.getBoundingBox().inflate(wardRange(stats));
         return !world.getEntities(EntityTypeTest.forClass(IronGolem.class), box, golem ->
-            golem != entity && activeLapisWard(golem, stats) && golem.distanceToSqr(entity) <= wardRangeSquared(stats)
+            golem != entity
+                && activeLapisWard(golem, stats)
+                && isWithinWardRange(
+                    golem.getX() - entity.getX(),
+                    golem.getY() - entity.getY(),
+                    golem.getZ() - entity.getZ(),
+                    stats)
         ).isEmpty();
     }
 
@@ -165,8 +178,4 @@ public final class LapisAbility {
         return Math.max(1, stats.lapisWardRange());
     }
 
-    private static double wardRangeSquared(TierStats stats) {
-        int range = wardRange(stats);
-        return (double) range * range;
-    }
 }
