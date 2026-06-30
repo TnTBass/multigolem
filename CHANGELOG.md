@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.8.1+mc26.2 — 2026-06-30
+
 - Added `golem_availability` server config so server owners can disable whole golem families or individual family/variant identities for future creation and server-known listing surfaces without deleting existing golems.
 
 ## 0.8.0+mc26.2 — 2026-06-28
