@@ -264,6 +264,7 @@ class MultiGolemConfigTest {
         assertTrue(loaded.lapisWardEffectIds().contains("minecraft:poison"));
         assertTrue(loaded.lapisWardEffectIds().contains("unknown:kept_for_writeback"));
         assertFalse(loaded.lapisWardEffectIds().contains("poison"));
+        assertFalse(Files.readString(file).contains("\"poison\""));
     }
 
     @Test

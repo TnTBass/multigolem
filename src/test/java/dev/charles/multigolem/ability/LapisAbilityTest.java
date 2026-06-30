@@ -16,6 +16,7 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.npc.wanderingtrader.WanderingTrader;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -58,11 +59,44 @@ class LapisAbilityTest {
     }
 
     @Test
-    void wardRangeUsesBlockCubeLikeEffectCleanup() {
+    void wardRangeUsesBoundingBoxesLikeEffectCleanup() {
         TierStats lapis = MultiGolemConfig.defaults().tier(GolemVariant.LAPIS);
+        AABB target = new AABB(0.0, 0.0, 0.0, 0.6, 1.8, 0.6);
 
-        assertTrue(LapisAbility.isWithinWardRange(15.0, 0.0, 15.0, lapis));
-        assertFalse(LapisAbility.isWithinWardRange(16.0, 0.0, 0.0, lapis));
+        assertTrue(LapisAbility.isWithinWardRange(target, new AABB(15.4, 0.0, 0.0, 16.8, 2.7, 1.4), lapis));
+        assertFalse(LapisAbility.isWithinWardRange(target, new AABB(15.7, 0.0, 0.0, 17.1, 2.7, 1.4), lapis));
+    }
+
+    @Test
+    void emptyEffectListDisablesConfiguredEffectScanning() {
+        TierStats lapis = MultiGolemConfig.defaults().tier(GolemVariant.LAPIS);
+        TierStats emptyEffects = new TierStats(
+            lapis.maxHealth(), lapis.attackDamage(), lapis.angerOnHit(), lapis.ignoredTargetTypes(),
+            lapis.copperLightningImmune(), lapis.copperLightningHealAmount(),
+            lapis.goldSpeedMultiplier(), lapis.goldSprintParticlesEnabled(), lapis.goldSunlightShineEnabled(),
+            lapis.emeraldAuraRange(), lapis.emeraldHealIntervalSeconds(), lapis.emeraldHealPerTick(),
+            lapis.emeraldCountWanderingTraders(),
+            lapis.diamondTargetMode(), lapis.diamondCooldownMinSeconds(), lapis.diamondCooldownMaxSeconds(),
+            lapis.diamondAuraRange(), lapis.diamondLightningProof(),
+            lapis.netheriteFireImmune(), lapis.netheriteIgniteSeconds(), lapis.netheriteVillageIgniteSeconds(),
+            lapis.zombieRottenFleshHealAmount(),
+            lapis.zombieHungerEnabled(), lapis.zombieHungerSeconds(), lapis.zombieHungerAmplifier(),
+            lapis.zombieNauseaEnabled(), lapis.zombieNauseaSeconds(), lapis.zombieNauseaAmplifier(),
+            lapis.zombiePoisonEnabled(), lapis.zombiePoisonSeconds(), lapis.zombiePoisonAmplifier(),
+            lapis.zombieConvertVillagersEnabled(), lapis.zombieVillagerConversionChance(),
+            lapis.zombieConvertWanderingTradersEnabled(), lapis.zombieWanderingTraderConversionChance(),
+            lapis.redstoneOverchargeEnabled(), lapis.redstoneOverchargeHealthThresholdPercent(),
+            lapis.redstoneOverchargeDurationSeconds(), lapis.redstoneOverchargeCooldownSeconds(),
+            lapis.redstoneOverchargeAttackMultiplier(), lapis.redstoneOverchargeResistanceAmplifier(),
+            lapis.redstoneOverchargeResistanceRefreshSeconds(), lapis.redstoneDeathPulseEnabled(),
+            lapis.redstoneDeathPulseRadius(),
+            lapis.redstoneDeathPulseSlownessSeconds(), lapis.redstoneDeathPulseSlownessAmplifier(),
+            lapis.redstoneParticlesEnabled(), lapis.redstoneDeathPulseParticlesEnabled(),
+            lapis.lapisWardEnabled(), lapis.lapisWardRange(),
+            lapis.lapisWardScanIntervalTicks(), lapis.lapisWardAffectsPlayers(),
+            lapis.lapisWardMagicDamageEnabled(), true, java.util.List.of(), lapis.lapisParticlesEnabled());
+
+        assertFalse(LapisAbility.blocksConfiguredEffects(emptyEffects));
     }
 
     @Test

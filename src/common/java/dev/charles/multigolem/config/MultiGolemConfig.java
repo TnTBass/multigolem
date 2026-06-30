@@ -407,7 +407,29 @@ public final class MultiGolemConfig {
         if (variant == GolemVariant.LAPIS) {
             canonicalizeInt(t, "lapis_ward_range", 1, 64);
             canonicalizeInt(t, "lapis_ward_scan_interval_ticks", 1, 200);
+            canonicalizeNamespacedStringList(t, "lapis_ward_effect_ids");
         }
+    }
+
+    private static void canonicalizeNamespacedStringList(JsonObject t, String key) {
+        if (!t.has(key) || !t.get(key).isJsonArray()) {
+            return;
+        }
+        JsonArray arr = t.getAsJsonArray(key);
+        JsonArray filtered = new JsonArray();
+        for (JsonElement e : arr) {
+            if (!e.isJsonPrimitive() || !e.getAsJsonPrimitive().isString()) {
+                MultiGolem.LOG.warn("{} value '{}' is not a string; dropped", key, e);
+                continue;
+            }
+            String value = e.getAsString();
+            if (!isNamespacedResourceId(value)) {
+                MultiGolem.LOG.warn("{} value '{}' is not a namespaced resource id; dropped", key, value);
+                continue;
+            }
+            filtered.add(value);
+        }
+        t.add(key, filtered);
     }
 
     private static void canonicalizeZombieVillageSpawningInPlace(JsonObject root) {

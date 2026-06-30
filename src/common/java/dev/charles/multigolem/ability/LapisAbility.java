@@ -94,7 +94,9 @@ public final class LapisAbility {
     public static boolean blocksConfiguredEffects(TierStats stats) {
         return stats != null
             && Boolean.TRUE.equals(stats.lapisWardEnabled())
-            && Boolean.TRUE.equals(stats.lapisWardEffectCleanupEnabled());
+            && Boolean.TRUE.equals(stats.lapisWardEffectCleanupEnabled())
+            && stats.lapisWardEffectIds() != null
+            && !stats.lapisWardEffectIds().isEmpty();
     }
 
     public static boolean isConfiguredEffect(MobEffectInstance effect, TierStats stats) {
@@ -105,11 +107,8 @@ public final class LapisAbility {
         return id != null && stats.lapisWardEffectIds().contains(id.toString());
     }
 
-    static boolean isWithinWardRange(double xDistance, double yDistance, double zDistance, TierStats stats) {
-        int range = wardRange(stats);
-        return Math.abs(xDistance) <= range
-            && Math.abs(yDistance) <= range
-            && Math.abs(zDistance) <= range;
+    static boolean isWithinWardRange(AABB targetBox, AABB wardBox, TierStats stats) {
+        return targetBox != null && wardBox != null && targetBox.inflate(wardRange(stats)).intersects(wardBox);
     }
 
     private static void tickWard(ServerLevel world, IronGolem golem, TierStats stats) {
@@ -151,11 +150,7 @@ public final class LapisAbility {
         return !world.getEntities(EntityTypeTest.forClass(IronGolem.class), box, golem ->
             golem != entity
                 && activeLapisWard(golem, stats)
-                && isWithinWardRange(
-                    golem.getX() - entity.getX(),
-                    golem.getY() - entity.getY(),
-                    golem.getZ() - entity.getZ(),
-                    stats)
+                && isWithinWardRange(entity.getBoundingBox(), golem.getBoundingBox(), stats)
         ).isEmpty();
     }
 
