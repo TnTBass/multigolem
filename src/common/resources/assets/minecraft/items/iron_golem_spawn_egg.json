@@ -17,6 +17,10 @@
         "model": { "type": "minecraft:model", "model": "multigolem:item/gold_golem_spawn_egg" }
       },
       {
+        "when": "{multigolem:{family:\"iron_golem\",variant:\"lapis\"}}",
+        "model": { "type": "minecraft:model", "model": "multigolem:item/lapis_golem_spawn_egg" }
+      },
+      {
         "when": "{multigolem:{family:\"iron_golem\",variant:\"emerald\"}}",
         "model": { "type": "minecraft:model", "model": "multigolem:item/emerald_golem_spawn_egg" }
       },

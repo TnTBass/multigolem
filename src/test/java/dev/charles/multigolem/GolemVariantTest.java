@@ -18,11 +18,12 @@ class GolemVariantTest {
     }
 
     @Test
-    void fromBodyBlock_recognizesAllSixTiers() {
+    void fromBodyBlock_recognizesAllBuildableTiers() {
         assertEquals(GolemVariant.COPPER,    GolemVariant.fromBodyBlock(copper(WeatheringCopper.WeatherState.UNAFFECTED)).orElseThrow());
         assertEquals(GolemVariant.IRON,      GolemVariant.fromBodyBlock(Blocks.IRON_BLOCK).orElseThrow());
         assertEquals(GolemVariant.REDSTONE,  GolemVariant.fromBodyBlock(Blocks.REDSTONE_BLOCK).orElseThrow());
         assertEquals(GolemVariant.GOLD,      GolemVariant.fromBodyBlock(Blocks.GOLD_BLOCK).orElseThrow());
+        assertEquals(GolemVariant.LAPIS,     GolemVariant.fromBodyBlock(Blocks.LAPIS_BLOCK).orElseThrow());
         assertEquals(GolemVariant.EMERALD,   GolemVariant.fromBodyBlock(Blocks.EMERALD_BLOCK).orElseThrow());
         assertEquals(GolemVariant.DIAMOND,   GolemVariant.fromBodyBlock(Blocks.DIAMOND_BLOCK).orElseThrow());
         assertEquals(GolemVariant.NETHERITE, GolemVariant.fromBodyBlock(Blocks.NETHERITE_BLOCK).orElseThrow());
@@ -43,11 +44,12 @@ class GolemVariantTest {
     }
 
     @Test
-    void fromIngot_recognizesAllSixTiers() {
+    void fromIngot_recognizesAllBuildableTiers() {
         assertEquals(GolemVariant.COPPER,    GolemVariant.fromIngot(Items.COPPER_INGOT).orElseThrow());
         assertEquals(GolemVariant.IRON,      GolemVariant.fromIngot(Items.IRON_INGOT).orElseThrow());
         assertEquals(GolemVariant.REDSTONE,  GolemVariant.fromIngot(Items.REDSTONE).orElseThrow());
         assertEquals(GolemVariant.GOLD,      GolemVariant.fromIngot(Items.GOLD_INGOT).orElseThrow());
+        assertEquals(GolemVariant.LAPIS,     GolemVariant.fromIngot(Items.LAPIS_LAZULI).orElseThrow());
         assertEquals(GolemVariant.EMERALD,   GolemVariant.fromIngot(Items.EMERALD).orElseThrow());
         assertEquals(GolemVariant.DIAMOND,   GolemVariant.fromIngot(Items.DIAMOND).orElseThrow());
         assertEquals(GolemVariant.NETHERITE, GolemVariant.fromIngot(Items.NETHERITE_INGOT).orElseThrow());
@@ -79,11 +81,22 @@ class GolemVariantTest {
     }
 
     @Test
+    void lapisUsesLapisBlockAndLazuli() {
+        assertEquals(GolemVariant.LAPIS, GolemVariant.fromBodyBlock(Blocks.LAPIS_BLOCK).orElseThrow());
+        assertTrue(GolemVariant.LAPIS.matchesBodyBlock(Blocks.LAPIS_BLOCK.defaultBlockState()));
+        assertEquals(GolemVariant.LAPIS, GolemVariant.fromIngot(Items.LAPIS_LAZULI).orElseThrow());
+        assertEquals(Items.LAPIS_LAZULI, GolemVariant.LAPIS.dropItem());
+        assertEquals("lapis", GolemVariant.LAPIS.id());
+        assertEquals("Lapis", GolemVariant.LAPIS.displayName());
+    }
+
+    @Test
     void idIsStableLowercase() {
         assertEquals("copper",    GolemVariant.COPPER.id());
         assertEquals("iron",      GolemVariant.IRON.id());
         assertEquals("redstone",  GolemVariant.REDSTONE.id());
         assertEquals("gold",      GolemVariant.GOLD.id());
+        assertEquals("lapis",     GolemVariant.LAPIS.id());
         assertEquals("emerald",   GolemVariant.EMERALD.id());
         assertEquals("diamond",   GolemVariant.DIAMOND.id());
         assertEquals("netherite", GolemVariant.NETHERITE.id());
@@ -108,6 +121,7 @@ class GolemVariantTest {
         assertEquals(Items.IRON_INGOT,      GolemVariant.IRON.dropItem());
         assertEquals(Items.REDSTONE,        GolemVariant.REDSTONE.dropItem());
         assertEquals(Items.GOLD_INGOT,      GolemVariant.GOLD.dropItem());
+        assertEquals(Items.LAPIS_LAZULI,    GolemVariant.LAPIS.dropItem());
         assertEquals(Items.EMERALD,         GolemVariant.EMERALD.dropItem());
         assertEquals(Items.DIAMOND,         GolemVariant.DIAMOND.dropItem());
         assertEquals(Items.NETHERITE_SCRAP, GolemVariant.NETHERITE.dropItem());

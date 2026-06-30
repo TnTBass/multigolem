@@ -47,4 +47,14 @@ public final class GolemStatsResolver {
     public boolean netheriteFireImmune() { return config.tier(GolemVariant.NETHERITE).netheriteFireImmune(); }
     public int netheriteIgniteSeconds() { return config.tier(GolemVariant.NETHERITE).netheriteIgniteSeconds(); }
     public int netheriteVillageIgniteSeconds() { return config.tier(GolemVariant.NETHERITE).netheriteVillageIgniteSeconds(); }
+
+    // V8 lapis-only
+    public boolean lapisWardEnabled() { return config.tier(GolemVariant.LAPIS).lapisWardEnabled(); }
+    public int lapisWardRange() { return config.tier(GolemVariant.LAPIS).lapisWardRange(); }
+    public int lapisWardScanIntervalTicks() { return config.tier(GolemVariant.LAPIS).lapisWardScanIntervalTicks(); }
+    public boolean lapisWardAffectsPlayers() { return config.tier(GolemVariant.LAPIS).lapisWardAffectsPlayers(); }
+    public boolean lapisWardMagicDamageEnabled() { return config.tier(GolemVariant.LAPIS).lapisWardMagicDamageEnabled(); }
+    public boolean lapisWardEffectCleanupEnabled() { return config.tier(GolemVariant.LAPIS).lapisWardEffectCleanupEnabled(); }
+    public List<String> lapisWardEffectIds() { return config.tier(GolemVariant.LAPIS).lapisWardEffectIds(); }
+    public boolean lapisParticlesEnabled() { return config.tier(GolemVariant.LAPIS).lapisParticlesEnabled(); }
 }

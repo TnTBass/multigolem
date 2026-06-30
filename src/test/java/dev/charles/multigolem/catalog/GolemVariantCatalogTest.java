@@ -16,6 +16,7 @@ import static dev.charles.multigolem.GolemVariant.COPPER;
 import static dev.charles.multigolem.GolemVariant.DIAMOND;
 import static dev.charles.multigolem.GolemVariant.EMERALD;
 import static dev.charles.multigolem.GolemVariant.GOLD;
+import static dev.charles.multigolem.GolemVariant.LAPIS;
 import static dev.charles.multigolem.GolemVariant.NETHERITE;
 import static dev.charles.multigolem.GolemVariant.REDSTONE;
 import static dev.charles.multigolem.GolemVariant.ZOMBIE;
@@ -60,14 +61,12 @@ class GolemVariantCatalogTest {
 
     @Test
     void catalogDerivedSetsMatchCurrentIntent() {
-        List<GolemVariant> customIronFamily = List.of(COPPER, REDSTONE, GOLD, EMERALD, DIAMOND, NETHERITE, ZOMBIE);
+        List<GolemVariant> customIronFamily = List.of(COPPER, REDSTONE, GOLD, LAPIS, EMERALD, DIAMOND, NETHERITE, ZOMBIE);
 
         assertEquals(customIronFamily, GolemVariant.spawnEggVariants());
         assertEquals(customIronFamily, GolemVariant.lootVariants());
         assertEquals(customIronFamily, GolemVariant.multiGolemPlayerBuildableVariants());
         assertEquals(customIronFamily, GolemVariant.nonIronVariants());
-        assertFalse(Arrays.stream(GolemVariant.values())
-            .anyMatch(v -> v.id().equals("lapis")));
     }
 
     @Test
@@ -106,6 +105,21 @@ class GolemVariantCatalogTest {
         assertTrue(redstone.permissionEnabled());
         assertTrue(redstone.renderable());
         assertEquals("redstone", redstone.permissionSuffix());
+    }
+
+    @Test
+    void lapisCatalogEntryMatchesDesignDefaults() {
+        GolemVariantSpec lapis = GolemVariantCatalog.require(LAPIS);
+
+        assertEquals(GolemFamily.IRON_GOLEM, lapis.family());
+        assertEquals(3, lapis.lootMin());
+        assertEquals(5, lapis.lootMax());
+        assertTrue(lapis.spawnEggEnabled());
+        assertTrue(lapis.lootEnabled());
+        assertTrue(lapis.playerBuildable());
+        assertTrue(lapis.permissionEnabled());
+        assertTrue(lapis.renderable());
+        assertEquals("lapis", lapis.permissionSuffix());
     }
 
     @Test

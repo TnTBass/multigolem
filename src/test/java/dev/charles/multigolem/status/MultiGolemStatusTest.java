@@ -11,6 +11,8 @@ import dev.charles.multigolem.internal.modstatus.VersionMismatchSeverity;
 import dev.charles.multigolem.internal.modstatus.VersionStatus;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,6 +31,14 @@ class MultiGolemStatusTest {
         assertEquals("multigolem", config.payloadNamespace());
         assertEquals("mod_status/server_version", config.payloadPath());
         assertEquals("multigolem:mod_status/server_version", config.payloadChannel());
+    }
+
+    @Test
+    void modMenuSummaryMentionsLapisPlayerFacingSurface() throws Exception {
+        String lang = Files.readString(Path.of("src/common/resources/assets/multigolem/lang/en_us.json"));
+
+        assertTrue(lang.contains("Lapis"));
+        assertTrue(lang.contains("anti-magic"));
     }
 
     @Test

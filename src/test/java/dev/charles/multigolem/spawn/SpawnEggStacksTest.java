@@ -29,6 +29,7 @@ class SpawnEggStacksTest {
             GolemVariant.COPPER,
             GolemVariant.GOLD,
             GolemVariant.REDSTONE,
+            GolemVariant.LAPIS,
             GolemVariant.EMERALD,
             GolemVariant.DIAMOND,
             GolemVariant.NETHERITE,
@@ -52,6 +53,8 @@ class SpawnEggStacksTest {
             SpawnEggStacks.create(GolemVariant.GOLD).get(DataComponents.ITEM_NAME).getString());
         assertEquals("Redstone Golem Spawn Egg",
             SpawnEggStacks.create(GolemVariant.REDSTONE).get(DataComponents.ITEM_NAME).getString());
+        assertEquals("Lapis Golem Spawn Egg",
+            SpawnEggStacks.create(GolemVariant.LAPIS).get(DataComponents.ITEM_NAME).getString());
         assertEquals("Emerald Golem Spawn Egg",
             SpawnEggStacks.create(GolemVariant.EMERALD).get(DataComponents.ITEM_NAME).getString());
         assertEquals("Diamond Golem Spawn Egg",

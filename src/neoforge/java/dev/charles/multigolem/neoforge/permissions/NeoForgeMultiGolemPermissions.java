@@ -55,8 +55,12 @@ public final class NeoForgeMultiGolemPermissions {
         add(nodes, MultiGolemPermissionNodes.heal(GolemVariant.COPPER));
         add(nodes, MultiGolemPermissionNodes.create(GolemVariant.IRON));
         add(nodes, MultiGolemPermissionNodes.heal(GolemVariant.IRON));
+        add(nodes, MultiGolemPermissionNodes.create(GolemVariant.REDSTONE));
+        add(nodes, MultiGolemPermissionNodes.heal(GolemVariant.REDSTONE));
         add(nodes, MultiGolemPermissionNodes.create(GolemVariant.GOLD));
         add(nodes, MultiGolemPermissionNodes.heal(GolemVariant.GOLD));
+        add(nodes, MultiGolemPermissionNodes.create(GolemVariant.LAPIS));
+        add(nodes, MultiGolemPermissionNodes.heal(GolemVariant.LAPIS));
         add(nodes, MultiGolemPermissionNodes.create(GolemVariant.EMERALD));
         add(nodes, MultiGolemPermissionNodes.heal(GolemVariant.EMERALD));
         add(nodes, MultiGolemPermissionNodes.create(GolemVariant.DIAMOND));

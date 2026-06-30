@@ -36,7 +36,7 @@ class VillageGolemSpawnResolverTest {
         MultiGolemConfig config = load(tmp, """
             {
               "village_spawning": {
-                "weights": { "iron": 0, "copper": 0, "redstone": 0, "gold": 0, "emerald": 0, "diamond": 0, "netherite": 0 }
+                "weights": { "iron": 0, "copper": 0, "redstone": 0, "gold": 0, "lapis": 0, "emerald": 0, "diamond": 0, "netherite": 0 }
               }
             }
             """);
@@ -50,7 +50,7 @@ class VillageGolemSpawnResolverTest {
         MultiGolemConfig config = load(tmp, """
             {
               "village_spawning": {
-                "weights": { "iron": 1, "copper": 0, "redstone": 0, "gold": 0, "emerald": 0, "diamond": 0, "netherite": 0 }
+                "weights": { "iron": 1, "copper": 0, "redstone": 0, "gold": 0, "lapis": 0, "emerald": 0, "diamond": 0, "netherite": 0 }
               }
             }
             """);
@@ -64,7 +64,7 @@ class VillageGolemSpawnResolverTest {
         MultiGolemConfig config = load(tmp, """
             {
               "village_spawning": {
-                "weights": { "iron": 0, "copper": 1, "redstone": 0, "gold": 0, "emerald": 0, "diamond": 0, "netherite": 0 }
+                "weights": { "iron": 0, "copper": 1, "redstone": 0, "gold": 0, "lapis": 0, "emerald": 0, "diamond": 0, "netherite": 0 }
               }
             }
             """);
@@ -78,7 +78,7 @@ class VillageGolemSpawnResolverTest {
         MultiGolemConfig config = load(tmp, """
             {
               "village_spawning": {
-                "weights": { "iron": 0, "copper": 0, "redstone": 0, "gold": 0, "emerald": 0, "diamond": 0, "netherite": 1 }
+                "weights": { "iron": 0, "copper": 0, "redstone": 0, "gold": 0, "lapis": 0, "emerald": 0, "diamond": 0, "netherite": 1 }
               }
             }
             """);

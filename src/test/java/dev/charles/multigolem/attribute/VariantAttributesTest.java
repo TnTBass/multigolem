@@ -32,6 +32,7 @@ class VariantAttributesTest {
         for (GolemVariant variant : List.of(
             GolemVariant.COPPER,
             GolemVariant.GOLD,
+            GolemVariant.LAPIS,
             GolemVariant.EMERALD,
             GolemVariant.DIAMOND,
             GolemVariant.NETHERITE
@@ -53,10 +54,22 @@ class VariantAttributesTest {
     }
 
     @Test
+    void lapisFreshSpawnHealthUsesConfiguredMaximum() {
+        MultiGolemConfig config = MultiGolemConfig.defaults();
+
+        assertEquals(50.0F, VariantAttributes.freshSpawnHealth(GolemVariant.LAPIS, config));
+        assertEquals(config.tier(GolemVariant.LAPIS).maxHealth(),
+            VariantAttributes.freshSpawnHealth(GolemVariant.LAPIS, config));
+    }
+
+    @Test
     void speedModifierRemainsGoldOnly() throws IOException {
         String source = Files.readString(Path.of("src/common/java/dev/charles/multigolem/attribute/VariantAttributes.java"));
 
         assertTrue(source.contains("double speedDelta = (variant == GolemVariant.GOLD)"));
+        // Plan guard: Lapis must stay on the existing config-backed attack delta path.
+        assertTrue(source.contains("stats.attackDamage() - IRON_BASE_ATTACK"));
+        assertFalse(source.contains("GolemVariant.LAPIS) ?"), "Lapis must not add a special attack or speed branch");
         assertFalse(source.toLowerCase(Locale.ROOT).contains("redstone"));
     }
 }

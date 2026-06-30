@@ -30,6 +30,7 @@ class MultiGolemPermissionsTest {
         assertEquals("multigolem.create." + GolemVariantCatalog.require(GolemVariant.COPPER).permissionSuffix(),
             MultiGolemPermissions.createNode(GolemVariant.COPPER));
         assertEquals("multigolem.create.redstone", MultiGolemPermissions.createNode(GolemVariant.REDSTONE));
+        assertEquals("multigolem.create.lapis", MultiGolemPermissions.createNode(GolemVariant.LAPIS));
     }
 
     @Test
@@ -42,6 +43,7 @@ class MultiGolemPermissionsTest {
         assertEquals("multigolem.heal." + GolemVariantCatalog.require(GolemVariant.COPPER).permissionSuffix(),
             MultiGolemPermissions.healNode(GolemVariant.COPPER));
         assertEquals("multigolem.heal.redstone", MultiGolemPermissions.healNode(GolemVariant.REDSTONE));
+        assertEquals("multigolem.heal.lapis", MultiGolemPermissions.healNode(GolemVariant.LAPIS));
     }
 
     @Test

@@ -17,6 +17,7 @@ class FabricAbilityEventsSourceTest {
             "DiamondAbility.java",
             "EmeraldAbility.java",
             "GoldAbility.java",
+            "LapisAbility.java",
             "NetheriteAbility.java",
             "RedstoneAbility.java"
         }) {
@@ -25,6 +26,7 @@ class FabricAbilityEventsSourceTest {
             assertFalse(source.contains("net.fabricmc"), file);
             assertFalse(source.contains("ServerTickEvents"), file);
             assertFalse(source.contains("ServerLivingEntityEvents"), file);
+            assertFalse(source.contains("ServerMobEffectEvents"), file);
         }
     }
 
@@ -36,9 +38,16 @@ class FabricAbilityEventsSourceTest {
         assertTrue(source.contains("ServerTickEvents.START_LEVEL_TICK.register(EmeraldAbility::onTick);"));
         assertTrue(source.contains("ServerTickEvents.START_LEVEL_TICK.register(DiamondAbility::onTick);"));
         assertTrue(source.contains("ServerTickEvents.START_LEVEL_TICK.register(RedstoneAbility::onTick);"));
+        assertTrue(source.contains("ServerTickEvents.START_LEVEL_TICK.register(LapisAbility::onTick);"));
         assertTrue(source.contains("ServerLivingEntityEvents.ALLOW_DAMAGE.register(CopperAbility::allowDamage);"));
         assertTrue(source.contains("ServerLivingEntityEvents.ALLOW_DAMAGE.register(NetheriteAbility::allowDamage);"));
         assertTrue(source.contains("ServerLivingEntityEvents.ALLOW_DAMAGE.register(DiamondAbility::allowDamage);"));
+        assertTrue(source.contains("ServerLivingEntityEvents.ALLOW_DAMAGE.register(LapisAbility::allowDamage);"));
+        assertTrue(source.contains("ServerMobEffectEvents.ALLOW_ADD.register"));
+        assertTrue(source.contains("ServerMobEffectEvents.ALLOW_ADD.register((effect, entity, context) -> {"));
+        assertTrue(source.contains("EffectEventContext is loader metadata; common Lapis ward logic only needs effect and target."));
+        assertTrue(source.contains("LapisAbility.allowEffectApplication(effect, entity)"));
+        assertFalse(source.contains("net.neoforged"));
     }
 
     @Test

@@ -60,6 +60,8 @@ class GolempediaCatalogTest {
         assertEquals("Redstone golems overcharge at or below 25% health for attack and resistance without speed, "
                 + "then release a Slowness X pulse on death.",
             entry(GolemVariant.REDSTONE).coreAbility());
+        assertEquals("Lapis golems protect nearby allied village entities from magic-tagged damage and configured magical effects.",
+            entry(GolemVariant.LAPIS).coreAbility());
         assertEquals("Emerald golems heal themselves when villagers are nearby.",
             entry(GolemVariant.EMERALD).coreAbility());
         assertEquals("Diamond golems call lightning onto nearby hostile mobs after a cooldown.",
@@ -93,6 +95,17 @@ class GolempediaCatalogTest {
         assertTrue(redstone.statLines().contains("Overcharge resistance: II"));
         assertTrue(redstone.statLines().contains("Speed: no bonus"));
         assertTrue(redstone.statLines().contains("Death pulse: Slowness X for 6s in 8 blocks"));
+
+        GolempediaEntry lapis = entry(GolemVariant.LAPIS);
+        assertTrue(lapis.creationSummary().contains("lapis block"));
+        assertEquals("Lapis Lazuli", lapis.healingItem());
+        assertEquals("Lapis Lazuli x3-5", lapis.dropSummary());
+        assertTrue(lapis.statLines().contains("Health: 50"));
+        assertTrue(lapis.statLines().contains("Attack: 7.5"));
+        assertTrue(lapis.statLines().contains("Ward range: 15 blocks"));
+        assertTrue(lapis.statLines().contains("Players protected: disabled by default"));
+        assertTrue(lapis.caveats().contains("Server settings may change ward range, scan interval, magic damage blocking, or effect cleanup."));
+        assertTrue(lapis.caveats().contains("Ordinary melee, projectile, explosion, fire, lava, and fall damage are not blocked."));
     }
 
     @Test
@@ -111,12 +124,14 @@ class GolempediaCatalogTest {
 
     @Test
     void villageSpawnCopyDescribesFrequencyFromConfiguredWeights() {
-        assertTrue(entry(GolemVariant.REDSTONE).villageSpawnSummary().contains("About 19%"));
-        assertTrue(entry(GolemVariant.REDSTONE).villageSpawnSummary().contains("roughly 1 in 5"));
-        assertTrue(entry(GolemVariant.GOLD).villageSpawnSummary().contains("About 19%"));
-        assertTrue(entry(GolemVariant.GOLD).villageSpawnSummary().contains("roughly 1 in 5"));
+        assertTrue(entry(GolemVariant.REDSTONE).villageSpawnSummary().contains("About 18%"));
+        assertTrue(entry(GolemVariant.REDSTONE).villageSpawnSummary().contains("roughly 1 in 6"));
+        assertTrue(entry(GolemVariant.GOLD).villageSpawnSummary().contains("About 18%"));
+        assertTrue(entry(GolemVariant.GOLD).villageSpawnSummary().contains("roughly 1 in 6"));
+        assertTrue(entry(GolemVariant.LAPIS).villageSpawnSummary().contains("About 5%"));
+        assertTrue(entry(GolemVariant.LAPIS).villageSpawnSummary().contains("roughly 1 in 21"));
         assertTrue(entry(GolemVariant.DIAMOND).villageSpawnSummary().contains("About 5%"));
-        assertTrue(entry(GolemVariant.DIAMOND).villageSpawnSummary().contains("roughly 1 in 20"));
+        assertTrue(entry(GolemVariant.DIAMOND).villageSpawnSummary().contains("roughly 1 in 21"));
         assertTrue(entry(GolemVariant.NETHERITE).villageSpawnSummary().contains("Does not spawn"));
 
         EnumMap<GolemVariant, Integer> custom = new EnumMap<>(GolemVariant.class);
@@ -124,6 +139,7 @@ class GolempediaCatalogTest {
         custom.put(GolemVariant.COPPER, 0);
         custom.put(GolemVariant.REDSTONE, 0);
         custom.put(GolemVariant.GOLD, 1);
+        custom.put(GolemVariant.LAPIS, 0);
         custom.put(GolemVariant.EMERALD, 0);
         custom.put(GolemVariant.DIAMOND, 1);
         custom.put(GolemVariant.NETHERITE, 0);

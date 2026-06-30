@@ -13,7 +13,9 @@ class NeoForgePermissionsSourceTest {
     private static final String[] VARIANTS = {
         "COPPER",
         "IRON",
+        "REDSTONE",
         "GOLD",
+        "LAPIS",
         "EMERALD",
         "DIAMOND",
         "NETHERITE",

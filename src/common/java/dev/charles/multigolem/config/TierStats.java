@@ -63,7 +63,16 @@ public record TierStats(
     Double redstoneDeathPulseSlownessSeconds,
     Integer redstoneDeathPulseSlownessAmplifier,
     Boolean redstoneParticlesEnabled,
-    Boolean redstoneDeathPulseParticlesEnabled
+    Boolean redstoneDeathPulseParticlesEnabled,
+    // Lapis
+    Boolean lapisWardEnabled,
+    Integer lapisWardRange,
+    Integer lapisWardScanIntervalTicks,
+    Boolean lapisWardAffectsPlayers,
+    Boolean lapisWardMagicDamageEnabled,
+    Boolean lapisWardEffectCleanupEnabled,
+    List<String> lapisWardEffectIds,
+    Boolean lapisParticlesEnabled
 ) {
 
     public static final int MIN_HEALTH = 1;
@@ -74,6 +83,9 @@ public record TierStats(
     public TierStats {
         Objects.requireNonNull(ignoredTargetTypes, "ignoredTargetTypes");
         ignoredTargetTypes = List.copyOf(ignoredTargetTypes);
+        if (lapisWardEffectIds != null) {
+            lapisWardEffectIds = List.copyOf(lapisWardEffectIds);
+        }
     }
 
     public TierStats(
@@ -106,7 +118,8 @@ public record TierStats(
             diamondTargetMode, diamondCooldownMinSeconds, diamondCooldownMaxSeconds, diamondAuraRange, diamondLightningProof,
             netheriteFireImmune, netheriteIgniteSeconds, netheriteVillageIgniteSeconds,
             null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-            null, null, null, null, null, null, null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null);
     }
 
     public TierStats(
@@ -157,7 +170,8 @@ public record TierStats(
             zombiePoisonEnabled, zombiePoisonSeconds, zombiePoisonAmplifier,
             zombieConvertVillagersEnabled, zombieVillagerConversionChance,
             zombieConvertWanderingTradersEnabled, zombieWanderingTraderConversionChance,
-            null, null, null, null, null, null, null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null);
     }
 
     /** Clamp V1 fields. V2 field clamping happens in MultiGolemConfig.parse. */
@@ -182,7 +196,10 @@ public record TierStats(
             redstoneOverchargeResistanceRefreshSeconds, redstoneDeathPulseEnabled,
             redstoneDeathPulseRadius, redstoneDeathPulseSlownessSeconds,
             redstoneDeathPulseSlownessAmplifier, redstoneParticlesEnabled,
-            redstoneDeathPulseParticlesEnabled);
+            redstoneDeathPulseParticlesEnabled, lapisWardEnabled, lapisWardRange,
+            lapisWardScanIntervalTicks, lapisWardAffectsPlayers,
+            lapisWardMagicDamageEnabled, lapisWardEffectCleanupEnabled,
+            lapisWardEffectIds, lapisParticlesEnabled);
     }
 
     public boolean isHealthDamageClamped() {

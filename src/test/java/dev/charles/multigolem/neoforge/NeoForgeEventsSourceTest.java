@@ -21,12 +21,19 @@ class NeoForgeEventsSourceTest {
         assertTrue(source.contains("EmeraldAbility.onTick(level);"));
         assertTrue(source.contains("DiamondAbility.onTick(level);"));
         assertTrue(source.contains("RedstoneAbility.onTick(level);"));
+        assertTrue(source.contains("LapisAbility.onTick(level);"));
         assertTrue(source.contains("CopperAbility.allowDamage(entity, source, amount)"));
         assertTrue(source.contains("NetheriteAbility.allowDamage(entity, source, amount)"));
         assertTrue(source.contains("DiamondAbility.allowDamage(entity, source, amount)"));
+        assertTrue(source.contains("LapisAbility.allowDamage(entity, source, amount)"));
         assertTrue(source.contains("boolean cancelDamage = !CopperAbility.allowDamage(entity, source, amount)"));
         assertTrue(source.contains("| !NetheriteAbility.allowDamage(entity, source, amount)"));
         assertTrue(source.contains("| !DiamondAbility.allowDamage(entity, source, amount)"));
+        assertTrue(source.contains("| !LapisAbility.allowDamage(entity, source, amount)"));
+        assertTrue(source.contains("NeoForge.EVENT_BUS.addListener(NeoForgeAbilityEvents::onMobEffectApplicable);"));
+        assertTrue(source.contains("MobEffectEvent.Applicable"));
+        assertTrue(source.contains("LapisAbility.allowEffectApplication"));
+        assertTrue(source.contains("MobEffectEvent.Applicable.Result.DO_NOT_APPLY"));
         assertFalse(source.contains("net.fabricmc"));
     }
 

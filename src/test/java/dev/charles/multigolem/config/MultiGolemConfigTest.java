@@ -45,6 +45,28 @@ class MultiGolemConfigTest {
         assertEquals(9, redstone.redstoneDeathPulseSlownessAmplifier());
         assertTrue(redstone.redstoneParticlesEnabled());
         assertTrue(redstone.redstoneDeathPulseParticlesEnabled());
+        TierStats lapis = cfg.tier(GolemVariant.LAPIS);
+        assertEquals(50, lapis.maxHealth());
+        assertEquals(7.5, lapis.attackDamage(), 0.0001);
+        assertEquals(java.util.List.of("CREEPERS"), lapis.ignoredTargetTypes());
+        assertTrue(lapis.lapisWardEnabled());
+        assertEquals(15, lapis.lapisWardRange());
+        assertEquals(5, lapis.lapisWardScanIntervalTicks());
+        assertFalse(lapis.lapisWardAffectsPlayers());
+        assertTrue(lapis.lapisWardMagicDamageEnabled());
+        assertTrue(lapis.lapisWardEffectCleanupEnabled());
+        assertEquals(java.util.List.of(
+            "minecraft:poison",
+            "minecraft:wither",
+            "minecraft:weakness",
+            "minecraft:slowness",
+            "minecraft:blindness",
+            "minecraft:nausea",
+            "minecraft:levitation",
+            "minecraft:darkness",
+            "minecraft:mining_fatigue"
+        ), lapis.lapisWardEffectIds());
+        assertTrue(lapis.lapisParticlesEnabled());
         assertEquals(600,  cfg.tier(GolemVariant.NETHERITE).maxHealth());
         assertEquals(85.0, cfg.tier(GolemVariant.NETHERITE).attackDamage(), 0.0001);
         assertEquals(100,  cfg.tier(GolemVariant.ZOMBIE).maxHealth());
@@ -215,6 +237,55 @@ class MultiGolemConfigTest {
     }
 
     @Test
+    void sourceWarnsWhenLapisEffectIdsContainNonStringEntries() throws IOException {
+        String source = Files.readString(Path.of("src/common/java/dev/charles/multigolem/config/MultiGolemConfig.java"));
+
+        assertTrue(source.contains("lapis_ward_effect_ids value '{}' is not a string; skipped"));
+    }
+
+    @Test
+    void loadFromFile_lapisOutOfRangeWardValues_clampedAndEffectIdsPreserved(@TempDir Path tmp) throws IOException {
+        Path file = tmp.resolve("multigolem.json");
+        Files.writeString(file, """
+            {
+              "tiers": {
+                "lapis": {
+                  "max_health": 50,
+                  "attack_damage": 7.5,
+                  "anger_on_hit": true,
+                  "lapis_ward_range": 0,
+                  "lapis_ward_scan_interval_ticks": 0,
+                  "lapis_ward_effect_ids": ["minecraft:poison", "unknown:kept_for_writeback"]
+                }
+              }
+            }
+            """);
+
+        TierStats loaded = MultiGolemConfig.loadOrCreate(file).tier(GolemVariant.LAPIS);
+        assertEquals(1, loaded.lapisWardRange());
+        assertEquals(1, loaded.lapisWardScanIntervalTicks());
+        assertTrue(loaded.lapisWardEffectIds().contains("unknown:kept_for_writeback"));
+
+        Files.writeString(file, """
+            {
+              "tiers": {
+                "lapis": {
+                  "max_health": 50,
+                  "attack_damage": 7.5,
+                  "anger_on_hit": true,
+                  "lapis_ward_range": 1000,
+                  "lapis_ward_scan_interval_ticks": 1000
+                }
+              }
+            }
+            """);
+
+        TierStats loadedHigh = MultiGolemConfig.loadOrCreate(file).tier(GolemVariant.LAPIS);
+        assertEquals(64, loadedHigh.lapisWardRange());
+        assertEquals(200, loadedHigh.lapisWardScanIntervalTicks());
+    }
+
+    @Test
     void loadFromFile_redstoneOutOfRangeAbilityValues_clamped(@TempDir Path tmp) throws IOException {
         Path file = tmp.resolve("multigolem.json");
         Files.writeString(file, """
@@ -265,6 +336,7 @@ class MultiGolemConfigTest {
         assertEquals(70, cfg.tier(GolemVariant.COPPER).maxHealth());
         assertEquals(100, cfg.tier(GolemVariant.IRON).maxHealth(), "missing tier uses default");
         assertEquals(90, cfg.tier(GolemVariant.REDSTONE).maxHealth(), "missing redstone tier uses default");
+        assertEquals(50, cfg.tier(GolemVariant.LAPIS).maxHealth(), "missing lapis tier uses default");
         assertEquals(600, cfg.tier(GolemVariant.NETHERITE).maxHealth(), "missing tier uses default");
         assertEquals(100, cfg.tier(GolemVariant.ZOMBIE).maxHealth(), "missing zombie tier uses default");
     }
