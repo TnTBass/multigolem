@@ -7,7 +7,7 @@ import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragonPart;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.monster.Creeper;
-import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.Enderman;
 import net.minecraft.world.entity.monster.skeleton.Skeleton;
 import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.monster.zombie.Zombie;
@@ -34,7 +34,7 @@ class TargetFilterTest {
     @Test
     void ignored_endermen_excludesEndermen() {
         TargetFilter f = TargetFilter.fromIgnoredList(List.of("ENDERMEN"));
-        assertTrue(f.isExcludedClass(EnderMan.class));
+        assertTrue(f.isExcludedClass(Enderman.class));
         assertFalse(f.isExcludedClass(Zombie.class));
     }
 
@@ -63,7 +63,7 @@ class TargetFilterTest {
     void ignored_empty_excludesNothing() {
         TargetFilter f = TargetFilter.fromIgnoredList(List.of());
         assertFalse(f.isExcludedClass(Creeper.class));
-        assertFalse(f.isExcludedClass(EnderMan.class));
+        assertFalse(f.isExcludedClass(Enderman.class));
     }
 
     @Test

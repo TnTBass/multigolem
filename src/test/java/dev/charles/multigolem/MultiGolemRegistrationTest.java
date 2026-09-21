@@ -2,6 +2,8 @@ package dev.charles.multigolem;
 
 import dev.charles.multigolem.test.MinecraftBootstrap;
 import net.minecraft.world.item.Items;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.storage.loot.LootContext;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -12,10 +14,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class MultiGolemRegistrationTest {
     @BeforeAll
     static void bootstrap() {
+        System.setProperty("net.bytebuddy.experimental", "true");
         MinecraftBootstrap.ensure();
     }
 
@@ -50,5 +55,23 @@ class MultiGolemRegistrationTest {
     @Test
     void ironLootUsesVanillaTableOnly() {
         assertThrows(IllegalArgumentException.class, () -> MultiGolem.lootDropFor(GolemVariant.IRON));
+    }
+
+    @Test
+    void variantDropCountsPreserveInclusiveIntegerBounds() {
+        LootContext context = mock(LootContext.class);
+        when(context.getRandom()).thenReturn(RandomSource.create(263L));
+        for (GolemVariant variant : MultiGolem.lootVariants()) {
+            MultiGolem.VariantLootDrop drop = MultiGolem.lootDropFor(variant);
+            var provider = MultiGolem.variantDropCount(drop.min(), drop.max()).value();
+            var observed = new java.util.HashSet<Integer>();
+            for (int i = 0; i < 256; i++) {
+                int count = provider.getIntUnsafe(context);
+                assertTrue(count >= drop.min() && count <= drop.max(), variant.name());
+                observed.add(count);
+            }
+            assertTrue(observed.contains(drop.min()), variant + " minimum never sampled");
+            assertTrue(observed.contains(drop.max()), variant + " maximum never sampled");
+        }
     }
 }

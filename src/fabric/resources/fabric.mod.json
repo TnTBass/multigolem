@@ -32,9 +32,9 @@
     { "config": "multigolem.client.mixins.json", "environment": "client" }
   ],
   "depends": {
-    "fabricloader": ">=0.19.2",
-    "fabric-api": ">=0.152.2+26.2",
-    "minecraft": ">=26.2",
+    "fabricloader": ">=0.19.5",
+    "fabric-api": ">=0.161.0+26.3",
+    "minecraft": "26.3",
     "java": ">=25"
   }
 }

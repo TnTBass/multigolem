@@ -26,7 +26,7 @@ public record HasGolemVariantLootCondition(GolemVariant variant) implements Loot
 
     @Override
     public boolean test(LootContext ctx) {
-        Entity e = ctx.getOptionalParameter(LootContextParams.THIS_ENTITY);
+        Entity e = ctx.getOptional(LootContextParams.THIS_ENTITY);
         return e != null && GolemVariantAttachment.get(e) == variant;
     }
 }

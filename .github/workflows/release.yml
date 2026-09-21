@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       release_ref:
-        description: 'Release tag to publish from, for example v0.6.1+mc26.2'
+        description: 'Release tag to publish from, for example v0.8.2+mc26.3'
         required: true
       publish_target:
         description: 'Publisher to run'
@@ -48,6 +48,9 @@ jobs:
         run: chmod +x ./gradlew
       - name: build
         run: ./gradlew build
+      - name: verify CurseForge upload metadata
+        shell: pwsh
+        run: ./scripts/test-upload-curseforge.ps1
       - name: validate release tag
         run: |
           if [[ ! "${RELEASE_REF}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+\+mc[0-9]+(\.[0-9]+)*$ ]]; then
@@ -65,6 +68,8 @@ jobs:
         run: |
           version="${RELEASE_REF#v}"
           python scripts/extract-changelog-section.py --section "$version" > release-notes.md
+          python scripts/extract-changelog-section.py --section "$version" --loader fabric > release-notes-fabric.md
+          python scripts/extract-changelog-section.py --section "$version" --loader neoforge > release-notes-neoforge.md
       - name: create github release
         if: ${{ github.event_name != 'workflow_dispatch' || inputs.publish_target == 'all' }}
         env:
@@ -95,13 +100,13 @@ jobs:
             -Loader "fabric" `
             -Version $version `
             -JarPath "fabric/build/libs/multigolem-fabric-$version.jar" `
-            -ChangelogPath "release-notes.md"
+            -ChangelogPath "release-notes-fabric.md"
           ./scripts/upload-modrinth.ps1 `
             -Slug "multigolem" `
             -Loader "neoforge" `
             -Version $version `
             -JarPath "neoforge/build/libs/multigolem-neoforge-$version.jar" `
-            -ChangelogPath "release-notes.md"
+            -ChangelogPath "release-notes-neoforge.md"
       - name: publish curseforge release
         if: ${{ github.event_name != 'workflow_dispatch' || inputs.publish_target == 'all' || inputs.publish_target == 'curseforge' }}
         shell: pwsh
@@ -115,10 +120,10 @@ jobs:
             -Loader "fabric" `
             -Version $version `
             -JarPath "fabric/build/libs/multigolem-fabric-$version.jar" `
-            -ChangelogPath "release-notes.md"
+            -ChangelogPath "release-notes-fabric.md"
           ./scripts/upload-curseforge.ps1 `
             -Slug "multigolem" `
             -Loader "neoforge" `
             -Version $version `
             -JarPath "neoforge/build/libs/multigolem-neoforge-$version.jar" `
-            -ChangelogPath "release-notes.md"
+            -ChangelogPath "release-notes-neoforge.md"

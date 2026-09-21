@@ -71,9 +71,9 @@ Players with ModMenu installed can open MultiGolem's client-side hub to check wh
 
 ## Requirements
 
-- Minecraft 26.2 or later compatible 26.x runtime
-- Fabric build: Fabric Loader 0.19.2+ and Fabric API 0.152.2+26.2
-- NeoForge build: NeoForge 26.2.0.6-beta or later compatible 26.2 runtime
+- Minecraft 26.3
+- Fabric build: Fabric Loader 0.19.5+ and Fabric API 0.161.0+26.3
+- NeoForge build: NeoForge 26.3.0.8-beta or later compatible 26.3 runtime
 
 ## Spawn Eggs
 

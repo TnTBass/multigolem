@@ -18,7 +18,6 @@ import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
-import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
@@ -83,7 +82,7 @@ public final class NeoForgeMultiGolemEvents {
         return LootPool.lootPool()
             .when(HasGolemVariantLootCondition.builder(variant))
             .add(LootItem.lootTableItem(drop)
-                .apply(SetItemCountFunction.setCount(UniformGenerator.between(min, max))))
+                .apply(SetItemCountFunction.setCount(MultiGolem.variantDropCount(min, max))))
             .build();
     }
 }

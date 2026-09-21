@@ -4,12 +4,15 @@ import dev.charles.multigolem.catalog.GolemVariantCatalog;
 import dev.charles.multigolem.catalog.GolemVariantSpec;
 import dev.charles.multigolem.config.MultiGolemConfig;
 import dev.charles.multigolem.loot.HasGolemVariantLootCondition;
+import net.minecraft.core.Holder;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
-import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
+import net.minecraft.world.level.storage.loot.providers.number.ints.ConstantValue;
+import net.minecraft.world.level.storage.loot.providers.number.ints.ContextIntProvider;
+import net.minecraft.world.level.storage.loot.providers.number.ints.UniformGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +56,11 @@ public final class MultiGolem {
         builder.withPool(LootPool.lootPool()
             .when(HasGolemVariantLootCondition.builder(variant))
             .add(LootItem.lootTableItem(drop)
-                .apply(SetItemCountFunction.setCount(UniformGenerator.between(min, max)))));
+                .apply(SetItemCountFunction.setCount(variantDropCount(min, max)))));
+    }
+
+    public static Holder<ContextIntProvider> variantDropCount(int min, int max) {
+        return Holder.direct(new UniformGenerator(
+            Holder.direct(new ConstantValue(min)), Holder.direct(new ConstantValue(max))));
     }
 }

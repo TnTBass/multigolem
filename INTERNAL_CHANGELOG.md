@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added Client and Server environment tags to CurseForge upload metadata, following the CarryBabyAnimals upload fix, and reject API error-code responses before reporting success.
+
+- Tailored compatibility release notes to each loader for Modrinth and CurseForge uploads, while preserving combined GitHub Release notes.
+
 - Implemented V7 Redstone Golem as a lower-strength emergency-control defender with Redstone Block construction, Redstone Dust healing, overcharge attack/resistance without speed, a Slowness X death pulse, marked eggs/assets, docs, and Fabric/NeoForge parity.
 - Added Redstone Golem design and implementation planning artifacts without starting gameplay implementation.
 - Stopped publishing sources jars to Modrinth while keeping sources artifacts on GitHub Releases.

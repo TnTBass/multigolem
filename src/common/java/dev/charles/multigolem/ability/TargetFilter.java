@@ -6,7 +6,7 @@ import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragonPart;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.monster.Creeper;
-import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.Enderman;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.player.Player;
@@ -40,7 +40,7 @@ public final class TargetFilter {
     /** Test-friendly: check by class token without needing an entity instance. */
     public boolean isExcludedClass(Class<?> type) {
         if (excludeCreepers  && Creeper.class.isAssignableFrom(type))    return true;
-        if (excludeEndermen  && EnderMan.class.isAssignableFrom(type))   return true;
+        if (excludeEndermen  && Enderman.class.isAssignableFrom(type))   return true;
         if (excludePlayers   && Player.class.isAssignableFrom(type))     return true;
         if (excludeAllBosses && isBossClass(type))                       return true;
         return false;

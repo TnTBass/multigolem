@@ -20,7 +20,7 @@ def section_name_from_header(line: str) -> str | None:
     return re.split(r"\s+[—-]\s+", name, maxsplit=1)[0].strip()
 
 
-def extract_section(changelog: Path, section: str) -> str:
+def extract_section(changelog: Path, section: str, loader: str | None = None) -> str:
     lines = changelog.read_text(encoding="utf-8").splitlines()
     in_section = False
     captured: list[str] = []
@@ -42,16 +42,27 @@ def extract_section(changelog: Path, section: str) -> str:
     while captured and not captured[-1].strip():
         captured.pop()
 
-    return "\n".join(captured)
+    notes = "\n".join(captured)
+    if loader is not None:
+        loader_name = {"fabric": "Fabric", "neoforge": "NeoForge"}[loader]
+        # Tailor only the standard compatibility bullet; other release copy stays verbatim.
+        notes = re.sub(
+            r"(?m)^(- Updated compatibility to Minecraft [0-9]+(?:\.[0-9]+)* for )Fabric and NeoForge\.$",
+            lambda match: f"{match.group(1)}{loader_name}.",
+            notes,
+        )
+    return notes
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--changelog", type=Path, default=DEFAULT_CHANGELOG)
     parser.add_argument("--section", required=True)
+    parser.add_argument("--loader", choices=("fabric", "neoforge"),
+                        help="Tailor compatibility notes for a marketplace loader upload.")
     args = parser.parse_args(argv)
 
-    extracted = extract_section(args.changelog, args.section)
+    extracted = extract_section(args.changelog, args.section, args.loader)
     if not extracted.strip():
         print(f"Could not find non-empty changelog section '{args.section}' in {args.changelog}.", file=sys.stderr)
         return 1

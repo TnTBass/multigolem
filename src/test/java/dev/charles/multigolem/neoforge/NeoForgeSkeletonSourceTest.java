@@ -13,12 +13,12 @@ class NeoForgeSkeletonSourceTest {
     // The Fabric test task sets workingDir to rootProject.projectDir; keep these
     // paths repo-root relative to match the existing source-text tests.
     @Test
-    void neoforgeCoordinatesAreRecordedForMinecraft262() throws IOException {
+    void neoforgeCoordinatesAreRecordedForMinecraft263() throws IOException {
         String properties = Files.readString(Path.of("gradle.properties"));
 
-        assertTrue(properties.contains("neoforge_version=26.2.0.6-beta"));
-        assertTrue(properties.contains("moddevgradle_version=2.0.141"));
-        assertTrue(properties.contains("Minecraft 26.2"));
+        assertTrue(properties.contains("neoforge_version=26.3.0.8-beta"));
+        assertTrue(properties.contains("moddevgradle_version=2.0.147"));
+        assertTrue(properties.contains("Minecraft 26.3"));
     }
 
     @Test
@@ -31,9 +31,9 @@ class NeoForgeSkeletonSourceTest {
         assertTrue(metadata.contains("displayName=\"MultiGolem\""));
         assertTrue(metadata.contains("logoFile=\"assets/multigolem/icon.png\""));
         assertTrue(metadata.contains("modId=\"neoforge\""));
-        assertTrue(metadata.contains("versionRange=\"[26.2.0.6-beta,)\""));
+        assertTrue(metadata.contains("versionRange=\"[26.3.0.8-beta,26.4)\""));
         assertTrue(metadata.contains("modId=\"minecraft\""));
-        assertTrue(metadata.contains("versionRange=\"[26.2,)\""));
+        assertTrue(metadata.contains("versionRange=\"[26.3]\""));
     }
 
     @Test

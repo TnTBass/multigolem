@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import re
 import sys
 import tempfile
 import unittest
@@ -32,6 +33,37 @@ def write_changelog(text: str) -> Path:
 
 
 class ExtractChangelogSectionTest(unittest.TestCase):
+    def test_compatibility_notes_are_specific_to_each_loader(self):
+        extractor = load_extractor()
+        combined = "- Updated compatibility to Minecraft 26.3 for Fabric and NeoForge."
+        unrelated = "- Fixed connections between Fabric and NeoForge clients."
+        changelog = write_changelog(f"## 0.8.2+mc26.3 — 2026-09-21\n\n{combined}\n{unrelated}\n")
+        self.assertEqual(extractor.extract_section(changelog, "0.8.2+mc26.3"),
+                         f"{combined}\n{unrelated}")
+        for loader, name in (("fabric", "Fabric"), ("neoforge", "NeoForge")):
+            with self.subTest(loader=loader):
+                self.assertEqual(
+                    extractor.extract_section(changelog, "0.8.2+mc26.3", loader),
+                    f"- Updated compatibility to Minecraft 26.3 for {name}.\n{unrelated}",
+                )
+
+    def test_release_workflow_routes_notes_to_the_matching_upload(self):
+        workflow = (REPO / ".github/workflows/release.yml").read_text(encoding="utf-8")
+        uploads = re.findall(
+            r'\./scripts/upload-(modrinth|curseforge)\.ps1\s+`\s*'
+            r'-Slug "multigolem"\s+`\s*-Loader "(fabric|neoforge)"'
+            r'.*?-ChangelogPath "([^"]+)"', workflow, re.DOTALL,
+        )
+        self.assertEqual(len(uploads), 4)
+        self.assertEqual({(publisher, loader) for publisher, loader, _ in uploads},
+                         {(publisher, loader) for publisher in ("modrinth", "curseforge")
+                          for loader in ("fabric", "neoforge")})
+        for publisher, loader, notes_path in uploads:
+            with self.subTest(publisher=publisher, loader=loader):
+                self.assertEqual(notes_path, f"release-notes-{loader}.md")
+                self.assertIn(f'--loader {loader} > {notes_path}', workflow)
+        self.assertIn('notes_args=(--notes-file release-notes.md)', workflow)
+
     def test_extracts_plus_version_with_dated_em_dash_heading(self):
         extractor = load_extractor()
         changelog = write_changelog("""# Changelog

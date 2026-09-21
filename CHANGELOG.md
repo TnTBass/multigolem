@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.8.2+mc26.3 — 2026-09-21
+
+- Updated compatibility to Minecraft 26.3 for Fabric and NeoForge.
+
 ## 0.8.1+mc26.2 — 2026-06-30
 
 - Added server config for disabling specific golem types or whole golem families so they cannot be spawned manually or by villages. If you disable a golem variant, any existing golems built or spawned naturally before this configuration option is changed will remain in world.

@@ -136,6 +136,9 @@ $metadata = @{
     gameVersions = @(
         Get-CurseForgeGameVersionId -GameVersions $gameVersions -Name $minecraftVersion
         Get-CurseForgeGameVersionId -GameVersions $gameVersions -Name $loaderGameVersion
+        # Supported runtimes, not a requirement to install the mod on both sides.
+        Get-CurseForgeGameVersionId -GameVersions $gameVersions -Name "Client"
+        Get-CurseForgeGameVersionId -GameVersions $gameVersions -Name "Server"
     )
     releaseType = "release"
 }
@@ -160,11 +163,13 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $curseForgeFile = $uploadResponse | ConvertFrom-Json
-if ($curseForgeFile.error -or $curseForgeFile.errors) {
+if ($curseForgeFile.error -or $curseForgeFile.errors -or
+    $curseForgeFile.PSObject.Properties.Name -contains "errorCode" -or
+    $curseForgeFile.PSObject.Properties.Name -contains "errorMessage") {
     throw "CurseForge file upload failed: $uploadResponse"
 }
 
-if ($null -eq $curseForgeFile.id) {
+if ([string]::IsNullOrWhiteSpace([string] $curseForgeFile.id)) {
     throw "CurseForge file upload did not return a file id: $uploadResponse"
 }
 

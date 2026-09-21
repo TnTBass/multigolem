@@ -1,6 +1,6 @@
 # MultiGolem
 
-A Fabric and NeoForge mod for Minecraft 26.2 that adds Copper, Redstone, Gold, Lapis, Emerald, Diamond, Netherite, and Zombie golem variants alongside the vanilla Iron Golem. Built by Tyler and Charles.
+A Fabric and NeoForge mod for Minecraft 26.3 that adds Copper, Redstone, Gold, Lapis, Emerald, Diamond, Netherite, and Zombie golem variants alongside the vanilla Iron Golem. Built by Tyler and Charles.
 
 ## What it does
 
